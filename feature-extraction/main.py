@@ -25,11 +25,11 @@ datetime_now = datetime.now()
 # Configure logging
 logging.basicConfig(filename=os.path.join(args.savedir,'output.log'), level=logging.INFO,format='%(asctime)s-%(levelname)s-%(message)s')
 
-def search_and_extract(pcap_dir, features_csv, enums):
+def search_and_extract(pcap_dir, features_dir, pcapname_dir, enums):
     success = 0
     failed = 0
     traffic_limit = 200
-    with open(features_csv, 'a', newline='') as csv:
+    with open(features_dir, 'a', newline='') as features_file, open(pcapname_dir, 'a', newline='') as pcapname_file:
         for root, dirs, files in os.walk(pcap_dir):
             for f in files:
                 if f.endswith(".pcap"):
@@ -44,8 +44,12 @@ def search_and_extract(pcap_dir, features_csv, enums):
 
                         # Write into csv file
                         for traffic_feature in traffic_features:
-                            csv.write(str(traffic_feature)+', ')
-                        csv.write('\n')
+                            features_file.write(str(traffic_feature)+', ')
+                        features_file.write('\n')
+
+                        # Write the filename of the pcap file into a file for reference
+                        pcapname_file.write(f+'\n')
+
                         success+=1
                         if success%1000==0:
                             print('{} pcap files has been parsed...'.format(success))
@@ -105,6 +109,7 @@ else:
                 out_file.write(line)
 
 # File for storing extracted features
-features_csv_filename = os.path.join(args.savedir,'features_tls_{}.csv'.format(datetime_now.strftime('%Y-%m-%d_%H-%M-%S')))
-search_and_extract(args.pcapdir, features_csv_filename, enums)
+features_dir = os.path.join(args.savedir, 'features_tls_{}.csv'.format(datetime_now.strftime('%Y-%m-%d_%H-%M-%S')))
+pcapname_dir = os.path.join(args.savedir, 'pcapname_{}.csv'.format(datetime_now.strftime('%Y-%m-%d_%H-%M-%S')))
+search_and_extract(args.pcapdir, features_dir, pcapname_dir, enums)
 
