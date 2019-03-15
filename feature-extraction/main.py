@@ -8,27 +8,22 @@ from ruamel.yaml import YAML
 import utils 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-t', '--traffic', help='Input top-level directory of the traffic module containing pcap files', required=True)
-parser.add_argument('-r', '--refenum', help='Input the top-level directory of the module for generating enums', default=None)
+parser.add_argument('-p', '--pcapdir', help='Input the directory path containing the pcap files for extraction', required=True)
+parser.add_argument('-s', '--savedir', help='Input the directory path to save the extracted feature files', required=True)  # e.g foo/bar/extracted-features/normal/
+parser.add_argument('-r', '--refenum', help='Input the file path to the yaml file for enum reference', default=None)
 args = parser.parse_args()
+if not os.path.exists(args.savedir):
+    os.mkdir(args.savedir) 
 
+# Initialize a yaml object for reading and writing yaml files
 yaml = YAML(typ='rt') # Round trip loading and dumping
 yaml.preserve_quotes = True
 yaml.indent(mapping=4, sequence=4)
 
-pcap_dir = args.traffic 
-extracted_features = os.path.join(pcap_dir, 'extracted_features')
-
-# Create a new directory 'extracted_features' to store extracted features
-if not os.path.exists(extracted_features):
-    os.mkdir(extracted_features)
+# Initialize current datetime into a variable
 datetime_now = datetime.now()
-# File for storing extracted features
-features_csv = os.path.join(extracted_features,'features_tls_{}.csv'.format(datetime_now.strftime('%Y-%m-%d_%H-%M-%S')))
-# File for storing information about enums used
-enums_info = os.path.join(extracted_features, 'enums_info_{}.txt'.format(datetime_now.strftime('%Y-%m-%d_%H-%M-%S')))
-
-logging.basicConfig(filename=os.path.join(extracted_features,'output.log'), level=logging.INFO,format='%(asctime)s-%(levelname)s-%(message)s')
+# Configure logging
+logging.basicConfig(filename=os.path.join(args.savedir,'output.log'), level=logging.INFO,format='%(asctime)s-%(levelname)s-%(message)s')
 
 def search_and_extract(pcap_dir, features_csv, enums):
     success = 0
@@ -39,15 +34,13 @@ def search_and_extract(pcap_dir, features_csv, enums):
             for f in files:
                 if f.endswith(".pcap"):
                     try:
-                        #print("Extracting features from {}".format(f))
                         logging.info("Extracting features from {}".format(f))
                         # Generate TCP features
                         tcp_features = utils.extract_tcp_features(os.path.join(root, f), limit=traffic_limit)
                         # Generate TLS/SSL features
                         tls_features = utils.extract_tslssl_features(os.path.join(root, f), enums, limit=traffic_limit)
-                        # Combine TCP and TLS/SSL features
+                        # Combine TCP and TLS/SSL features and each packet in traffic features is a vector of 146 dimension
                         traffic_features = (np.concatenate((np.array(tcp_features), np.array(tls_features)), axis=1)).tolist()
-                        # Each packet in traffic features is a vector of 139 dimension
 
                         # Write into csv file
                         for traffic_feature in traffic_features:
@@ -70,28 +63,24 @@ if args.refenum:
     with open(args.refenum, 'r') as f:
         enums = yaml.load(f)
 else:
-    # Iterate through pcap files and identify all enums
-    if 'new_traffic' in pcap_dir:
-        # Traffic contains both TLS and SSLv3 traffic and both have wide differences in enums
-        enums_tls = utils.searchEnums(os.path.join(pcap_dir, 'output_TLS'), limit=1000)
-        enums_sslv3 = utils.searchEnums(os.path.join(pcap_dir, 'outsslv3'), limit=1000)
-        enums = {k:list(set(v+enums_sslv3[k])) for k,v in enums_tls.items()}
-    elif 'legitimate traffic' in pcap_dir:
-        # Traffic contains both TLS and SSLv3 traffic and both have wide differences in enums
-        enums_tls = utils.searchEnums(os.path.join(pcap_dir, 'output TLS'), limit=1000)
-        enums_sslv3 = utils.searchEnums(os.path.join(pcap_dir, 'output_SSLv3'), limit=1000)
-        enums = {k:list(set(v+enums_sslv3[k])) for k,v in enums_tls.items()}
-    else:
-        enums = utils.searchEnums(pcap_dir, limit=2000)
-    
-    # Save the enums into a yaml file
-    enums_filename = os.path.join(extracted_features,'enums_{}.yml'.format(datetime_now.strftime('%Y-%m-%d_%H-%M-%S')))
+    enums = {}
+    # Iterate through sub-directories inside the root directory for alternate traffic
+    for dirname in os.listdir(args.pcapdir):
+        enums_in_a_file = utils.searchEnums(os.path.join(args.pcapdir, dirname), limit=1000)
+        for k,v in enums_in_a_file.items():
+            if k not in enums:
+                enums[k] = []
+            enums[k] = list(set(enums[k] + v))
+
+    # File for storing enums used in this feature extraction
+    enums_filename = os.path.join(args.savedir,'enums_{}.yml'.format(datetime_now.strftime('%Y-%m-%d_%H-%M-%S')))
     with open(enums_filename, 'w') as f:
         yaml.dump(enums, f)
 
-    feature_info = 'feature_info.csv'
-    new_feature_info = os.path.join(extracted_features, 'feature_info_{}.csv'.format(datetime_now.strftime('%Y-%m-%d_%H-%M-%S')))
-    with open(feature_info,'r') as in_file, open(new_feature_info,'w') as out_file:
+    # File for updating information on feature extracted in this feature extraction
+    feature_info_filename = 'feature_info.csv'
+    new_feature_info_filename = os.path.join(args.savedir, 'feature_info_{}.csv'.format(datetime_now.strftime('%Y-%m-%d_%H-%M-%S')))
+    with open(feature_info_filename,'r') as in_file, open(new_feature_info_filename,'w') as out_file:
         for line in in_file:
             enum_list = None
             split_line = line.split(',')
@@ -115,15 +104,7 @@ else:
             else:
                 out_file.write(line)
 
-    # with open(enums_info, 'w') as f:
-    #     for k,v in enums.items():
-    #         print('Enum: {}'.format(k))
-    #         f.write('Enum: {}\n'.format(k))
-    #         print(v)
-    #         f.write(str(v)+'\n')
-    #         print('Length of enum: {}'.format(len(v)))
-    #         f.write('Length of enum: {}\n\n'.format(len(v)))
-
-# Iterate through pcap files and extract features
-search_and_extract(pcap_dir, features_csv, enums)
+# File for storing extracted features
+features_csv_filename = os.path.join(args.savedir,'features_tls_{}.csv'.format(datetime_now.strftime('%Y-%m-%d_%H-%M-%S')))
+search_and_extract(args.pcapdir, features_csv_filename, enums)
 
