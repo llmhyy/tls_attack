@@ -81,32 +81,32 @@ else:
     with open(enums_filename, 'w') as f:
         yaml.dump(enums, f)
 
-    # File for updating information on feature extracted in this feature extraction
-    feature_info_filename = 'feature_info.csv'
-    new_feature_info_filename = os.path.join(args.savedir, 'feature_info_{}.csv'.format(datetime_now.strftime('%Y-%m-%d_%H-%M-%S')))
-    with open(feature_info_filename,'r') as in_file, open(new_feature_info_filename,'w') as out_file:
-        for line in in_file:
-            enum_list = None
-            split_line = line.split(',')
-            if 'ClientHello' == split_line[1]:
-                if 'Cipher suites' == split_line[2]:
-                    enum_list = enums['ciphersuites']
-                elif 'Compression method' == split_line[2]:
-                    enum_list = enums['compressionmethods']
-                elif 'Supported groups' == split_line[2]:
-                    enum_list = enums['supportedgroups']
-                elif 'Signature hash algorithm' == split_line[2]:
-                    enum_list = enums['sighashalgorithms_client']
-            elif 'Certificate' == split_line[1] and 'Signature algorithm' == split_line[2]:
-                enum_list = enums['sighashalgorithms_cert']
+# File for updating information on feature extracted in this feature extraction
+feature_info_filename = 'feature_info.csv'
+new_feature_info_filename = os.path.join(args.savedir, 'feature_info_{}.csv'.format(datetime_now.strftime('%Y-%m-%d_%H-%M-%S')))
+with open(feature_info_filename,'r') as in_file, open(new_feature_info_filename,'w') as out_file:
+    for line in in_file:
+        enum_list = None
+        split_line = line.split(',')
+        if 'ClientHello' == split_line[1]:
+            if 'Cipher suites' == split_line[2]:
+                enum_list = enums['ciphersuites']
+            elif 'Compression method' == split_line[2]:
+                enum_list = enums['compressionmethods']
+            elif 'Supported groups' == split_line[2]:
+                enum_list = enums['supportedgroups']
+            elif 'Signature hash algorithm' == split_line[2]:
+                enum_list = enums['sighashalgorithms_client']
+        elif 'Certificate' == split_line[1] and 'Signature algorithm' == split_line[2]:
+            enum_list = enums['sighashalgorithms_cert']
 
-            if enum_list:
-                enum_list = [0] + enum_list
-                for each_enum in enum_list:
-                    split_line[4] = str(each_enum)
-                    out_file.write(','.join(split_line)+'\n')
-            else:
-                out_file.write(line)
+        if enum_list:
+            enum_list = [0] + enum_list
+            for each_enum in enum_list:
+                split_line[4] = str(each_enum)
+                out_file.write(','.join(split_line)+'\n')
+        else:
+            out_file.write(line)
 
 # File for storing extracted features
 features_dir = os.path.join(args.savedir, 'features_tls_{}.csv'.format(datetime_now.strftime('%Y-%m-%d_%H-%M-%S')))

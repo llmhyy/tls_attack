@@ -1,5 +1,7 @@
 import os
+import math
 import random
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
 from matplotlib.widgets import Slider, Button, RadioButtons
@@ -79,7 +81,7 @@ def plot_prediction_on_pktlen(predict_train, true_train, predict_test, true_test
         plt.show()
     plt.clf()
 
-def plot_distribution(final_acc, overall_mean_acc, feature_filename, save_dir, show=False):
+def plot_distribution(final_acc, overall_mean_acc, save_dir, show=False):
     ax = plt.gca()
     ax.set_ylim(0.0, 1.0)
     plt.plot(final_acc, '|')
@@ -88,11 +90,37 @@ def plot_distribution(final_acc, overall_mean_acc, feature_filename, save_dir, s
     plt.ylabel('Mean Cosine Similarity')
     plt.axhline(y=round(overall_mean_acc,5), color='r', linestyle='-')
     plt.text(0.05, round(overall_mean_acc,5)-0.025, '{:.5f}'.format(overall_mean_acc), color='r', fontweight='bold', horizontalalignment='left', verticalalignment='top', transform=ax.transAxes)
-    plt.savefig(os.path.join(save_dir, 'dist_true_({})'.format(feature_filename)))
+    plt.savefig(os.path.join(save_dir, 'acc-traffic'))
     if show:
         plt.show()
     plt.clf()
 
+def plot_mse_for_dim(mse_dim, dim_name, save_dir, show=False):
+    fig = plt.gcf()
+    fig.set_size_inches(25,18)
+    plt.bar(np.arange(len(mse_dim)), mse_dim, tick_label=dim_name)
+    plt.xticks(rotation='vertical', fontsize=6)
+    plt.title('Overall MSE score for each dimension')
+    plt.xlabel('Dimension')
+    plt.ylabel('Mean Squared Error')
+    plt.savefig(os.path.join(save_dir, 'mse-dim'))
+    if show:
+        plt.show()
+
+def plot_mse_for_dim_for_outliers(pcap_filename, mean_acc, mse_dim, typename, save_dir, show=False):
+    n = len(pcap_filename)
+    col = 5
+    row = math.ceil(n/col)
+    fig, ax = plt.subplots(nrows=row, ncols=col)
+    plt.subplots_adjust(wspace=0.5)
+    fig.set_size_inches(25, 18)
+    for i in range(n):
+        ax[i//col,i%col].bar(np.arange(len(mse_dim[i])), mse_dim[i])
+        ax[i//col,i%col].set_title(str(pcap_filename[i])+'\nAcc: '+str(mean_acc[i]), fontsize=10)
+    fig.suptitle('MSE score for each dimension for {} {} outlier'.format(typename, n), fontsize=24)
+    plt.savefig(os.path.join(save_dir, 'outlier({}{})'.format(typename,n)))
+    if show:
+        plt.show()
 
 def plot_accuracy_and_distribution(mean_acc_train, median_acc_train, mean_acc_test, median_acc_test, final_acc_train, final_acc_test, 
                                     first, save_every_epoch, save_dir, show=False):

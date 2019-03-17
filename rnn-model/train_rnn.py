@@ -22,11 +22,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import normalize
 import matplotlib.pyplot as plt
 
-from utils_datagen import get_mmapdata_and_byteoffset
-from utils_datagen import get_min_max
-from utils_datagen import split_train_test
-from utils_datagen import normalize
-from utils_datagen import BatchGenerator
+import utils_datagen as utilsDatagen
 import utils_plot as utilsPlot
 import utils_diagnostic as utilsDiagnostic
 import utils_metric as utilsMetric
@@ -34,9 +30,9 @@ import utils_metric as utilsMetric
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-e', '--epoch', help='Input epoch for training', default=100, type=int)
-parser.add_argument('-t', '--traffic', help='Input top-level directory of the traffic module containing extracted features', required=True)
-parser.add_argument('-f', '--feature', help='Input directory path of feature file to be used', required=True)
-parser.add_argument('-s', '--show', help='Flag for displaying plots', action='store_true', default=False)
+parser.add_argument('-f', '--featuredir', help='Input the directory path of feature file to be used', required=True)
+parser.add_argument('-s', '--savedir', help='Input the directory path to save the rnn model and its training results', required=True)  # e.g foo/bar/trained-rnn/normal/
+parser.add_argument('-o', '--show', help='Flag for displaying plots', action='store_true', default=False)
 parser.add_argument('-m', '--model', help='Input directory for existing model to be trained')
 args = parser.parse_args()
 
@@ -45,75 +41,52 @@ DATETIME_NOW = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 BATCH_SIZE = 64
 SEQUENCE_LEN = 100
 EPOCH = args.epoch
-SAVE_EVERY_EPOCH = 5
+SAVE_EVERY_EPOCH = 1
 SPLIT_RATIO = 0.05
 SEED = 2019
-feature_file = args.feature
-existing_model = args.model
-
-# Create directories for current experiment
-trained_rnn_results = os.path.join(args.traffic, 'trained_rnn', 'expt_{}'.format(DATETIME_NOW),'train_results')
-trained_rnn_model = os.path.join(args.traffic, 'trained_rnn', 'expt_{}'.format(DATETIME_NOW), 'model')
-os.makedirs(trained_rnn_results)
-os.makedirs(trained_rnn_model)
 
 # Start diagnostic analysis
 tracemalloc.start()
 
-# Start logging into file
-# sys.stdout = Logger(os.path.join(trained_rnn_results, 'train_log.txt'))
-logfile = open(os.path.join(trained_rnn_results, 'train_log.txt'),'w')
-
-##########################################################################################
-
+#####################################################
 # DATA LOADING AND PREPROCESSING
-
-##########################################################################################
-
-# Search for extracted_features directory
-extracted_features = os.path.join(args.traffic, 'extracted_features')
-if not os.path.exists(extracted_features):
-    raise FileNotFoundError("Directory extracted_features not found. Extract features first")
+#####################################################
 
 # Load the mmap data and the byte offsets from the feature file
-mmap_data, byte_offset = get_mmapdata_and_byteoffset(feature_file)
+mmap_data, byte_offset = utilsDatagen.get_mmapdata_and_byteoffset(args.featuredir)
 
 # Get min and max for each feature
-min_max_feature = get_min_max(mmap_data, byte_offset)
+min_max_feature = utilsDatagen.get_min_max(mmap_data, byte_offset)
 
-# Split the dataset into train and test
-train_byteoffset, test_byteoffset = split_train_test(byte_offset, SPLIT_RATIO, SEED)
+# Split the dataset into train and test and return train/test indexes to the byte offset
+train_idx, test_idx = utilsDatagen.split_train_test(byte_offset, SPLIT_RATIO, SEED)
 
-# Intializing constants
-TRAIN_SIZE = len(train_byteoffset)
-TEST_SIZE = len(test_byteoffset)
-sample_traffic = json.loads('['+mmap_data[train_byteoffset[0][0]:train_byteoffset[0][1]+1].decode('ascii').strip().rstrip(',')+']')
+# Intializing constants for data
+TRAIN_SIZE = len(train_idx)
+TEST_SIZE = len(test_idx)
+sample_traffic = json.loads('['+mmap_data[byte_offset[0][0]:byte_offset[0][1]+1].decode('ascii').strip().rstrip(',')+']')
 INPUT_DIM = len(sample_traffic[0])
 
 # Initialize the normalization function 
-norm_fn = normalize(2, min_max_feature)
+norm_fn = utilsDatagen.normalize(2, min_max_feature)
 
 # Initialize the train and test generators for model training
-train_generator = BatchGenerator(mmap_data, train_byteoffset, BATCH_SIZE, SEQUENCE_LEN, norm_fn)
-test_generator = BatchGenerator(mmap_data, test_byteoffset, BATCH_SIZE, SEQUENCE_LEN, norm_fn)
+train_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, train_idx, BATCH_SIZE, SEQUENCE_LEN, norm_fn)
+test_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, test_idx, BATCH_SIZE, SEQUENCE_LEN, norm_fn)
 
-##########################################################################################
- 
+#####################################################
 # MODEL BUILDING
+#####################################################
 
-##########################################################################################
-
-# Build RNN model or Load existing RNN model
-if existing_model:
-    model = load_model(existing_model)
+# Build RNN model or load existing RNN model
+if args.model:
+    model = load_model(args.model)
 else:
     model = Sequential()
     model.add(LSTM(INPUT_DIM, input_shape=(SEQUENCE_LEN,INPUT_DIM), return_sequences=True))
     model.add(Activation('relu'))
-    # Selecting optimizers 
     model.compile(loss='mean_squared_error',
                     optimizer='rmsprop')
-
 model.summary()
 
 class TrainHistory(keras.callbacks.Callback):
@@ -135,7 +108,8 @@ class TrainHistory(keras.callbacks.Callback):
             temp_predict_on_len = np.array([])
             temp_true_on_len = np.array([])
 
-            for (batch_inputs, batch_true, batch_seq_len) in self.generator:
+            for (batch_inputs, batch_true, batch_info) in self.generator:
+                batch_seq_len = batch_info['seq_len']
                 batch_predict = self.model.predict_on_batch(batch_inputs)
                 batch_acc = utilsMetric.calculate_acc_of_traffic(batch_predict, batch_true)
 
@@ -195,8 +169,8 @@ class TrainHistory(keras.callbacks.Callback):
             self.true_on_len = np.concatenate((self.true_on_len, temp_predict_on_len.reshape(1, *temp_true_on_len.shape)))
 
 # Initialize NEW train and test generators for model prediction
-train_generator_prediction = BatchGenerator(mmap_data, train_byteoffset, BATCH_SIZE, SEQUENCE_LEN, norm_fn, return_seq_len=True)
-test_generator_prediction = BatchGenerator(mmap_data, test_byteoffset, BATCH_SIZE, SEQUENCE_LEN, norm_fn, return_seq_len=True)
+train_generator_prediction = utilsDatagen.BatchGenerator(mmap_data, byte_offset, train_idx, BATCH_SIZE, SEQUENCE_LEN, norm_fn, return_seq_len=True)
+test_generator_prediction = utilsDatagen.BatchGenerator(mmap_data, byte_offset, test_idx, BATCH_SIZE, SEQUENCE_LEN, norm_fn, return_seq_len=True)
 trainHistory_on_traindata = TrainHistory(train_generator_prediction)
 trainHistory_on_testdata = TrainHistory(test_generator_prediction)
 
@@ -209,23 +183,25 @@ history = model.fit_generator(train_generator, steps_per_epoch=math.ceil(TRAIN_S
                                                 workers=1,
                                                 use_multiprocessing=False)
 
-##########################################################################################
-
+#####################################################
 # MODEL EVALUATION
+#####################################################
 
-##########################################################################################
+# Directory for saving training results
+results_dir = os.path.join(args.savedir, 'expt_{}'.format(DATETIME_NOW),'train_results')
+os.makedirs(results_dir)
 
 plt.rcParams['figure.figsize'] = (10,7)
 plt.rcParams['legend.fontsize'] = 8
 
-# Visualize the model prediction on a specified dimension (default:packet length) over epochs
+# Generate plots for the model prediction on packet length over epochs
 utilsPlot.plot_prediction_on_pktlen(trainHistory_on_traindata.predict_on_len, 
                                     trainHistory_on_traindata.true_on_len, 
                                     trainHistory_on_testdata.predict_on_len, 
                                     trainHistory_on_testdata.true_on_len, 
-                                    save_every_epoch=SAVE_EVERY_EPOCH, save_dir=trained_rnn_results, show=args.show)
+                                    save_every_epoch=SAVE_EVERY_EPOCH, save_dir=results_dir, show=args.show)
 
-# Generate result plots for different sequence length
+# Generate plots for model accuracy on different sequence length
 seq_len_keys = ['true'] + list(range(10,101,10))
 for key in seq_len_keys:
     acc_pkt_mean_train = trainHistory_on_traindata.mean_acc[key]
@@ -244,7 +220,7 @@ for key in seq_len_keys:
                                     acc_pkt_median_test, 
                                     final_acc_pkt_mean_train, 
                                     final_acc_pkt_mean_test, 
-                                    first=key, save_every_epoch=SAVE_EVERY_EPOCH, save_dir=trained_rnn_results, show=args.show)
+                                    first=key, save_every_epoch=SAVE_EVERY_EPOCH, save_dir=results_dir, show=args.show)
 
 # Generate plots for training & validation loss
 plt.plot(history.history['loss'])
@@ -253,47 +229,41 @@ plt.title('Model loss')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['Train', 'Val'], loc='upper left')
-
-plt.savefig(os.path.join(trained_rnn_results,'loss'))
+plt.savefig(os.path.join(results_dir,'loss'))
 if args.show:
     plt.show()
 plt.clf()  
 
-# Save the train results into the log file
-logfile.write("#####  TRAIN/VAL LOSS  #####\n")
-for i, (loss, val_loss) in enumerate(zip(history.history['loss'], history.history['val_loss'])):
-    logfile.write('Epoch  #{}\tTrain Loss: {:.6f}\tVal Loss: {:.6f}\n'.format(i+1, loss, val_loss))
-logfile.write("\n#####  TRAIN/VAL MEAN ACCURACY  #####\n")
-for i, (train_mean, test_mean) in enumerate(zip(trainHistory_on_traindata.mean_acc['true'], trainHistory_on_testdata.mean_acc['true'])):
-    logfile.write('Epoch  #{}\tTrain Mean Accuracy: {:.6f}\tVal Mean Accuracy: {:.6f}\n'.format((i*SAVE_EVERY_EPOCH)+SAVE_EVERY_EPOCH, train_mean, test_mean))
-logfile.write("\n#####  TRAIN/VAL MEDIAN ACCURACY  #####\n")
-for i, (train_median, test_median) in enumerate(zip(trainHistory_on_traindata.median_acc['true'], trainHistory_on_testdata.median_acc['true'])):
-    logfile.write('Epoch  #{}\tTrain Median Accuracy: {:.6f}\tVal Median Accuracy: {:.6f}\n'.format((i*SAVE_EVERY_EPOCH)+SAVE_EVERY_EPOCH, train_median, test_median))
+# File for storing model configuration and training results in numerical form
+with open(os.path.join(results_dir, 'train_log.txt'),'w') as logfile:
+    logfile.write('####################################\n')
+    logfile.write('Training Start Date: {}\n'.format(DATETIME_NOW.split('_')[0]))
+    logfile.write('Training Start Time: {}\n'.format(DATETIME_NOW.split('_')[1]))
+    logfile.write('Batch Size: {}\n'.format(BATCH_SIZE))
+    logfile.write('Epoch: {}\n'.format(EPOCH))
+    logfile.write('Feature file used: {}\n'.format(os.path.basename(args.featuredir)))
+    logfile.write("Existing model used: {}\n".format(args.model))
+    logfile.write("Split Ratio: {}\n".format(SPLIT_RATIO))
+    logfile.write("Seed: {}\n".format(SEED))
+    logfile.write('####################################\n\n')
+    model.summary(print_fn=lambda x:logfile.write(x + '\n\n'))
+
+    logfile.write("#####  TRAIN/VAL LOSS  #####\n")
+    for i, (loss, val_loss) in enumerate(zip(history.history['loss'], history.history['val_loss'])):
+        logfile.write('Epoch  #{}\tTrain Loss: {:.6f}\tVal Loss: {:.6f}\n'.format(i+1, loss, val_loss))
+    logfile.write("\n#####  TRAIN/VAL MEAN ACCURACY  #####\n")
+    for i, (train_mean, test_mean) in enumerate(zip(trainHistory_on_traindata.mean_acc['true'], trainHistory_on_testdata.mean_acc['true'])):
+        logfile.write('Epoch  #{}\tTrain Mean Accuracy: {:.6f}\tVal Mean Accuracy: {:.6f}\n'.format((i*SAVE_EVERY_EPOCH)+SAVE_EVERY_EPOCH, train_mean, test_mean))
+    logfile.write("\n#####  TRAIN/VAL MEDIAN ACCURACY  #####\n")
+    for i, (train_median, test_median) in enumerate(zip(trainHistory_on_traindata.median_acc['true'], trainHistory_on_testdata.median_acc['true'])):
+        logfile.write('Epoch  #{}\tTrain Median Accuracy: {:.6f}\tVal Median Accuracy: {:.6f}\n'.format((i*SAVE_EVERY_EPOCH)+SAVE_EVERY_EPOCH, train_median, test_median))
 
 # Save the model
-model.save(os.path.join(trained_rnn_model,'rnnmodel_{}.h5'.format(DATETIME_NOW)))
+model.save(os.path.join(args.savedir, 'expt_{}'.format(DATETIME_NOW),'rnnmodel_{}.h5'.format(DATETIME_NOW)))
 
-# Save model config information
-train_info = os.path.join(trained_rnn_model, 'train_info_{}.txt'.format(DATETIME_NOW))
-with open(train_info, 'w') as f:
-    # Datetime
-    f.write('####################################\n\n')
-    f.write('Training Date: {}\n'.format(DATETIME_NOW.split('_')[0]))
-    f.write('Training Time: {}\n'.format(DATETIME_NOW.split('_')[1]))
-    f.write('Batch Size: {}\n'.format(BATCH_SIZE))
-    f.write('Epoch: {}\n'.format(EPOCH))
-    f.write('Feature file used: {}\n'.format(os.path.basename(feature_file)))
-    f.write("Existing model used: {}\n".format(existing_model))
-    f.write("Split Ratio: {}\n".format(SPLIT_RATIO))
-    f.write("Seed: {}\n\n".format(SEED))
-    f.write('####################################\n\n')
-    model.summary(print_fn=lambda x:f.write(x + '\n'))
-
-##########################################################################################
-
+#####################################################
 # DIAGNOSTIC TESTS
-
-##########################################################################################
+#####################################################
 
 print('\n##################################################')
 print('RUNNING DIAGNOSTIC TESTS...')
@@ -309,5 +279,3 @@ for i in range(0,5):
     for line in stat.traceback.format():
         print(line)
 print('##################################################')
-
-logfile.close()

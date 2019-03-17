@@ -7,8 +7,6 @@ from random import shuffle
 from keras.utils import Sequence
 from keras.preprocessing.sequence import pad_sequences
 
-
-
 def find_lines(data):
     for i, char in enumerate(data):
         if char == b'\n':
@@ -49,10 +47,12 @@ def split_train_test(byte_offset, split_ratio, seed):
     indices = np.random.RandomState(seed=seed).permutation(len(byte_offset)) 
     split_idx = math.ceil((1-split_ratio)*len(byte_offset))
     train_idx, test_idx = indices[:split_idx], indices[split_idx:]
-    train_byte_offset = [byte_offset[idx] for idx in train_idx]
-    test_byte_offset = [byte_offset[idx] for idx in test_idx]
-
-    return train_byte_offset, test_byte_offset
+    # train_byte_offset = [byte_offset[idx] for idx in train_idx]
+    # test_byte_offset = [byte_offset[idx] for idx in test_idx]
+    # if return_idx:
+        # return (train_byte_offset, test_byte_offset, train_idx, test_idx)
+    # return (train_byte_offset, test_byte_offset)
+    return train_idx, test_idx
 
 def normalize(option, min_max_feature=None):
     def l2_norm(batch_data):
@@ -74,23 +74,25 @@ def normalize(option, min_max_feature=None):
             return
 
 class BatchGenerator(Sequence):
-    def __init__(self, mmap_data, byte_offset, batch_size, sequence_len, norm_fn, return_seq_len=False):
+    def __init__(self, mmap_data, byte_offset, selected_idx, batch_size, sequence_len, norm_fn, return_seq_len=False, return_batch_idx=False):
         self.mmap_data = mmap_data
         self.byte_offset = byte_offset
+        self.selected_idx = selected_idx
         self.batch_size = batch_size
         self.sequence_len = sequence_len
         self.norm_fn = norm_fn
-        # self.min_feature = min_max_feature[0]
-        # self.max_feature = min_max_feature[1]
         self.return_seq_len = return_seq_len
+        self.return_batch_idx = return_batch_idx
 
     def __len__(self):
-        return int(np.ceil(len(self.byte_offset)/float(self.batch_size)))
+        return int(np.ceil(len(self.selected_idx)/float(self.batch_size)))
 
     def __getitem__(self, idx):
-        batch_idx = self.byte_offset[idx*self.batch_size:(idx+1)*self.batch_size]
+        batch_idx = self.selected_idx[idx*self.batch_size:(idx+1)*self.batch_size]
+        batch_byte_offset = [self.byte_offset[i] for i in batch_idx]
+        # batch_idx = self.byte_offset[idx*self.batch_size:(idx+1)*self.batch_size]
         batch_data = []
-        for start,end in batch_idx:
+        for start,end in batch_byte_offset:
             dataline = self.mmap_data[start:end+1].decode('ascii').strip().rstrip(',')
             batch_data.append(json.loads('['+dataline+']'))
         
@@ -102,14 +104,6 @@ class BatchGenerator(Sequence):
 
         # Scale the features
         batch_data = self.norm_fn(batch_data)
-        # (1)   L2 Normalization
-        # l2_norm = np.linalg.norm(batch_data, axis=2, keepdims=True)
-        # batch_data = np.divide(batch_data, l2_norm, out=np.zeros_like(batch_data), where=l2_norm!=0.0)
-        # (2)   Min Max Normalization
-        # batch_data = (batch_data - self.min_feature)/(self.max_feature - self.min_feature)
-        # num = batch_data-self.min_feature
-        # den = self.max_feature-self.min_feature
-        # batch_data = np.divide(num, den, out=np.zeros_like(num), where=den!=0.0)
 
         # Append zero to the start of the sequence
         packet_zero = np.zeros((batch_data.shape[0],1,batch_data.shape[2]))
@@ -119,10 +113,17 @@ class BatchGenerator(Sequence):
         batch_inputs = batch_data[:,:-1,:]
         batch_targets = batch_data[:,1:,:]
 
+        batch_info = {}
         if self.return_seq_len:
-            return (batch_inputs, batch_targets, batch_seq_len)
+            batch_info['seq_len'] = batch_seq_len
+        if self.return_batch_idx:
+            batch_info['batch_idx'] = batch_idx
         
-        return (batch_inputs, batch_targets)
+        if bool(batch_info):
+            return (batch_inputs, batch_targets, batch_info)
+        else:
+            return (batch_inputs, batch_targets)
     
     def on_epoch_end(self):
-        shuffle(self.byte_offset)
+        #shuffle(self.byte_offset)
+        shuffle(self.selected_idx)
