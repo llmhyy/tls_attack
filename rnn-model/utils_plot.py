@@ -2,6 +2,7 @@ import os
 import math
 import random
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
 from matplotlib.widgets import Slider, Button, RadioButtons
@@ -82,6 +83,8 @@ def plot_prediction_on_pktlen(predict_train, true_train, predict_test, true_test
     plt.clf()
 
 def plot_distribution(final_acc, overall_mean_acc, save_dir, show=False):
+    fig = plt.gcf()
+    fig.set_size_inches(8,6)
     ax = plt.gca()
     ax.set_ylim(0.0, 1.0)
     plt.plot(final_acc, '|')
@@ -106,6 +109,7 @@ def plot_mse_for_dim(mse_dim, dim_name, save_dir, show=False):
     plt.savefig(os.path.join(save_dir, 'mse-dim'))
     if show:
         plt.show()
+    plt.clf()
 
 def plot_mse_for_dim_for_outliers(pcap_filename, mean_acc, mse_dim, typename, save_dir, show=False):
     n = len(pcap_filename)
@@ -121,6 +125,7 @@ def plot_mse_for_dim_for_outliers(pcap_filename, mean_acc, mse_dim, typename, sa
     plt.savefig(os.path.join(save_dir, 'outlier({}{})'.format(typename,n)))
     if show:
         plt.show()
+    plt.clf()
 
 def plot_accuracy_and_distribution(mean_acc_train, median_acc_train, mean_acc_test, median_acc_test, final_acc_train, final_acc_test, 
                                     first, save_every_epoch, save_dir, show=False):
