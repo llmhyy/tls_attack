@@ -20,5 +20,5 @@ def calculate_median_acc_of_traffic(list_of_acc):
 
 def calculate_squared_error_of_traffic(predict, true):
     # Calculates squared error between predict and true for a batch of traffic
-    # Returns a numpy array with dimensions (num of traffic in a batch ,num of features)
-    return np.sum((true - predict)**2, 1)
+    # Returns a numpy array with dimensions (num of traffic in a batch, num of packets, num of features)
+    return (true - predict)**2

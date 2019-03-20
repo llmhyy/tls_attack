@@ -76,9 +76,10 @@ def predict_and_evaluate(model, data_generator, featureinfo_dir, pcapname_dir, s
         os.makedirs(save_dir)
     # Generate predictions and perform computation of metrics
     mean_acc_for_all_traffic = np.array([])
-    num_traffic = 0
+    num_packets = 0
     # batch_idx_for_all_traffic = np.array([])
     batch_idx_for_all_traffic = []
+    mean_squared_error_for_all_traffic = []
     squared_error_for_all_traffic = []
 
     for (batch_inputs, batch_true, batch_info) in data_generator:
@@ -95,8 +96,13 @@ def predict_and_evaluate(model, data_generator, featureinfo_dir, pcapname_dir, s
         ###############################################################
         # TEST 2
         squared_error_batch = utilsMetric.calculate_squared_error_of_traffic(batch_predict, batch_true)
-        num_traffic += BATCH_SIZE
-        squared_error_for_all_traffic.extend([error for error in squared_error_batch])
+        for i, seq_len in enumerate(batch_seq_len):
+            squared_error_spliced = squared_error_batch[i,0:seq_len,:]
+            mean_squared_error_onetraffic = np.sum(squared_error_spliced, axis=0)/seq_len
+            mean_squared_error_for_all_traffic.append(mean_squared_error_onetraffic)
+            num_packets += seq_len
+
+        squared_error_for_all_traffic.append(np.sum(squared_error_batch, axis=(0,1)))
         ###############################################################
         # TEST 3
         # batch_idx_for_all_traffic = np.concatenate((batch_idx_for_all_traffic, batch_idx))
@@ -120,7 +126,7 @@ def predict_and_evaluate(model, data_generator, featureinfo_dir, pcapname_dir, s
                 dim_name = '('+tls_protocol+')'+dim_name
             dim_names.append(dim_name)
 
-    mean_squared_error_for_features = np.sum(np.array(squared_error_for_all_traffic), axis=0)/num_traffic
+    mean_squared_error_for_features = np.sum(np.array(squared_error_for_all_traffic), axis=0)/num_packets
     utilsPLot.plot_mse_for_dim(mean_squared_error_for_features, dim_names, save_dir)
     ###############################################################
     # TEST 3
@@ -132,7 +138,7 @@ def predict_and_evaluate(model, data_generator, featureinfo_dir, pcapname_dir, s
     bottom_idx = sorted_acc_idx[:outlier_count]
     bottom_pcap_filename = [pcap_filename[batch_idx_for_all_traffic[i]] for i in bottom_idx]
     bottom_mean_acc = [mean_acc_for_all_traffic[i] for i in bottom_idx]
-    bottom_mse_dim = [squared_error_for_all_traffic[i] for i in bottom_idx]
+    bottom_mse_dim = [mean_squared_error_for_all_traffic[i] for i in bottom_idx]
     utilsPLot.plot_mse_for_dim_for_outliers(pcap_filename=bottom_pcap_filename, 
                                     mean_acc=bottom_mean_acc, 
                                     mse_dim=bottom_mse_dim,
@@ -141,7 +147,7 @@ def predict_and_evaluate(model, data_generator, featureinfo_dir, pcapname_dir, s
     top_idx = sorted_acc_idx[-outlier_count:]
     top_pcap_filename = [pcap_filename[batch_idx_for_all_traffic[i]] for i in top_idx]
     top_mean_acc = [mean_acc_for_all_traffic[i] for i in top_idx]
-    top_mse_dim = [squared_error_for_all_traffic[i] for i in top_idx]
+    top_mse_dim = [mean_squared_error_for_all_traffic[i] for i in top_idx]
     utilsPLot.plot_mse_for_dim_for_outliers(pcap_filename=top_pcap_filename, 
                                     mean_acc=top_mean_acc,
                                     mse_dim=top_mse_dim,
