@@ -73,6 +73,21 @@ def normalize(option, min_max_feature=None):
             print("Error: min-max range for feature is not provided")
             return
 
+def get_feature_vector(selected_idx, mmap_data, byte_offset, sequence_len, norm_fn):
+    selected_byte_offset = [byte_offset[i] for i in selected_idx]
+    selected_data = []
+    for start,end in selected_byte_offset:
+        dataline = mmap_data[start:end+1].decode('ascii').strip().rstrip(',')
+        selected_data.append(json.loads('['+dataline+']'))
+    selected_seq_len = [len(data) for data in selected_data]
+    selected_data = pad_sequences(selected_data, maxlen=sequence_len, dtype='float32', padding='post', value=0.0)
+    selected_data = norm_fn(selected_data)
+    packet_zero = np.zeros((selected_data.shape[0],1,selected_data.shape[2]))
+    selected_data = np.concatenate((packet_zero, selected_data), axis=1)
+    selected_inputs = selected_data[:,:-1,:]
+    selected_targets = selected_data[:,1:,:]
+    return (selected_inputs, selected_targets, selected_seq_len)
+
 class BatchGenerator(Sequence):
     def __init__(self, mmap_data, byte_offset, selected_idx, batch_size, sequence_len, norm_fn, return_seq_len=False, return_batch_idx=False):
         self.mmap_data = mmap_data

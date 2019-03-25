@@ -127,6 +127,51 @@ def plot_mse_for_dim_for_outliers(pcap_filename, mean_acc, mse_dim, typename, sa
         plt.show()
     plt.clf()
 
+def plot_summary_for_outlier(pcap_filename, mse_dim, dim_name, mean_acc, packetwise_acc, 
+                                predict_for_top5_dim, true_for_top5_dim, top5dim, 
+                                predict_for_bottom5_dim, true_for_bottom5_dim, bottom5dim,
+                                save_dir, show=False):
+    fig=plt.gcf()
+    fig.set_size_inches(25,18)
+    fig.suptitle('Summary Stats for {}\nAcc: {}'.format(pcap_filename, mean_acc))
+    
+    gs = mpl.gridspec.GridSpec(4,5)
+    gs.update(hspace=0.3)
+
+    # ax1 = plt.subplot2grid((4,5), (0,0), colspan=5)
+    ax1 = plt.subplot(gs[0,:])
+    ax1.bar(np.arange(len(mse_dim)), mse_dim)
+    ax1.set_xlabel('Feature #')
+    ax1.set_ylabel('MSE score')
+    ax1.set_title('MSE score for each dimension')
+    
+    # ax2 = plt.subplot2grid((4,5), (1,0), colspan=5)
+    ax2 = plt.subplot(gs[1,:])
+    # ax2.bar(np.arange(packetwise_acc.size), packetwise_acc)
+    ax2.plot(packetwise_acc)
+    ax2.set_xlabel('Packet #')
+    ax2.set_ylabel('Cosine similarity score')
+    ax2.set_title('Cosine similarity for each packet')
+
+    for i in range(5):
+        # ax_top = plt.subplot2grid((4,5), (2,i))
+        ax_top = plt.subplot(gs[2,i])
+        ax_top.plot(predict_for_top5_dim[:,i], label='Predict')
+        ax_top.plot(true_for_top5_dim[:,i], label='True')
+        ax_top.set_title('{} (T)'.format(dim_name[top5dim[i]]))
+
+        # ax_bottom = plt.subplot2grid((4,5), (3,i))
+        ax_bottom = plt.subplot(gs[3,i])
+        ax_bottom.plot(predict_for_bottom5_dim[:,i], label='Predict')
+        ax_bottom.plot(true_for_bottom5_dim[:,i], label='True')
+        ax_bottom.set_title('{} (B)'.format(dim_name[bottom5dim[i]]))
+    handles,labels = ax_top.get_legend_handles_labels()
+    fig.legend(handles, labels, loc=(0.85,0.05))
+    plt.savefig(os.path.join(save_dir, '{}.png'.format(pcap_filename)))
+    if show:
+        plt.show()
+    plt.clf()
+
 def plot_accuracy_and_distribution(mean_acc_train, median_acc_train, mean_acc_test, median_acc_test, final_acc_train, final_acc_test, 
                                     first, save_every_epoch, save_dir, show=False):
     """

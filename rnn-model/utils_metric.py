@@ -10,13 +10,15 @@ def calculate_acc_of_traffic(predict, true):
     cos_sim = np.divide(dot,vnorm,out=np.zeros_like(dot), where=vnorm!=0.0)
     return cos_sim
 
-def calculate_mean_acc_of_traffic(list_of_acc):
-    # Calculates the mean cosine similarity across packets in a traffic. Works with batches
-    return np.mean(list_of_acc, axis=1)
+def calculate_mean_over_traffic(batch_data):
+    # batch_data is a 3D numpy array with shape: (# batch, # packet, # features)
+    # Returns a 2D numpy array with shape: (# batch, # features) by mean-ing over all traffic
+    return np.mean(batch_data, axis=1)
 
-def calculate_median_acc_of_traffic(list_of_acc):
-    # Calculates the median cosine similarity across packets in a traffic. Works with batches
-    return np.median(list_of_acc, axis=1)
+def calculate_median_over_traffic(batch_data):
+    # batch_data is a 3D numpy array with shape: (# batch, # packet, # features)
+    # Returns a 2D numpy array with shape: (# batch, # features) by median-ing over all traffic
+    return np.median(batch_data, axis=1)
 
 def calculate_squared_error_of_traffic(predict, true):
     # Calculates squared error between predict and true for a batch of traffic

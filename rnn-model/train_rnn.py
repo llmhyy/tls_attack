@@ -120,8 +120,8 @@ class TrainHistory(keras.callbacks.Callback):
                     temp_median_acc['true'] = np.array([])
                 for i,seq_len in enumerate(batch_seq_len):
                     acc_spliced = batch_acc[i:i+1,0:seq_len] # slicing to retain the dimensionality
-                    mean_acc_of_true_traffic = utilsMetric.calculate_mean_acc_of_traffic(acc_spliced)
-                    median_acc_of_true_traffic = utilsMetric.calculate_median_acc_of_traffic(acc_spliced)
+                    mean_acc_of_true_traffic = utilsMetric.calculate_mean_over_traffic(acc_spliced)
+                    median_acc_of_true_traffic = utilsMetric.calculate_median_over_traffic(acc_spliced)
                     temp_mean_acc['true'] = np.concatenate((temp_mean_acc['true'], mean_acc_of_true_traffic))
                     temp_median_acc['true'] = np.concatenate((temp_median_acc['true'], median_acc_of_true_traffic))
 
@@ -132,8 +132,8 @@ class TrainHistory(keras.callbacks.Callback):
                     if seq_len not in temp_median_acc:
                         temp_median_acc[seq_len] = np.array([])
                     batch_acc_spliced = batch_acc[:,0:seq_len]
-                    mean_batch_acc_of_traffic = utilsMetric.calculate_mean_acc_of_traffic(batch_acc_spliced)
-                    median_batch_acc_of_traffic = utilsMetric.calculate_median_acc_of_traffic(batch_acc_spliced)
+                    mean_batch_acc_of_traffic = utilsMetric.calculate_mean_over_traffic(batch_acc_spliced)
+                    median_batch_acc_of_traffic = utilsMetric.calculate_median_over_traffic(batch_acc_spliced)
                     temp_mean_acc[seq_len] = np.concatenate((temp_mean_acc[seq_len], mean_batch_acc_of_traffic))
                     temp_median_acc[seq_len] = np.concatenate((temp_median_acc[seq_len], median_batch_acc_of_traffic))
 
