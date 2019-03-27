@@ -130,7 +130,7 @@ def plot_mse_for_dim_for_outliers(pcap_filename, mean_acc, mse_dim, typename, sa
 def plot_summary_for_outlier(pcap_filename, mse_dim, dim_name, mean_acc, packetwise_acc, 
                                 predict_for_top5_dim, true_for_top5_dim, top5dim, 
                                 predict_for_bottom5_dim, true_for_bottom5_dim, bottom5dim,
-                                save_dir, show=False):
+                                save_dir, show=False, trough_marker=False):
     fig=plt.gcf()
     fig.set_size_inches(25,18)
     fig.suptitle('Summary Stats for {}\nAcc: {}'.format(pcap_filename, mean_acc))
@@ -149,6 +149,14 @@ def plot_summary_for_outlier(pcap_filename, mse_dim, dim_name, mean_acc, packetw
     ax2 = plt.subplot(gs[1,:])
     # ax2.bar(np.arange(packetwise_acc.size), packetwise_acc)
     ax2.plot(packetwise_acc)
+    if trough_marker:
+        percentile25_acc = np.percentile(packetwise_acc, 25)
+        for i,packet_acc in enumerate(packetwise_acc.tolist()):
+            if packet_acc<percentile25_acc:
+                ax2.plot(i, packet_acc, 'ro-')
+                ax2.text(i, (packet_acc-0.05), i+1, fontsize=9, horizontalalignment='center')
+            else:
+                ax2.plot(i, packet_acc, '-')
     ax2.set_xlabel('Packet #')
     ax2.set_ylabel('Cosine similarity score')
     ax2.set_title('Cosine similarity for each packet')

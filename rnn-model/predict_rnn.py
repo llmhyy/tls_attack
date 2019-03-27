@@ -1,5 +1,6 @@
 import os
 import fnmatch
+import random
 import argparse
 import numpy as np
 from keras.models import load_model
@@ -76,7 +77,7 @@ def predict_and_evaluate(model, data_generator, featureinfo_dir, pcapname_dir, s
         os.makedirs(save_dir)
     # Generate predictions and perform computation of metrics
     mean_acc_for_all_traffic = np.array([])
-    batch_idx_for_all_traffic = []
+    batch_idx_for_all_traffic = [] # batch_idx_for_all_traffic is a list of the original index of the traffic in the feature file and the pcapname file. this is the ground truth
     mean_squared_error_for_all_traffic = []
     squared_error_for_all_traffic = []
     num_packets = 0
@@ -185,6 +186,33 @@ def predict_and_evaluate(model, data_generator, featureinfo_dir, pcapname_dir, s
                                             top_predict[:,:,bottom5dim][i,:top_seq_len[i]], top_true[:,:,bottom5dim][i,:top_seq_len[i]], bottom5dim,
                                             save_top10_dir)
 
+    ###############################################################
+    # TEST 5
+    save_sampled_dir = os.path.join(save_dir, 'sampledtraffic')
+    if not os.path.exists(save_sampled_dir):
+        os.makedirs(save_sampled_dir)
+    lower_limit_acc = 0.79
+    upper_limit_acc = 0.81
+    bounded_acc_idx = [(i,mean_acc) for i,mean_acc in enumerate(mean_acc_for_all_traffic) if mean_acc >= lower_limit_acc and mean_acc <= upper_limit_acc]
+    try: 
+        random.seed(2018)
+        sampled_acc_idx = random.sample(bounded_acc_idx, 10)
+    except ValueError:
+        sampled_acc_idx = bounded_acc_idx
+    sampled_idx, sampled_mean_acc = [list(t) for t in zip(*sampled_acc_idx)]
+    sampled_pcap_filename = [pcap_filename[batch_idx_for_all_traffic[i]] for i in sampled_idx]
+    sampled_acc = [acc_for_all_traffic[i] for i in sampled_idx]
+    sampled_mse_dim = [mean_squared_error_for_all_traffic[i] for i in sampled_idx]
+    sampled_input, sampled_true, sampled_seq_len = utilsDatagen.get_feature_vector([batch_idx_for_all_traffic[i] for i in sampled_idx], mmap_data, byte_offset, SEQUENCE_LEN, norm_fn)
+    sampled_predict = model.predict_on_batch(sampled_input)
+    for i in range(len(sampled_pcap_filename)):
+        top5dim = sorted(range(len(sampled_mse_dim[i])), key=lambda k:sampled_mse_dim[i][k])[:5]
+        bottom5dim = sorted(range(len(sampled_mse_dim[i])), key=lambda k:sampled_mse_dim[i][k])[-5:]
+        utilsPlot.plot_summary_for_outlier(sampled_pcap_filename[i], sampled_mse_dim[i], dim_names, sampled_mean_acc[i], sampled_acc[i],
+                                            sampled_predict[:,:,top5dim][i,:sampled_seq_len[i]], sampled_true[:,:,top5dim][i,:sampled_seq_len[i]], top5dim,
+                                            sampled_predict[:,:,bottom5dim][i,:sampled_seq_len[i]], sampled_true[:,:,bottom5dim][i,:sampled_seq_len[i]], bottom5dim,
+                                            save_sampled_dir, trough_marker=True)
+
     # Write results into log file
     # target_traffic_name = os.path.split(save_dir.strip('/'))[-1]
     with open(os.path.join(save_dir, 'predict_log.txt'),'w') as logfile:
@@ -206,6 +234,8 @@ def predict_and_evaluate(model, data_generator, featureinfo_dir, pcapname_dir, s
         for i in range(len(top_pcap_filename)):
             line = 'Mean Accuracy for {:60}{:>10.6f}\n'.format(top_pcap_filename[i]+':', top_mean_acc[i])
             logfile.write(line)
+
+        # logfile.write("\n#####  TEST 5: PACKETWISE EXAMINATION FOR SAMPLED TRAFFIC  #####\n")
 
 print('Computing metrics for train traffic...')
 predict_and_evaluate(model, train_generator, featureinfo_dir, pcapname_dir, os.path.join(args.savedir, 'train'))
