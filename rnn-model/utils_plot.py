@@ -155,8 +155,6 @@ def plot_summary_for_outlier(pcap_filename, mse_dim, dim_name, mean_acc, packetw
             if packet_acc<percentile25_acc:
                 ax2.plot(i, packet_acc, 'ro-')
                 ax2.text(i, (packet_acc-0.05), i+1, fontsize=9, horizontalalignment='center')
-            else:
-                ax2.plot(i, packet_acc, '-')
     ax2.set_xlabel('Packet #')
     ax2.set_ylabel('Cosine similarity score')
     ax2.set_title('Cosine similarity for each packet')

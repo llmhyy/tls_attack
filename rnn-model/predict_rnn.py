@@ -95,7 +95,7 @@ def predict_and_evaluate(model, data_generator, featureinfo_dir, pcapname_dir, s
             mean_acc = utilsMetric.calculate_mean_over_traffic(acc_spliced)
             mean_acc_for_all_traffic = np.concatenate((mean_acc_for_all_traffic, mean_acc))
 
-            acc_for_all_traffic.append(np.squeeze(acc_spliced))
+            acc_for_all_traffic.append(acc_spliced[0])
         ###############################################################
         # TEST 2
         squared_error_batch = utilsMetric.calculate_squared_error_of_traffic(batch_predict, batch_true)
@@ -194,24 +194,27 @@ def predict_and_evaluate(model, data_generator, featureinfo_dir, pcapname_dir, s
     lower_limit_acc = 0.79
     upper_limit_acc = 0.81
     bounded_acc_idx = [(i,mean_acc) for i,mean_acc in enumerate(mean_acc_for_all_traffic) if mean_acc >= lower_limit_acc and mean_acc <= upper_limit_acc]
-    try: 
-        random.seed(2018)
-        sampled_acc_idx = random.sample(bounded_acc_idx, 10)
-    except ValueError:
-        sampled_acc_idx = bounded_acc_idx
-    sampled_idx, sampled_mean_acc = [list(t) for t in zip(*sampled_acc_idx)]
-    sampled_pcap_filename = [pcap_filename[batch_idx_for_all_traffic[i]] for i in sampled_idx]
-    sampled_acc = [acc_for_all_traffic[i] for i in sampled_idx]
-    sampled_mse_dim = [mean_squared_error_for_all_traffic[i] for i in sampled_idx]
-    sampled_input, sampled_true, sampled_seq_len = utilsDatagen.get_feature_vector([batch_idx_for_all_traffic[i] for i in sampled_idx], mmap_data, byte_offset, SEQUENCE_LEN, norm_fn)
-    sampled_predict = model.predict_on_batch(sampled_input)
-    for i in range(len(sampled_pcap_filename)):
-        top5dim = sorted(range(len(sampled_mse_dim[i])), key=lambda k:sampled_mse_dim[i][k])[:5]
-        bottom5dim = sorted(range(len(sampled_mse_dim[i])), key=lambda k:sampled_mse_dim[i][k])[-5:]
-        utilsPlot.plot_summary_for_outlier(sampled_pcap_filename[i], sampled_mse_dim[i], dim_names, sampled_mean_acc[i], sampled_acc[i],
-                                            sampled_predict[:,:,top5dim][i,:sampled_seq_len[i]], sampled_true[:,:,top5dim][i,:sampled_seq_len[i]], top5dim,
-                                            sampled_predict[:,:,bottom5dim][i,:sampled_seq_len[i]], sampled_true[:,:,bottom5dim][i,:sampled_seq_len[i]], bottom5dim,
-                                            save_sampled_dir, trough_marker=True)
+    if len(bounded_acc_idx)>0:
+        try: 
+            random.seed(2018)
+            sampled_acc_idx = random.sample(bounded_acc_idx, 10)
+        except ValueError:
+            sampled_acc_idx = bounded_acc_idx
+        sampled_idx, sampled_mean_acc = [list(t) for t in zip(*sampled_acc_idx)]
+        sampled_pcap_filename = [pcap_filename[batch_idx_for_all_traffic[i]] for i in sampled_idx]
+        sampled_acc = [acc_for_all_traffic[i] for i in sampled_idx]
+        sampled_mse_dim = [mean_squared_error_for_all_traffic[i] for i in sampled_idx]
+        sampled_input, sampled_true, sampled_seq_len = utilsDatagen.get_feature_vector([batch_idx_for_all_traffic[i] for i in sampled_idx], mmap_data, byte_offset, SEQUENCE_LEN, norm_fn)
+        sampled_predict = model.predict_on_batch(sampled_input)
+        for i in range(len(sampled_pcap_filename)):
+            top5dim = sorted(range(len(sampled_mse_dim[i])), key=lambda k:sampled_mse_dim[i][k])[:5]
+            bottom5dim = sorted(range(len(sampled_mse_dim[i])), key=lambda k:sampled_mse_dim[i][k])[-5:]
+            utilsPlot.plot_summary_for_outlier(sampled_pcap_filename[i], sampled_mse_dim[i], dim_names, sampled_mean_acc[i], sampled_acc[i],
+                                                sampled_predict[:,:,top5dim][i,:sampled_seq_len[i]], sampled_true[:,:,top5dim][i,:sampled_seq_len[i]], top5dim,
+                                                sampled_predict[:,:,bottom5dim][i,:sampled_seq_len[i]], sampled_true[:,:,bottom5dim][i,:sampled_seq_len[i]], bottom5dim,
+                                                save_sampled_dir, trough_marker=True)
+    else:
+        print("No traffic found within bound of {}-{}".format(lower_limit_acc, upper_limit_acc))
 
     # Write results into log file
     # target_traffic_name = os.path.split(save_dir.strip('/'))[-1]
