@@ -128,10 +128,10 @@ TLS,ClientHello,Signature hash algorithm,Enum,514
 TLS,ClientHello,Signature hash algorithm,Enum,769
 TLS,ServerHello,Length,Integer,-
 TLS,ServerHello,Renegotiation info length,Integer ,-
+TLS,Certificate,Number of Certificates,Integer,-
 TLS,Certificate,Average certificate length,Integer,-
 TLS,Certificate,Maximum certificate length,Integer,-
 TLS,Certificate,Minimum certificate length,Integer,-
-TLS,Certificate,Number of Certificates,Integer,-
 TLS,Certificate,Signature algorithm,Enum,0
 TLS,Certificate,Signature algorithm,Enum,1.2.840.10045.4.3.3
 TLS,Certificate,Signature algorithm,Enum,1.2.840.113549.1.1.13

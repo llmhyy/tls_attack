@@ -29,10 +29,10 @@ TLS,ClientHello,Extended master secret,Integer,-
 TLS,ClientHello,Signature hash algorithm,Enum,?
 TLS,ServerHello,Length,Integer,-
 TLS,ServerHello,Renegotiation info length,Integer ,-
+TLS,Certificate,Number of Certificates,Integer,-
 TLS,Certificate,Average certificate length,Integer,-
 TLS,Certificate,Maximum certificate length,Integer,-
 TLS,Certificate,Minimum certificate length,Integer,-
-TLS,Certificate,Number of Certificates,Integer,-
 TLS,Certificate,Signature algorithm,Enum,?
 TLS,Server Hello Done,Length,Integer,-
 TLS,Client Key Exchange,Length,Integer,-
