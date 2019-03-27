@@ -69,7 +69,10 @@ def extract_tcp_features(pcapfile, limit):
                 protocol_onehot[protocol_id] = 1
             except ValueError:
                 logging.warning('Found SSL packet with unknown SSL type {} in file {}'.format(prot, pcapfile))
-            
+        # TCP Packet
+        else:
+            protocol_onehot[0] = 1
+
         features.extend(protocol_onehot)
 
         # 3: LENGTH
