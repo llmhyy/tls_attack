@@ -101,7 +101,7 @@ with open(feature_info_filename,'r') as in_file, open(new_feature_info_filename,
             enum_list = enums['sighashalgorithms_cert']
 
         if enum_list:
-            enum_list = [0] + enum_list
+            enum_list = enum_list + [0]
             for each_enum in enum_list:
                 split_line[4] = str(each_enum)
                 out_file.write(','.join(split_line)+'\n')
