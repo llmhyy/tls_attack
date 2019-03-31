@@ -8,9 +8,13 @@ from keras.models import load_model
 import utils_plot as utilsPlot
 import utils_metric as utilsMetric
 import utils_datagen as utilsDatagen
+import utils_predict as utilsPredict
 
 '''
-MODEL EVALUATION
+PREDICT RNN
+
+Note: PREDICT RNN is a script for standard evaluation of the model. It should be a one-off execution of the script and not executed repeatedly
+
 This script is used to evaluate the performance of the model. A series of tests will be conducted to gain insights into the model
 
 TEST 1 (acc-traffic)
@@ -30,13 +34,8 @@ TEST 3 (outlier)
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model', help='Input directory path of existing model to be used for prediction', required=True)
 parser.add_argument('-r', '--rootdir', help='Input the root directory path containing the feature csv file and other supporting files')
-# parser.add_argument('-f', '--featuredir', help='Input the directory path of feature file to be used', required=True)
-# parser.add_argument('-i', '--infodir', help='Input directory path of feature info to be used for dimension identification', required=True)
-# parser.add_argument('-n', '--namedir', help='Input directory path of pcap filename to be used for traffic identification', required=True)
 parser.add_argument('-s', '--savedir', help='Input the directory path to save the prediction results', required=True)  # e.g foo/bar/trained-rnn/normal/expt_2019-03-15_21-52-20/predict_results/predict_on_normal/
 args = parser.parse_args()
-# if not os.path.exists(args.savedir):
-    # os.makedirs(args.savedir)
 
 # Obtain relevant filenames using string matches
 FEATURE_FILENAME = 'features_tls_*.csv'
@@ -75,48 +74,8 @@ test_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, test_idx, B
 def predict_and_evaluate(model, data_generator, featureinfo_dir, pcapname_dir, save_dir):
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
-    # Generate predictions and perform computation of metrics
-    mean_acc_for_all_traffic = np.array([])
-    batch_idx_for_all_traffic = [] # batch_idx_for_all_traffic is a list of the original index of the traffic in the feature file and the pcapname file. this is the ground truth
-    mean_squared_error_for_all_traffic = []
-    squared_error_for_all_traffic = []
-    num_packets = 0
-    acc_for_all_traffic = []
 
-    for (batch_inputs, batch_true, batch_info) in data_generator:
-        batch_seq_len = batch_info['seq_len']
-        batch_idx = batch_info['batch_idx']
-        batch_predict = model.predict_on_batch(batch_inputs)
-        ###############################################################
-        # TEST 1 and TEST 4
-        batch_acc = utilsMetric.calculate_acc_of_traffic(batch_predict, batch_true)
-        for i, seq_len in enumerate(batch_seq_len):
-            acc_spliced = batch_acc[i:i+1,0:seq_len]
-            mean_acc = utilsMetric.calculate_mean_over_traffic(acc_spliced)
-            mean_acc_for_all_traffic = np.concatenate((mean_acc_for_all_traffic, mean_acc))
-
-            acc_for_all_traffic.append(acc_spliced[0])
-        ###############################################################
-        # TEST 2
-        squared_error_batch = utilsMetric.calculate_squared_error_of_traffic(batch_predict, batch_true)
-        for i, seq_len in enumerate(batch_seq_len):
-            squared_error_spliced = squared_error_batch[i,0:seq_len,:]
-            mean_squared_error_onetraffic = np.sum(squared_error_spliced, axis=0)/seq_len
-            mean_squared_error_for_all_traffic.append(mean_squared_error_onetraffic)
-            num_packets += seq_len
-
-        squared_error_for_all_traffic.append(np.sum(squared_error_batch, axis=(0,1)))
-        ###############################################################
-        # TEST 3
-        # batch_idx_for_all_traffic = np.concatenate((batch_idx_for_all_traffic, batch_idx))
-        batch_idx_for_all_traffic.extend(batch_idx.tolist())
-
-    ###############################################################
-    # TEST 1
-    overall_mean_acc = np.mean(mean_acc_for_all_traffic, keepdims=True)[0]
-    utilsPlot.plot_distribution(mean_acc_for_all_traffic, overall_mean_acc, save_dir)
-    ###############################################################
-    # TEST 2
+    # Extract dim names for identifying dim
     dim_names = []
     with open(featureinfo_dir, 'r') as f:
         features_info = f.readlines()[1:] # Ignore header
@@ -128,63 +87,138 @@ def predict_and_evaluate(model, data_generator, featureinfo_dir, pcapname_dir, s
             if 'TLS' in network_layer:
                 dim_name = '('+tls_protocol+')'+dim_name
             dim_names.append(dim_name)
+    # Extract the pcap filename for traffic identification
+    with open(pcapname_dir) as f:
+        pcap_filename = [row.strip() for row in f.readlines()]
+    # Log file for logging in each tests
+    logfile = open(os.path.join(save_dir, 'predict_log.txt'),'w')
 
-    mean_squared_error_for_features = np.sum(np.array(squared_error_for_all_traffic), axis=0)/num_packets
-    utilsPlot.plot_mse_for_dim(mean_squared_error_for_features, dim_names, save_dir)
+    # Generate predictions and perform computation of metrics
+    acc_for_all_traffic = []
+    mean_acc_for_all_traffic = []
+    squared_error_for_all_traffic = []
+    mean_squared_error_for_all_traffic = []
+    idx_for_all_traffic = [] # idx_for_all_traffic is a list of the original index of the traffic in the feature file and the pcapname file. this is the ground truth
+    # num_packets = 0 # for use in calculating mse for dimension over all traffic
+
+    # Data collection about traffic while iterating through traffic
+    for (batch_inputs, batch_true, batch_info) in data_generator:
+        batch_seq_len = batch_info['seq_len']
+        batch_idx = batch_info['batch_idx']
+        batch_predict = model.predict_on_batch(batch_inputs)
+        # num_packets += sum(batch_seq_len)
+
+        padded_batch_acc = utilsMetric.calculate_acc_of_traffic(batch_predict, batch_true)
+        batch_acc = [padded_batch_acc[i,0:seq_len] for i,seq_len in enumerate(batch_seq_len)]
+        batch_mean_acc = [np.mean(acc) for acc in batch_acc]
+        
+        padded_batch_squared_error = utilsMetric.calculate_squared_error_of_traffic(batch_predict, batch_true)
+        batch_squared_error = [padded_batch_squared_error[i,0:seq_len,:] for i,seq_len in enumerate(batch_seq_len)]
+        batch_mean_squared_error = [np.sum(sqerr, axis=0)/sqerr.shape[0] for i,sqerr in enumerate(batch_squared_error)]
+
+        acc_for_all_traffic.extend(batch_acc)
+        mean_acc_for_all_traffic.extend(batch_mean_acc)
+        squared_error_for_all_traffic.extend(batch_squared_error)
+        mean_squared_error_for_all_traffic.extend(batch_mean_squared_error)
+        idx_for_all_traffic.extend(batch_idx.tolist())
+
+        # ###############################################################
+        # # TEST 1 and TEST 4
+        # batch_acc = utilsMetric.calculate_acc_of_traffic(batch_predict, batch_true)
+        # for i, seq_len in enumerate(batch_seq_len):
+        #     acc_spliced = batch_acc[i:i+1,0:seq_len]
+        #     mean_acc = utilsMetric.calculate_mean_over_traffic(acc_spliced)
+        #     mean_acc_for_all_traffic = np.concatenate((mean_acc_for_all_traffic, mean_acc))
+
+        #     acc_for_all_traffic.append(acc_spliced[0])
+        # ###############################################################
+        # # TEST 2
+        # squared_error_batch = utilsMetric.calculate_squared_error_of_traffic(batch_predict, batch_true)
+        # for i, seq_len in enumerate(batch_seq_len):
+        #     squared_error_spliced = squared_error_batch[i,0:seq_len,:]
+        #     mean_squared_error_onetraffic = np.sum(squared_error_spliced, axis=0)/seq_len
+        #     mean_squared_error_for_all_traffic.append(mean_squared_error_onetraffic)
+        #     num_packets += seq_len
+
+        # squared_error_for_all_traffic.append(np.sum(squared_error_batch, axis=(0,1)))
+        # ###############################################################
+        # # TEST 3
+        # # idx_for_all_traffic = np.concatenate((idx_for_all_traffic, batch_idx))
+        # idx_for_all_traffic.extend(batch_idx.tolist())
+
+    ###############################################################
+    # TEST 1
+    utilsPredict.test_accuracy_of_traffic(mean_acc_for_all_traffic, logfile, save_dir)
+
+    # overall_mean_acc = np.mean(mean_acc_for_all_traffic, keepdims=True)[0]
+    # utilsPlot.plot_distribution(mean_acc_for_all_traffic, overall_mean_acc, save_dir)
+    ###############################################################
+    # TEST 2
+    utilsPredict.test_mse_of_dim(squared_error_for_all_traffic, dim_names, logfile, save_dir)
+
+    # mean_squared_error_for_features = np.sum(np.array(squared_error_for_all_traffic), axis=0)/num_packets
+    # utilsPlot.plot_mse_for_dim(mean_squared_error_for_features, dim_names, save_dir)
     ###############################################################
     # TEST 3
     outlier_count = 10
-    # Load the pcap filename for traffic identification
-    with open(pcapname_dir) as f:
-        pcap_filename = [row.strip() for row in f.readlines()]
-    sorted_acc_idx = sorted(range(len(mean_acc_for_all_traffic)), key=lambda k:mean_acc_for_all_traffic[k])
-    bottom_idx = sorted_acc_idx[:outlier_count]
-    bottom_pcap_filename = [pcap_filename[batch_idx_for_all_traffic[i]] for i in bottom_idx]
-    bottom_mean_acc = [mean_acc_for_all_traffic[i] for i in bottom_idx]
-    bottom_mse_dim = [mean_squared_error_for_all_traffic[i] for i in bottom_idx]
-    utilsPlot.plot_mse_for_dim_for_outliers(pcap_filename=bottom_pcap_filename, 
-                                    mean_acc=bottom_mean_acc, 
-                                    mse_dim=bottom_mse_dim,
-                                    typename='bottom',
-                                    save_dir=save_dir)
-    top_idx = sorted_acc_idx[-outlier_count:]
-    top_pcap_filename = [pcap_filename[batch_idx_for_all_traffic[i]] for i in top_idx]
-    top_mean_acc = [mean_acc_for_all_traffic[i] for i in top_idx]
-    top_mse_dim = [mean_squared_error_for_all_traffic[i] for i in top_idx]
-    utilsPlot.plot_mse_for_dim_for_outliers(pcap_filename=top_pcap_filename, 
-                                    mean_acc=top_mean_acc,
-                                    mse_dim=top_mse_dim,
-                                    typename='top',
-                                    save_dir=save_dir)
+    bottom_idx, top_idx = utilsPredict.find_outlier(outlier_count, mean_acc_for_all_traffic)
+
+    utilsPredict.test_outlier(bottom_idx, top_idx, mean_acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, logfile, save_dir)
+    # sorted_acc_idx = sorted(range(len(mean_acc_for_all_traffic)), key=lambda k:mean_acc_for_all_traffic[k])
+    
+    # bottom_idx = sorted_acc_idx[:outlier_count]
+    # bottom_pcap_filename = [pcap_filename[idx_for_all_traffic[i]] for i in bottom_idx]
+    # bottom_mean_acc = [mean_acc_for_all_traffic[i] for i in bottom_idx]
+    # bottom_mse_dim = [mean_squared_error_for_all_traffic[i] for i in bottom_idx]
+    # utilsPlot.plot_mse_for_dim_for_outliers(pcap_filename=bottom_pcap_filename, 
+    #                                 mean_acc=bottom_mean_acc, 
+    #                                 mse_dim=bottom_mse_dim,
+    #                                 typename='bottom',
+    #                                 save_dir=save_dir)
+    # top_idx = sorted_acc_idx[-outlier_count:]
+    # top_pcap_filename = [pcap_filename[idx_for_all_traffic[i]] for i in top_idx]
+    # top_mean_acc = [mean_acc_for_all_traffic[i] for i in top_idx]
+    # top_mse_dim = [mean_squared_error_for_all_traffic[i] for i in top_idx]
+    # utilsPlot.plot_mse_for_dim_for_outliers(pcap_filename=top_pcap_filename, 
+    #                                 mean_acc=top_mean_acc,
+    #                                 mse_dim=top_mse_dim,
+    #                                 typename='top',
+    #                                 save_dir=save_dir)
     ###############################################################
     # TEST 4
     save_bottom10_dir = os.path.join(save_dir, 'bottom10traffic')
     if not os.path.exists(save_bottom10_dir):
         os.makedirs(save_bottom10_dir)
-    bottom_acc = [acc_for_all_traffic[i] for i in bottom_idx]
-    bottom_input, bottom_true, bottom_seq_len = utilsDatagen.get_feature_vector([batch_idx_for_all_traffic[i] for i in bottom_idx], mmap_data, byte_offset, SEQUENCE_LEN, norm_fn)
-    bottom_predict = model.predict_on_batch(bottom_input)
-    for i in range(len(bottom_pcap_filename)):
-        top5dim = sorted(range(len(bottom_mse_dim[i])), key=lambda k:bottom_mse_dim[i][k])[:5]
-        bottom5dim = sorted(range(len(bottom_mse_dim[i])), key=lambda k:bottom_mse_dim[i][k])[-5:]
-        utilsPlot.plot_summary_for_outlier(bottom_pcap_filename[i], bottom_mse_dim[i], dim_names, bottom_mean_acc[i], bottom_acc[i], 
-                                            bottom_predict[:,:,top5dim][i,:bottom_seq_len[i]], bottom_true[:,:,top5dim][i,:bottom_seq_len[i]], top5dim,
-                                            bottom_predict[:,:,bottom5dim][i,:bottom_seq_len[i]], bottom_true[:,:,bottom5dim][i,:bottom_seq_len[i]], bottom5dim,
-                                            save_bottom10_dir)
+    utilsPredict.summary_for_sampled_traffic(bottom_idx, mean_acc_for_all_traffic, acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, dim_names,
+                                                mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model, save_bottom10_dir)
+
+    # bottom_acc = [acc_for_all_traffic[i] for i in bottom_idx]
+    # bottom_input, bottom_true, bottom_seq_len = utilsDatagen.get_feature_vector([idx_for_all_traffic[i] for i in bottom_idx], mmap_data, byte_offset, SEQUENCE_LEN, norm_fn)
+    # bottom_predict = model.predict_on_batch(bottom_input)
+    # for i in range(len(bottom_pcap_filename)):
+    #     top5dim = sorted(range(len(bottom_mse_dim[i])), key=lambda k:bottom_mse_dim[i][k])[:5]
+    #     bottom5dim = sorted(range(len(bottom_mse_dim[i])), key=lambda k:bottom_mse_dim[i][k])[-5:]
+    #     utilsPlot.plot_summary_for_outlier(bottom_pcap_filename[i], bottom_mse_dim[i], dim_names, bottom_mean_acc[i], bottom_acc[i], 
+    #                                         bottom_predict[:,:,top5dim][i,:bottom_seq_len[i]], bottom_true[:,:,top5dim][i,:bottom_seq_len[i]], top5dim,
+    #                                         bottom_predict[:,:,bottom5dim][i,:bottom_seq_len[i]], bottom_true[:,:,bottom5dim][i,:bottom_seq_len[i]], bottom5dim,
+    #                                         save_bottom10_dir)
 
     save_top10_dir = os.path.join(save_dir, 'top10traffic')
     if not os.path.exists(save_top10_dir):
         os.makedirs(save_top10_dir)
-    top_acc = [acc_for_all_traffic[i] for i in top_idx]
-    top_input, top_true, top_seq_len = utilsDatagen.get_feature_vector([batch_idx_for_all_traffic[i] for i in top_idx], mmap_data, byte_offset, SEQUENCE_LEN, norm_fn)
-    top_predict = model.predict_on_batch(top_input)
-    for i in range(len(top_pcap_filename)):
-        top5dim = sorted(range(len(top_mse_dim[i])), key=lambda k:top_mse_dim[i][k])[:5]
-        bottom5dim = sorted(range(len(top_mse_dim[i])), key=lambda k:top_mse_dim[i][k])[-5:]
-        utilsPlot.plot_summary_for_outlier(top_pcap_filename[i], top_mse_dim[i], dim_names, top_mean_acc[i], top_acc[i],
-                                            top_predict[:,:,top5dim][i,:top_seq_len[i]], top_true[:,:,top5dim][i,:top_seq_len[i]], top5dim,
-                                            top_predict[:,:,bottom5dim][i,:top_seq_len[i]], top_true[:,:,bottom5dim][i,:top_seq_len[i]], bottom5dim,
-                                            save_top10_dir)
+    utilsPredict.summary_for_sampled_traffic(top_idx, mean_acc_for_all_traffic, acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, dim_names,
+                                                mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model, save_top10_dir)
+
+    # top_acc = [acc_for_all_traffic[i] for i in top_idx]
+    # top_input, top_true, top_seq_len = utilsDatagen.get_feature_vector([idx_for_all_traffic[i] for i in top_idx], mmap_data, byte_offset, SEQUENCE_LEN, norm_fn)
+    # top_predict = model.predict_on_batch(top_input)
+    # for i in range(len(top_pcap_filename)):
+    #     top5dim = sorted(range(len(top_mse_dim[i])), key=lambda k:top_mse_dim[i][k])[:5]
+    #     bottom5dim = sorted(range(len(top_mse_dim[i])), key=lambda k:top_mse_dim[i][k])[-5:]
+    #     utilsPlot.plot_summary_for_outlier(top_pcap_filename[i], top_mse_dim[i], dim_names, top_mean_acc[i], top_acc[i],
+    #                                         top_predict[:,:,top5dim][i,:top_seq_len[i]], top_true[:,:,top5dim][i,:top_seq_len[i]], top5dim,
+    #                                         top_predict[:,:,bottom5dim][i,:top_seq_len[i]], top_true[:,:,bottom5dim][i,:top_seq_len[i]], bottom5dim,
+    #                                         save_top10_dir)
 
     ###############################################################
     # TEST 5
@@ -200,43 +234,60 @@ def predict_and_evaluate(model, data_generator, featureinfo_dir, pcapname_dir, s
             sampled_acc_idx = random.sample(bounded_acc_idx, 10)
         except ValueError:
             sampled_acc_idx = bounded_acc_idx
+
         sampled_idx, sampled_mean_acc = [list(t) for t in zip(*sampled_acc_idx)]
-        sampled_pcap_filename = [pcap_filename[batch_idx_for_all_traffic[i]] for i in sampled_idx]
-        sampled_acc = [acc_for_all_traffic[i] for i in sampled_idx]
-        sampled_mse_dim = [mean_squared_error_for_all_traffic[i] for i in sampled_idx]
-        sampled_input, sampled_true, sampled_seq_len = utilsDatagen.get_feature_vector([batch_idx_for_all_traffic[i] for i in sampled_idx], mmap_data, byte_offset, SEQUENCE_LEN, norm_fn)
-        sampled_predict = model.predict_on_batch(sampled_input)
-        for i in range(len(sampled_pcap_filename)):
-            top5dim = sorted(range(len(sampled_mse_dim[i])), key=lambda k:sampled_mse_dim[i][k])[:5]
-            bottom5dim = sorted(range(len(sampled_mse_dim[i])), key=lambda k:sampled_mse_dim[i][k])[-5:]
-            utilsPlot.plot_summary_for_outlier(sampled_pcap_filename[i], sampled_mse_dim[i], dim_names, sampled_mean_acc[i], sampled_acc[i],
-                                                sampled_predict[:,:,top5dim][i,:sampled_seq_len[i]], sampled_true[:,:,top5dim][i,:sampled_seq_len[i]], top5dim,
-                                                sampled_predict[:,:,bottom5dim][i,:sampled_seq_len[i]], sampled_true[:,:,bottom5dim][i,:sampled_seq_len[i]], bottom5dim,
-                                                save_sampled_dir, trough_marker=True)
+        utilsPredict.summary_for_sampled_traffic(sampled_idx, mean_acc_for_all_traffic, acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, dim_names,
+                                                    mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model, save_sampled_dir)
+        # sampled_pcap_filename = [pcap_filename[idx_for_all_traffic[i]] for i in sampled_idx]
+        # sampled_acc = [acc_for_all_traffic[i] for i in sampled_idx]
+        # sampled_mse_dim = [mean_squared_error_for_all_traffic[i] for i in sampled_idx]
+        # sampled_input, sampled_true, sampled_seq_len = utilsDatagen.get_feature_vector([idx_for_all_traffic[i] for i in sampled_idx], mmap_data, byte_offset, SEQUENCE_LEN, norm_fn)
+        # sampled_predict = model.predict_on_batch(sampled_input)
+        # for i in range(len(sampled_pcap_filename)):
+        #     top5dim = sorted(range(len(sampled_mse_dim[i])), key=lambda k:sampled_mse_dim[i][k])[:5]
+        #     bottom5dim = sorted(range(len(sampled_mse_dim[i])), key=lambda k:sampled_mse_dim[i][k])[-5:]
+        #     utilsPlot.plot_summary_for_outlier(sampled_pcap_filename[i], sampled_mse_dim[i], dim_names, sampled_mean_acc[i], sampled_acc[i],
+        #                                         sampled_predict[:,:,top5dim][i,:sampled_seq_len[i]], sampled_true[:,:,top5dim][i,:sampled_seq_len[i]], top5dim,
+        #                                         sampled_predict[:,:,bottom5dim][i,:sampled_seq_len[i]], sampled_true[:,:,bottom5dim][i,:sampled_seq_len[i]], bottom5dim,
+        #                                         save_sampled_dir, trough_marker=True)
+    
     else:
         print("No traffic found within bound of {}-{}".format(lower_limit_acc, upper_limit_acc))
+
+
+
+
+
+
+
+
+
+
+
+
 
     # Write results into log file
     # target_traffic_name = os.path.split(save_dir.strip('/'))[-1]
     with open(os.path.join(save_dir, 'predict_log.txt'),'w') as logfile:
-        logfile.write("#####  TEST 1: OVERALL MEAN COSINE SIMILARITY  #####\n")
-        logfile.write('Overall Mean Accuracy{:60}{:>10.6f}\n'.format(':', overall_mean_acc))
+        # logfile.write("#####  TEST 1: OVERALL MEAN COSINE SIMILARITY  #####\n")
+        # logfile.write('Overall Mean Accuracy{:60}{:>10.6f}\n'.format(':', overall_mean_acc))
 
-        logfile.write("\n#####  TEST 2: MEAN SQUARED ERROR FOR EACH DIMENSION  #####\n")
-        sorted_mse_idx = sorted(range(len(mean_squared_error_for_features)), key=lambda k:mean_squared_error_for_features[k])
-        for i in sorted_mse_idx:
-            line = 'Mean Squared Error for {:60}{:>10.6f}\n'.format(dim_names[i]+':', mean_squared_error_for_features[i])
-            logfile.write(line)
+        # logfile.write("\n#####  TEST 2: MEAN SQUARED ERROR FOR EACH DIMENSION  #####\n")
+        # sorted_mse_idx = sorted(range(len(mean_squared_error_for_features)), key=lambda k:mean_squared_error_for_features[k])
+        # for i in sorted_mse_idx:
+        #     line = 'Mean Squared Error for {:60}{:>10.6f}\n'.format(dim_names[i]+':', mean_squared_error_for_features[i])
+        #     logfile.write(line)
 
-        logfile.write("\n#####  TEST 3: OUTLIER TRAFFIC IN MEAN COSINE SIMILARITY  #####\n")
-        logfile.write('Bottom {} Performing Traffic\n'.format(outlier_count))
-        for i in range(len(bottom_pcap_filename)):
-            line = 'Mean Accuracy for {:60}{:>10.6f}\n'.format(bottom_pcap_filename[i]+':', bottom_mean_acc[i])
-            logfile.write(line)
-        logfile.write('Top {} Performing Traffic\n'.format(outlier_count))
-        for i in range(len(top_pcap_filename)):
-            line = 'Mean Accuracy for {:60}{:>10.6f}\n'.format(top_pcap_filename[i]+':', top_mean_acc[i])
-            logfile.write(line)
+        # logfile.write("\n#####  TEST 3: OUTLIER TRAFFIC IN MEAN COSINE SIMILARITY  #####\n")
+        # logfile.write('Bottom {} Performing Traffic\n'.format(outlier_count))
+        # for i in range(len(bottom_pcap_filename)):
+        #     line = 'Mean Accuracy for {:60}{:>10.6f}\n'.format(bottom_pcap_filename[i]+':', bottom_mean_acc[i])
+        #     logfile.write(line)
+        # logfile.write('Top {} Performing Traffic\n'.format(outlier_count))
+        # for i in range(len(top_pcap_filename)):
+        #     line = 'Mean Accuracy for {:60}{:>10.6f}\n'.format(top_pcap_filename[i]+':', top_mean_acc[i])
+        #     logfile.write(line)
+        pass
 
         # logfile.write("\n#####  TEST 5: PACKETWISE EXAMINATION FOR SAMPLED TRAFFIC  #####\n")
 
