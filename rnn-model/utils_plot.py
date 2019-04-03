@@ -150,11 +150,15 @@ def plot_summary_for_outlier(pcap_filename, mse_dim, dim_name, mean_acc, packetw
     # ax2.bar(np.arange(packetwise_acc.size), packetwise_acc)
     ax2.plot(packetwise_acc)
     if trough_marker:
-        percentile25_acc = np.percentile(packetwise_acc, 25)
         for i,packet_acc in enumerate(packetwise_acc.tolist()):
-            if packet_acc<percentile25_acc:
-                ax2.plot(i, packet_acc, 'ro-')
-                ax2.text(i, (packet_acc-0.05), i+1, fontsize=9, horizontalalignment='center')
+            ax2.plot(i, packet_acc, 'ro-')
+            ax2.text(i, (packet_acc-0.05), i+1, fontsize=8, horizontalalignment='center')
+
+        # percentile25_acc = np.percentile(packetwise_acc, 25)
+        # for i,packet_acc in enumerate(packetwise_acc.tolist()):
+            # if packet_acc<percentile25_acc:
+                # ax2.plot(i, packet_acc, 'ro-')
+                # ax2.text(i, (packet_acc-0.05), i+1, fontsize=9, horizontalalignment='center')
     ax2.set_xlabel('Packet #')
     ax2.set_ylabel('Cosine similarity score')
     ax2.set_title('Cosine similarity for each packet')
