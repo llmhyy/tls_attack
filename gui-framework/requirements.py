@@ -1,0 +1,14 @@
+cycler==0.10.0
+kiwisolver==1.0.1
+Logbook==1.4.3
+lxml==4.3.3
+matplotlib==3.0.3
+numpy==1.16.2
+py==1.8.0
+pyparsing==2.3.1
+PyQt5==5.12.1
+PyQt5-sip==4.19.15
+pyshark==0.3.7.11
+python-dateutil==2.8.0
+six==1.12.0
+trollius==1.0.4
