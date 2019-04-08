@@ -6,10 +6,19 @@
 #
 # WARNING! All changes made in this file will be lost!
 import os
+import re
 import json
+import numpy as np
 import pyshark
 import subprocess
 from PyQt5 import QtCore, QtGui, QtWidgets
+
+import matplotlib.pyplot as plt
+from matplotlib.backends.qt_compat import QtCore, QtWidgets
+from matplotlib.backends.backend_qt5agg import (FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
+from matplotlib.figure import Figure
+# from matplotlib.transforms import Affine2D
+# import mpl_toolkits.axisartist.floating_axes as floating_axes
 
 class Ui_MainWindow(object):
     def __init__(self, json_dirs, pcap_dirs):
@@ -86,6 +95,9 @@ class Ui_MainWindow(object):
         self.chooseTraffic.addItem("")
         self.chooseTraffic.addItem("")
         self.chooseTraffic.addItem("")
+        self.chooseTraffic.addItem("")
+        self.chooseTraffic.addItem("")
+        self.chooseTraffic.addItem("")
         
         self.searchCriteriaLabel = QtWidgets.QLabel(self.centralwidget)
         self.searchCriteriaLabel.setGeometry(QtCore.QRect(1050, 40, 111, 31))
@@ -113,18 +125,29 @@ class Ui_MainWindow(object):
         self.searchButton.clicked.connect(self.onSearch)
         
         # TO-DO
-        self.tempDimGraph = QtWidgets.QLabel(self.centralwidget)
-        self.tempDimGraph.setGeometry(QtCore.QRect(260, 710, 1551, 231))
-        self.tempDimGraph.setStyleSheet("background-color: rgb(255, 255, 255);")
-        self.tempDimGraph.setAlignment(QtCore.Qt.AlignCenter)
-        self.tempDimGraph.setObjectName("tempDimGraph")
-        
+        # self.tempDimGraph = QtWidgets.QLabel(self.centralwidget)
+        # self.tempDimGraph.setGeometry(QtCore.QRect(260, 710, 1551, 231))
+        # self.tempDimGraph.setStyleSheet("background-color: rgb(255, 255, 255);")
+        # self.tempDimGraph.setAlignment(QtCore.Qt.AlignCenter)
+        # self.tempDimGraph.setObjectName("tempDimGraph")
+        self.dimGraph = FigureCanvas(Figure(figsize=(15.51, 2.31)))
+        self.dimGraph.setGeometry(QtCore.QRect(260, 710, 1551, 231))
+        self.dimGraph.setParent(self.centralwidget)
+        self.dim_fig = self.dimGraph.figure
+        self.dim_ax = self.dim_fig.subplots()
+        self.dim_ax2 = self.dim_ax.twinx()
+
         # TO-DO
-        self.tempAccGraph = QtWidgets.QLabel(self.centralwidget)
-        self.tempAccGraph.setGeometry(QtCore.QRect(1530, 80, 281, 621))
-        self.tempAccGraph.setStyleSheet("background-color: rgb(255, 255, 255);")
-        self.tempAccGraph.setAlignment(QtCore.Qt.AlignCenter)
-        self.tempAccGraph.setObjectName("tempAccGraph")
+        # self.tempAccGraph = QtWidgets.QLabel(self.centralwidget)
+        # self.tempAccGraph.setGeometry(QtCore.QRect(1530, 80, 281, 621))
+        # self.tempAccGraph.setStyleSheet("background-color: rgb(255, 255, 255);")
+        # self.tempAccGraph.setAlignment(QtCore.Qt.AlignCenter)
+        # self.tempAccGraph.setObjectName("tempAccGraph")
+        self.accGraph = FigureCanvas(Figure(figsize=(2.81, 6.21)))
+        self.accGraph.setGeometry(QtCore.QRect(1530, 80, 281, 621))
+        self.accGraph.setParent(self.centralwidget)
+        self.acc_fig = self.accGraph.figure
+        self.acc_ax = self.acc_fig.subplots()
 
         self.verticalScrollBar = QtWidgets.QScrollBar(self.centralwidget)
         self.verticalScrollBar.setGeometry(QtCore.QRect(1510, 80, 16, 621))
@@ -146,29 +169,37 @@ class Ui_MainWindow(object):
         self.chooseModel.setItemText(3, _translate("MainWindow", "Sample model"))
         self.predictsOnLabel.setText(_translate("MainWindow", "predicts on"))
         self.chooseTraffic.setItemText(0, _translate("MainWindow", "- Traffic type -"))
-        self.chooseTraffic.setItemText(1, _translate("MainWindow", "Normal"))
-        self.chooseTraffic.setItemText(2, _translate("MainWindow", "Thc-tls-dos"))
-        self.chooseTraffic.setItemText(3, _translate("MainWindow", "Sample"))
+        self.chooseTraffic.setItemText(1, _translate("MainWindow", "Normal (train)"))
+        self.chooseTraffic.setItemText(2, _translate("MainWindow", "Normal (val)"))
+        self.chooseTraffic.setItemText(3, _translate("MainWindow", "Thc-tls-dos (train)"))
+        self.chooseTraffic.setItemText(4, _translate("MainWindow", "Thc-tls-dos (val)"))
+        self.chooseTraffic.setItemText(5, _translate("MainWindow", "Sample (train)"))
+        self.chooseTraffic.setItemText(6, _translate("MainWindow", "Sample (val)"))
         self.searchCriteriaLabel.setText(_translate("MainWindow", "Search Criteria:"))
         self.chooseSearchCriteria.setItemText(0, _translate("MainWindow", "search..."))
         self.chooseSearchCriteria.setItemText(1, _translate("MainWindow", "Low Accuracy (<0.5)"))
         self.chooseSearchCriteria.setItemText(2, _translate("MainWindow", "High Accuracy (>0.8)"))
         self.settingButton.setText(_translate("MainWindow", "Settings"))
         self.searchButton.setText(_translate("MainWindow", "Search"))
-        self.tempDimGraph.setText(_translate("MainWindow", "Temp Packet Graph"))
-        self.tempAccGraph.setText(_translate("MainWindow", "Temp Packet Graph"))
+        # self.tempDimGraph.setText(_translate("MainWindow", "Temp Packet Graph"))
+        # self.tempAccGraph.setText(_translate("MainWindow", "Temp Packet Graph"))
 
     def onSearch(self):
         selected_model = str(self.chooseModel.currentText()).lower().replace(" model", "")
-        selected_dataset = str(self.chooseTraffic.currentText()).lower()
+        tmp = str(self.chooseTraffic.currentText()).lower().split('(')
+        selected_dataset = tmp[0].strip()
+        selected_split = tmp[1].rstrip(')')
         for json_dir in self.json_dirs:
+            json_dir_list = json_dir.split(os.sep)
             # directory must follow the naming pattern in the UI for this to work
-            if selected_model in json_dir and selected_dataset in json_dir:
+            if selected_model in json_dir_list[-6] and selected_dataset in json_dir_list[-3] and selected_split in json_dir_list[-2]:
                 self.json_dir = json_dir
         try:
             # Load the json file into mem
             with open(self.json_dir) as f:
                 self.data = json.load(f)
+                self.predict_for_all_traffic = np.array(self.data['predict'])
+                self.true_for_all_traffic = np.array(self.data['true'])
 
             # Load the traffic into ListWidget
             self.loadTraffic()
@@ -187,7 +218,12 @@ class Ui_MainWindow(object):
 
     def onClickTraffic(self, item):
         print(item.text())
-        self.selected_traffic = item.text()
+        self.selected_trafficname = item.text()
+        self.selected_trafficidx = self.data['pcap_filenames'].index(self.selected_trafficname)
+        print(len(self.data['pcap_filenames']))
+        print(self.selected_trafficidx)
+        print(len(self.data['idx']))
+        # self.selected_trafficidx = self.data['idx'].index(orig_idx)
         self.loadPcapTable()
         self.loadAccuracyGraph()
 
@@ -197,10 +233,10 @@ class Ui_MainWindow(object):
         for pcap_dir in self.pcap_dirs:
             for root, dirs, files in os.walk(pcap_dir):
                 for f in files:
-                    if f == self.selected_traffic: 
+                    if f == self.selected_trafficname: 
                         found_pcap_dirs.append(os.path.join(root,f))
         if len(found_pcap_dirs) > 1:
-            QWidget.QMessageBox.about(self.centralwidget, 'Alert', 'More than 1 pcap file found:\n'+'\n'.join(found_pcap_dirs))
+            QtWidgets.QMessageBox.about(self.centralwidget, 'Alert', 'More than 1 pcap file found:\n'+'\n'.join(found_pcap_dirs))
             print("Found more than 1 pcap file!")
         self.selected_pcapfile = found_pcap_dirs[0]
 
@@ -224,15 +260,17 @@ class Ui_MainWindow(object):
         with open(tempfile) as tmp_f:
             for line in tmp_f.readlines():
                 pkt_info = []
+                print(line)
                 line = line.strip()
+                line = re.sub(' +', ' ',line) # To remove all white spaces
                 spaces_idx = [i for i,char in enumerate(line) if char==' ']
-                pkt_info.append(line[0])                                # no
-                pkt_info.append(line[4:12])                             # time
-                pkt_info.append(line[spaces_idx[3]+1:spaces_idx[4]])    # src
-                pkt_info.append(line[spaces_idx[5]+1:spaces_idx[6]])    # dst
-                pkt_info.append(line[spaces_idx[6]+1:spaces_idx[7]])    # prot
-                pkt_info.append(line[spaces_idx[7]+1:spaces_idx[8]])    # len
-                pkt_info.append(line[spaces_idx[8]+1:])                 # info
+                # pkt_info.append(line[0])                                # no
+                pkt_info.append(line[spaces_idx[0]+1:spaces_idx[1]])    # time
+                pkt_info.append(line[spaces_idx[1]+1:spaces_idx[2]])    # src
+                pkt_info.append(line[spaces_idx[3]+1:spaces_idx[4]])    # dst
+                pkt_info.append(line[spaces_idx[4]+1:spaces_idx[5]])    # prot
+                pkt_info.append(line[spaces_idx[5]+1:spaces_idx[6]])    # len
+                pkt_info.append(line[spaces_idx[6]+1:])                 # info
                 self.pcapfile_info.append(pkt_info)
 
         ### -- Using Pyshark -- ###
@@ -251,7 +289,8 @@ class Ui_MainWindow(object):
         ncol = len(self.pcapfile_info[0])
         self.tableWidget.setRowCount(nrow)
         self.tableWidget.setColumnCount(ncol)
-        self.tableWidget.setHorizontalHeaderLabels(['No.', 'Time', 'Src', 'Dst', 'Prot', 'Len', 'Info'])
+        # self.tableWidget.setHorizontalHeaderLabels(['No.', 'Time', 'Src', 'Dst', 'Prot', 'Len', 'Info'])
+        self.tableWidget.setHorizontalHeaderLabels(['Time', 'Src', 'Dst', 'Prot', 'Len', 'Info'])
         for i in range(nrow):
             for j in range(ncol):
                 self.tableWidget.setItem(i, j, QtWidgets.QTableWidgetItem(self.pcapfile_info[i][j]))
@@ -260,8 +299,56 @@ class Ui_MainWindow(object):
         subprocess.run(['rm', tempfile])
 
     def loadAccuracyGraph(self):
+        self.acc_ax.clear()
+        # self.acc_fig.clf()
 
-        pass
+        def on_pick(event):
+            # print(event)
+            print(round(event.mouseevent.xdata))
+            print(round(event.mouseevent.ydata))
+
+            self.dim_ax.clear()
+            self.dim_ax2.clear()
+            ndim = len(self.data['dim_names'])
+            index = [i for i in range(ndim)]
+            bar_width = 0.3
+            opacity = 0.5
+            packet_num = int(round(event.mouseevent.ydata))-1
+            print(packet_num)
+            predict_for_all_traffic = self.data['predict']
+
+            print(self.predict_for_all_traffic[self.selected_trafficidx,packet_num,:])
+            self.dim_ax.bar(index, self.predict_for_all_traffic[self.selected_trafficidx,packet_num,:], bar_width,
+                                alpha=opacity, color='b', label='Predict')
+            self.dim_ax.bar([i+bar_width for i in index], self.true_for_all_traffic[self.selected_trafficidx,packet_num,:], bar_width,
+                                alpha=opacity, color='r', label='True')
+            self.dim_ax.set_xticks([i+(bar_width/2) for i in index])
+            self.dim_ax.set_xticklabels(self.data['dim_names'], rotation='vertical', fontsize=6)
+            self.dim_ax.legend()
+
+            print(self.data['squared_error'][self.selected_trafficidx][packet_num])
+            self.dim_ax2.plot(index, self.data['squared_error'][self.selected_trafficidx][packet_num], color='#000000', linewidth=0.7)
+
+            self.dimGraph.draw()
+
+        selected_pktwise_acc = self.data['acc'][self.selected_trafficidx]
+        self.acc_ax.plot(selected_pktwise_acc, [i+1 for i in range(len(selected_pktwise_acc))])
+        for i, pkt_acc in enumerate(selected_pktwise_acc):
+            self.acc_ax.plot(pkt_acc, i+1, 'ro', picker=5)
+            self.acc_ax.text((pkt_acc-0.05), i+1, i+1, fontsize=9, horizontalalignment='center')
+        self.acc_ax.invert_yaxis()
+        try:
+            self.dim_ax.clear()
+            self.dim_ax2.clear()
+        except AttributeError:
+            print("Warning: Dim axes does not exist")
+
+        self.acc_fig.canvas.mpl_connect('pick_event', on_pick)
+
+        # t = np.linspace(0, 10, 501)
+        # self.acc_ax.plot(t, np.tan(t), ".")
+        self.accGraph.draw()
+        print("plotted!")
 
 if __name__ == "__main__":
     import sys
