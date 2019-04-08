@@ -77,8 +77,14 @@ def evaluate_sampled_traffic_on_generator(model, data_generator, featureinfo_dir
         os.makedirs(save_dir)
 
     # Compute metrics used for conducting tests
-    acc_for_all_traffic, mean_acc_for_all_traffic, squared_error_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic = utilsPredict.compute_metrics(model, data_generator)
-
+    # acc_for_all_traffic, mean_acc_for_all_traffic, squared_error_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic = utilsPredict.compute_metrics(model, data_generator)
+    metrics = utilsPredict.compute_metrics(model, data_generator)
+    acc_for_all_traffic = metrics['acc']
+    mean_acc_for_all_traffic = metrics['mean_acc']
+    squared_error_for_all_traffic = metrics['squared_error']
+    mean_squared_error_for_all_traffic = metrics['mean_squared_error']
+    idx_for_all_traffic = metrics['idx_for_all_traffic']
+    
     # Extract dim names for identifying dim
     dim_names = []
     with open(featureinfo_dir, 'r') as f:

@@ -1,4 +1,5 @@
 import os
+import json
 import fnmatch
 import random
 import argparse
@@ -77,7 +78,15 @@ def test_model_on_generator(model, data_generator, featureinfo_dir, pcapname_dir
         os.makedirs(save_dir)
 
     # Compute metrics used for conducting tests
-    acc_for_all_traffic, mean_acc_for_all_traffic, squared_error_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic = utilsPredict.compute_metrics(model, data_generator)
+    # acc_for_all_traffic, mean_acc_for_all_traffic, squared_error_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic = utilsPredict.compute_metrics(model, data_generator)
+    metrics = utilsPredict.compute_metrics(model, data_generator, return_output=True)
+    acc_for_all_traffic = metrics['acc']
+    mean_acc_for_all_traffic = metrics['mean_acc']
+    squared_error_for_all_traffic = metrics['squared_error']
+    mean_squared_error_for_all_traffic = metrics['mean_squared_error']
+    idx_for_all_traffic = metrics['idx']
+    # predict_for_all_traffic = metrics['predict']
+    # true_for_all_traffic = metrics['true']
 
     # Extract dim names for identifying dim
     dim_names = []
@@ -96,6 +105,20 @@ def test_model_on_generator(model, data_generator, featureinfo_dir, pcapname_dir
         pcap_filename = [row.strip() for row in f.readlines()]
     # Create a log file for logging in each tests
     logfile = open(os.path.join(save_dir, 'predict_log.txt'),'w')
+
+    # Save all results into python serialization format
+    print('Dumping results into json file...')
+    for k,v in metrics.items():
+        if type(v[0]) is np.ndarray:
+            metrics[k] = [nparray.tolist() for nparray in v] # due to not equal number in the traffic length dim
+        # metrics[k] = (np.array(v)).tolist()
+    
+    # Adding pcap filenames and dim names
+    metrics['dim_names'] = dim_names
+    metrics['pcap_filenames'] = [pcap_filename[idx] for idx in idx_for_all_traffic]
+    with open(os.path.join(save_dir,'data.json'), 'w') as f:
+        json.dump(metrics, f)
+    print('Dumped!')
 
     ####  TEST 1 ####
     utilsPredict.test_accuracy_of_traffic(mean_acc_for_all_traffic, logfile, save_dir)
@@ -139,6 +162,7 @@ def test_model_on_generator(model, data_generator, featureinfo_dir, pcapname_dir
                                                     mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model, save_sampled_dir)
     else:
         print("No traffic found within bound of {}-{}".format(lower_limit_acc, upper_limit_acc))
+
 
     logfile.close()
 
