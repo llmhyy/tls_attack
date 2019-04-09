@@ -63,7 +63,8 @@ class Ui_MainWindow(object):
         self.listWidget.setObjectName("listWidget")
         
         self.tableWidget = QtWidgets.QTableWidget(self.centralwidget)
-        self.tableWidget.setGeometry(QtCore.QRect(260, 80, 1261, 621))
+        # self.tableWidget.setGeometry(QtCore.QRect(260, 80, 1261, 621))
+        self.tableWidget.setGeometry(QtCore.QRect(260, 80, 1171, 560))
         self.tableWidget.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.tableWidget.setShowGrid(True)
         self.tableWidget.setObjectName("tableWidget")
@@ -131,9 +132,12 @@ class Ui_MainWindow(object):
         # self.tempDimGraph.setAlignment(QtCore.Qt.AlignCenter)
         # self.tempDimGraph.setObjectName("tempDimGraph")
         self.dimGraph = FigureCanvas(Figure(figsize=(15.51, 2.31)))
-        self.dimGraph.setGeometry(QtCore.QRect(260, 710, 1551, 231))
+        # self.dimGraph.setGeometry(QtCore.QRect(260, 710, 1551, 231))
+        self.dimGraph.setGeometry(QtCore.QRect(260, 649, 1551, 292))
         self.dimGraph.setParent(self.centralwidget)
         self.dim_fig = self.dimGraph.figure
+        # self.dim_fig.tight_layout()
+        self.dim_fig.subplots_adjust(bottom=0.5, left=0.05, right=0.95)
         self.dim_ax = self.dim_fig.subplots()
         self.dim_ax2 = self.dim_ax.twinx()
 
@@ -144,15 +148,16 @@ class Ui_MainWindow(object):
         # self.tempAccGraph.setAlignment(QtCore.Qt.AlignCenter)
         # self.tempAccGraph.setObjectName("tempAccGraph")
         self.accGraph = FigureCanvas(Figure(figsize=(2.81, 6.21)))
-        self.accGraph.setGeometry(QtCore.QRect(1530, 80, 281, 621))
+        # self.accGraph.setGeometry(QtCore.QRect(1530, 80, 281, 560))
+        self.accGraph.setGeometry(QtCore.QRect(1440, 80, 371, 560))
         self.accGraph.setParent(self.centralwidget)
         self.acc_fig = self.accGraph.figure
         self.acc_ax = self.acc_fig.subplots()
 
-        self.verticalScrollBar = QtWidgets.QScrollBar(self.centralwidget)
-        self.verticalScrollBar.setGeometry(QtCore.QRect(1510, 80, 16, 621))
-        self.verticalScrollBar.setOrientation(QtCore.Qt.Vertical)
-        self.verticalScrollBar.setObjectName("verticalScrollBar")
+        # self.verticalScrollBar = QtWidgets.QScrollBar(self.centralwidget)
+        # self.verticalScrollBar.setGeometry(QtCore.QRect(1510, 80, 16, 560))
+        # self.verticalScrollBar.setOrientation(QtCore.Qt.Vertical)
+        # self.verticalScrollBar.setObjectName("verticalScrollBar")
 
         MainWindow.setCentralWidget(self.centralwidget)
 
@@ -314,29 +319,35 @@ class Ui_MainWindow(object):
             bar_width = 0.3
             opacity = 0.5
             packet_num = int(round(event.mouseevent.ydata))-1
-            print(packet_num)
+            # print(packet_num)
             predict_for_all_traffic = self.data['predict']
 
-            print(self.predict_for_all_traffic[self.selected_trafficidx,packet_num,:])
+            # print(self.predict_for_all_traffic[self.selected_trafficidx,packet_num,:])
             self.dim_ax.bar(index, self.predict_for_all_traffic[self.selected_trafficidx,packet_num,:], bar_width,
                                 alpha=opacity, color='b', label='Predict')
             self.dim_ax.bar([i+bar_width for i in index], self.true_for_all_traffic[self.selected_trafficidx,packet_num,:], bar_width,
                                 alpha=opacity, color='r', label='True')
             self.dim_ax.set_xticks([i+(bar_width/2) for i in index])
             self.dim_ax.set_xticklabels(self.data['dim_names'], rotation='vertical', fontsize=6)
-            self.dim_ax.legend()
+            self.dim_ax.legend(loc='upper left', fontsize=7)
+            self.dim_ax.set_ylabel('Predict/True output')
+            self.dim_ax2.set_ylabel('Sq Err')
 
-            print(self.data['squared_error'][self.selected_trafficidx][packet_num])
+            # print(self.data['squared_error'][self.selected_trafficidx][packet_num])
             self.dim_ax2.plot(index, self.data['squared_error'][self.selected_trafficidx][packet_num], color='#000000', linewidth=0.7)
 
             self.dimGraph.draw()
 
         selected_pktwise_acc = self.data['acc'][self.selected_trafficidx]
+        # self.acc_fig.suptitle('Mean Acc: {}'.format(self.data['mean_acc'][self.selected_trafficidx]))
         self.acc_ax.plot(selected_pktwise_acc, [i+1 for i in range(len(selected_pktwise_acc))])
         for i, pkt_acc in enumerate(selected_pktwise_acc):
             self.acc_ax.plot(pkt_acc, i+1, 'ro', picker=5)
             self.acc_ax.text((pkt_acc-0.05), i+1, i+1, fontsize=9, horizontalalignment='center')
         self.acc_ax.invert_yaxis()
+        self.acc_ax.set_title('Mean Acc: {}'.format(self.data['mean_acc'][self.selected_trafficidx]))
+        self.acc_ax.set_ylabel('# packets')
+        self.acc_ax.set_xlabel('Acc')
         try:
             self.dim_ax.clear()
             self.dim_ax2.clear()
