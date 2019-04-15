@@ -99,7 +99,7 @@ class AccCanvas(FigureCanvas):
         self.dimcanvas.dim_ax.clear()
         self.dimcanvas.dim_ax2.clear()
         self.dimcanvas.draw()
-        
+
         self.acc_ax.clear()
 
         self.data = data
@@ -167,7 +167,7 @@ class Ui_MainWindow(object):
         self.tableWidget = QtWidgets.QTableWidget(self.centralwidget)
         # self.tableWidget.setGeometry(QtCore.QRect(260, 80, 1261, 621))
         # self.tableWidget.setGeometry(QtCore.QRect(260, 80, 1171, 560))
-        self.tableWidget.setGeometry(QtCore.QRect(260, 80, 1171, 520))
+        self.tableWidget.setGeometry(QtCore.QRect(260, 80, 1171, 480))
         self.tableWidget.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.tableWidget.setShowGrid(True)
         self.tableWidget.setObjectName("tableWidget")
@@ -242,7 +242,7 @@ class Ui_MainWindow(object):
         self.dimGraphWidget = PlotWidget(self.centralwidget)
         self.dimGraphWidget.add_canvas(self.dimGraph)
         # self.dimGraphWidget.setGeometry(QtCore.QRect(260, 649, 1551, 292))
-        self.dimGraphWidget.setGeometry(QtCore.QRect(260, 609, 1551, 332))
+        self.dimGraphWidget.setGeometry(QtCore.QRect(260, 569, 1551, 372))
         self.dimGraph.setParent(self.dimGraphWidget)
 
         # TO-DO
@@ -257,7 +257,7 @@ class Ui_MainWindow(object):
         self.accGraphWidget = PlotWidget(self.centralwidget)
         self.accGraphWidget.add_canvas(self.accGraph)
         # self.accGraphWidget.setGeometry(QtCore.QRect(1440, 80, 371, 560))
-        self.accGraphWidget.setGeometry(QtCore.QRect(1440, 80, 371, 520))
+        self.accGraphWidget.setGeometry(QtCore.QRect(1440, 80, 371, 480))
         self.accGraph.setParent(self.accGraphWidget)
 
         # self.verticalScrollBar = QtWidgets.QScrollBar(self.centralwidget)
