@@ -14,16 +14,23 @@ import pyshark
 import subprocess
 from keras.models import load_model
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 import matplotlib.pyplot as plt
 from matplotlib.backends.qt_compat import QtCore, QtWidgets
 from matplotlib.backends.backend_qt5agg import (FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
 from matplotlib.figure import Figure
+from ruamel.yaml import YAML
 
 import sys
 sys.path.append(os.path.join('..','rnn-model'))
 import utils_datagen as utilsDatagen
 import utils_metric as utilsMetric
+sys.path.append(os.path.join('..','feature-extraction'))
+import utils as utilsFeatureExtract
+
+# Initialize a yaml object for reading and writing yaml files
+yaml = YAML(typ='rt') # Round trip loading and dumping
+yaml.preserve_quotes = True
+yaml.indent(mapping=4, sequence=4)
 
 # BASE WIDGET FOR PLOTTING MATPLOTLIB GRAPHS
 class PlotWidget(QtWidgets.QWidget):
@@ -208,7 +215,8 @@ class Ui_MainWindow(object):
         self.searchButton.setGeometry(QtCore.QRect(1438, 40, 181, 31))
         self.searchButton.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.searchButton.setObjectName("searchButton")
-        self.searchButton.clicked.connect(self.onSearch)
+        # self.searchButton.clicked.connect(self.onSearch)
+        self.searchButton.clicked.connect(self.onSearch2)
         
         self.dimGraph = DimCanvas()
         self.dimGraphWidget = PlotWidget(self.centralwidget)
@@ -278,8 +286,8 @@ class Ui_MainWindow(object):
                     filenames = os.listdir(os.path.join(root,d))
 
                     # Load the feature file
-                    self.feature_dir = os.path.join(root, d, fnmatch.filter(filenames, FEATURE_FILENAME)[0])
-                    self.mmap_data, self.byte_offset = utilsDatagen.get_mmapdata_and_byteoffset(self.feature_dir)
+                    self.featurecsv_dir = os.path.join(root, d, fnmatch.filter(filenames, FEATURE_FILENAME)[0])
+                    self.mmap_data, self.byte_offset = utilsDatagen.get_mmapdata_and_byteoffset(self.featurecsv_dir) # extra long time to load the dataset
                     self.min_max_feature = utilsDatagen.get_min_max(self.mmap_data, self.byte_offset)
                     train_idx, test_idx = utilsDatagen.split_train_test(self.byte_offset, SPLIT_RATIO, SEED)
                     # Note: self.dataset_idx follows the indexing of the pcapname.csv and features_tls.csv
@@ -307,14 +315,84 @@ class Ui_MainWindow(object):
                     # Load the pcap filenames
                     self.pcapname_dir = os.path.join(root, d, fnmatch.filter(filenames, PCAPNAME_FILENAME)[0])
                     with open(self.pcapname_dir) as f:
-                        all_pcap_filename = [row.strip() for row in f.readlines()]
-                        self.pcap_filename2idx = {all_pcap_filename[idx]:idx for idx in self.dataset_idx} # Note: might have error due to same name key...
+                        all_pcap_filenames = [row.strip() for row in f.readlines()]
+                        self.pcap_filename2idx = {all_pcap_filenames[idx]:idx for idx in self.dataset_idx} # Note: might have error due to same name key...
 
         # Load the traffic into ListWidget
         try:
             self.loadTraffic()
         except AttributeError:
             print("Error: Directory to json file cannot be found. Please choose another option")
+
+    def onSearch2(self):
+        # Clear the List Widget, Table Widget, Dim Graph, Acc Graph
+        self.listWidget.clear()
+        self.tableWidget.setRowCount(0)
+
+        # Get model name and load model
+        model_name = str(self.chooseModel.currentText()).lower().replace(" model", "")
+        for root, dirs, files in os.walk(self.model_dirs):
+            for f in files:
+                if model_name in root and 'rnnmodel' in f:
+                    self.model = load_model(os.path.join(root, f))
+
+
+        SPLIT_RATIO = 0.05
+        SEED = 2019
+        SEQUENCE_LEN = 100
+        FEATURE_FILENAME = 'features_tls_*.csv'
+        FEATUREINFO_FILENAME = 'feature_info_*.csv'
+        PCAPNAME_FILENAME = 'pcapname_*.csv'
+        tmp = str(self.chooseTraffic.currentText()).lower().split('(')
+        dataset_name = tmp[0].strip()
+        split_name = tmp[1].rstrip(')')
+        for root, dirs, files in os.walk(self.feature_dirs):
+            for d in dirs:
+                if d == dataset_name:
+                    self.feature_dir = os.path.join(root,d)
+                    filenames = os.listdir(self.feature_dir)
+
+                    # Get indexes from split
+                    self.featurecsv_dir = os.path.join(root, d, fnmatch.filter(filenames, FEATURE_FILENAME)[0])
+                    # Get the number of lines in a file
+                    with open(self.featurecsv_dir) as f:
+                        for i, line in enumerate(f):
+                            pass
+                        line_count = i+1
+                    train_idx, test_idx = utilsDatagen.split_train_test(range(line_count), SPLIT_RATIO, SEED)
+                    print('line count: {}'.format(line_count))
+                    print('train idx: {}'.format(len(train_idx)))
+                    print('test idx: {}'.format(len(test_idx)))
+                    if split_name == 'train':
+                        self.dataset_idx = train_idx
+                    elif split_name == 'val':
+                        self.dataset_idx = test_idx
+
+                    # Load the dimension names
+                    self.featureinfo_dir = os.path.join(root, d, fnmatch.filter(filenames, FEATUREINFO_FILENAME)[0])
+                    self.dim_names = []
+                    with open(self.featureinfo_dir, 'r') as f:
+                        features_info = f.readlines()[1:] # Ignore header
+                        for row in features_info:
+                            split_row = row.split(',')
+                            network_layer, tls_protocol, dim_name, feature_type, feature_enum_value = split_row[0].strip(), split_row[1].strip(), split_row[2].strip(), split_row[3].strip(), split_row[4].strip()
+                            if 'Enum' in feature_type:
+                                dim_name = dim_name+'-'+feature_enum_value
+                            if 'TLS' in network_layer:
+                                dim_name = '('+tls_protocol+')'+dim_name
+                            self.dim_names.append(dim_name)
+
+                    # Load the pcap filenames
+                    self.pcapname_dir = os.path.join(root, d, fnmatch.filter(filenames, PCAPNAME_FILENAME)[0])
+                    with open(self.pcapname_dir) as f:
+                        all_pcap_filenames = [row.strip() for row in f.readlines()]
+                        self.pcap_filename2idx = {all_pcap_filenames[idx]:idx for idx in self.dataset_idx} # Note: might have error due to same name key...
+
+        # Load the traffic into ListWidget
+        try:
+            self.loadTraffic2(dataset_name)
+        except AttributeError as e:
+            print(e)
 
     def loadTraffic(self):
         # TODO: Get and filter through criteria
@@ -324,13 +402,53 @@ class Ui_MainWindow(object):
             self.listWidget.addItem(pcap_f)
         self.listWidget.itemClicked.connect(self.onClickTraffic)
 
+    def loadTraffic2(self, dataset_name):
+        count = 0
+        rand_list = []
+        # Get the dataset from the pcap directory and add to ListWidget
+        split_pcap_filenames = self.pcap_filename2idx.keys()
+        for pcap_dir in self.pcap_dirs:
+            if dataset_name in pcap_dir:
+                for root,dirs,files in os.walk(pcap_dir):
+                    for f in files:
+                        if f.endswith('.pcap') and os.path.normcase(os.path.join(root,f).replace(pcap_dir, "")) in os.path.normcase(split_pcap_filenames):
+                            self.listWidget.addItem(f)
+                            if f in rand_list:
+                                print(os.path.join(root,f))
+                            rand_list.append(f)
+                            count+=1
+        print('{} traffic loaded into ListWidget'.format(count))
+        self.listWidget.itemClicked.connect(self.onClickTraffic)
+
     def onClickTraffic(self, item):
         self.selected_trafficname = item.text()
         self.selected_trafficidx = self.pcap_filename2idx[self.selected_trafficname]
+        self.selected_pcapfile = findPcapFile()
         self.loadPcapTable()
 
         # Get feature for prediction and generate predictions and metrics
-        selected_input, selected_target, selected_seq_len = utilsDatagen.get_feature_vector([self.selected_trafficidx], self.mmap_data, self.byte_offset, self.seq_len, self.norm_fn)
+        # selected_input, selected_target, selected_seq_len = utilsDatagen.get_feature_vector([self.selected_trafficidx], self.mmap_data, self.byte_offset, self.seq_len, self.norm_fn)
+        
+        # Generate features from PCAP file
+        tcp_features = utilsFeatureExtract.extract_tcp_features(self.selected_pcapfile, limit=200)
+        tls_features = utilsFeatureExtract.extract_tslssl_features(self.selected_pcapfile, enums, limit=200)
+        traffic_features = np.concatenate((np.array(tcp_features), np.array(tls_features)), axis=1)
+        traffic_features = traffic_features.reshape(1, *traffic_features.shape)     # Batchify the traffic features
+        
+        # Preprocess the features
+        SEQUENCE_LEN = 100
+        MINMAX_FILENAME = 'minmax_features.csv'
+        try:
+            with open(os.path.join(self.feature_dir, MINMAX_FILENAME), 'r') as f:
+                min_max_feature_list = json.load(f)
+            min_max_feature = (np.array(min_max_feature_list[0]), np.array(min_max_feature_list[1]))
+        except FileNotFoundError:
+            print('Error: min-max feature file cannot be found in the extracted-features directory of the selected database')
+        norm_fn = utilsDatagen.normalize(2, min_max_feature)
+        selected_seq_len = [len(traffic_features[0])]
+        selected_input, selected_target = preprocess_data(traffic_features, pad_len=SEQUENCE_LEN, norm_fn=norm_fn)
+
+        # Compute metrics for GUI
         data = {}
         selected_predict = self.model.predict_on_batch(selected_input)
         selected_acc_padded = utilsMetric.calculate_acc_of_traffic(selected_predict, selected_target)
@@ -338,7 +456,6 @@ class Ui_MainWindow(object):
         selected_mean_acc = [np.mean(acc) for acc in selected_acc_true]
         selected_sqerr_padded = utilsMetric.calculate_squared_error_of_traffic(selected_predict, selected_target)
         selected_sqerr_true = [selected_sqerr_padded[i,0:seq_len,:] for i,seq_len in enumerate(selected_seq_len)]
-        
         data['predict'] = selected_predict
         data['true'] = selected_target
         data['acc'] = selected_acc_true
@@ -348,7 +465,7 @@ class Ui_MainWindow(object):
 
         self.loadAccuracyGraph(data)
 
-    def loadPcapTable(self):
+    def findPcapFile(self):
         # Search for the pcap file from the directory
         found_pcap_dirs = []
         for pcap_dir in self.pcap_dirs:
@@ -357,12 +474,27 @@ class Ui_MainWindow(object):
             found_pcap_dirs.extend(out)
         if len(found_pcap_dirs) > 1:
             QtWidgets.QMessageBox.about(self.centralwidget, 'Alert', 'More than 1 pcap file found:\n'+'\n'.join(found_pcap_dirs))
-            print("Found more than 1 pcap file!")
+            print("Found more than 1 pcap file! Choosing the first")
         elif len(found_pcap_dirs) == 0:
             QtWidgets.QMessageBox.about(self.centralwidget, 'Alert', 'Pcap file cannot be found!')
             print("Pcap file cannot be found!")
-            return
-        self.selected_pcapfile = found_pcap_dirs[0]
+            return 0 
+        return found_pcap_dirs[0]
+
+    def loadPcapTable(self):
+        # Search for the pcap file from the directory
+        # found_pcap_dirs = []
+        # for pcap_dir in self.pcap_dirs:
+        #     command = 'find '+pcap_dir+' -name '+self.selected_trafficname
+        #     out = [line.decode('ascii') for line in subprocess.run(command.split(' '), stdout=subprocess.PIPE).stdout.splitlines()]
+        #     found_pcap_dirs.extend(out)
+        # if len(found_pcap_dirs) > 1:
+        #     QtWidgets.QMessageBox.about(self.centralwidget, 'Alert', 'More than 1 pcap file found:\n'+'\n'.join(found_pcap_dirs))
+        #     print("Found more than 1 pcap file! Choosing the first")
+        # elif len(found_pcap_dirs) == 0:
+        #     QtWidgets.QMessageBox.about(self.centralwidget, 'Alert', 'Pcap file cannot be found!')
+        #     print("Pcap file cannot be found!")
+        #     return
 
         self.pcapfile_info = []
         # Using tshark to extract information from pcap files

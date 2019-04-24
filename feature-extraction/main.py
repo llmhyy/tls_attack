@@ -29,7 +29,7 @@ def search_and_extract(pcap_dir, features_dir, pcapname_dir, enums):
     success = 0
     failed = 0
     traffic_limit = 200
-    with open(features_dir, 'a', newline='') as features_file, open(pcapname_dir, 'a', newline='') as pcapname_file:
+    with open(features_dir, 'w') as features_file, open(pcapname_dir, 'w') as pcapname_file:
         for root, dirs, files in os.walk(pcap_dir):
             for f in files:
                 if f.endswith(".pcap"):
@@ -48,7 +48,8 @@ def search_and_extract(pcap_dir, features_dir, pcapname_dir, enums):
                         features_file.write('\n')
 
                         # Write the filename of the pcap file into a file for reference
-                        pcapname_file.write(f+'\n')
+                        # print(str(os.path.join(root,f)).replace(pcap_dir,""))
+                        pcapname_file.write(str(os.path.join(root,f)).replace(pcap_dir,"")+'\n')
 
                         success+=1
                         if success%1000==0:

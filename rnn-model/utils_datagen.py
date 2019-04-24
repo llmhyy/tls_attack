@@ -80,13 +80,29 @@ def get_feature_vector(selected_idx, mmap_data, byte_offset, sequence_len, norm_
         dataline = mmap_data[start:end+1].decode('ascii').strip().rstrip(',')
         selected_data.append(json.loads('['+dataline+']'))
     selected_seq_len = [len(data) for data in selected_data]
-    selected_data = pad_sequences(selected_data, maxlen=sequence_len, dtype='float32', padding='post', value=0.0)
-    selected_data = norm_fn(selected_data)
-    packet_zero = np.zeros((selected_data.shape[0],1,selected_data.shape[2]))
-    selected_data = np.concatenate((packet_zero, selected_data), axis=1)
-    selected_inputs = selected_data[:,:-1,:]
-    selected_targets = selected_data[:,1:,:]
+    selected_input,selected_targets = preprocess_data(selected_data, pad_len=sequence_len, norm_fn=norm_fn)
+    # selected_data = pad_sequences(selected_data, maxlen=sequence_len, dtype='float32', padding='post', value=0.0)
+    # selected_data = norm_fn(selected_data)
+    # packet_zero = np.zeros((selected_data.shape[0],1,selected_data.shape[2]))
+    # selected_data = np.concatenate((packet_zero, selected_data), axis=1)
+    # selected_inputs = selected_data[:,:-1,:]
+    # selected_targets = selected_data[:,1:,:]    
+
     return (selected_inputs, selected_targets, selected_seq_len)
+
+def preprocess_data(batch_data, pad_len, norm_fn):
+    # Step 1: Pad sequences
+    batch_data = pad_sequences(batch_data, maxlen=pad_len, dtype='float32', padding='post', value=0.0)
+    # Step 2: Scale features with a normalization function
+    batch_data = norm_fn(batch_data)
+    # Step 3: Append zero to start of the sequence
+    packet_zero = np.zeros((batch_data.shape[0], 1, batch_data.shape[2]))
+    batch_data = np.concatenate((packet_zero, batch_data), axis=1)
+    # Step 4: Split the data into inputs and targets
+    batch_inputs = batch_data[:,:-1,:]
+    batch_targets = batch_data[:,1:,:]
+    
+    return batch_inputs, batch_targets
 
 class BatchGenerator(Sequence):
     def __init__(self, mmap_data, byte_offset, selected_idx, batch_size, sequence_len, norm_fn, return_seq_len=False, return_batch_idx=False):
@@ -114,19 +130,21 @@ class BatchGenerator(Sequence):
         if self.return_seq_len:
             batch_seq_len = [len(data) for data in batch_data]
 
-        # Pad the sequence
-        batch_data = pad_sequences(batch_data, maxlen=self.sequence_len, dtype='float32', padding='post',value=0.0)
+        # # Pad the sequence
+        # batch_data = pad_sequences(batch_data, maxlen=self.sequence_len, dtype='float32', padding='post',value=0.0)
 
-        # Scale the features
-        batch_data = self.norm_fn(batch_data)
+        # # Scale the features
+        # batch_data = self.norm_fn(batch_data)
 
-        # Append zero to the start of the sequence
-        packet_zero = np.zeros((batch_data.shape[0],1,batch_data.shape[2]))
-        batch_data = np.concatenate((packet_zero, batch_data), axis=1)
+        # # Append zero to the start of the sequence
+        # packet_zero = np.zeros((batch_data.shape[0],1,batch_data.shape[2]))
+        # batch_data = np.concatenate((packet_zero, batch_data), axis=1)
 
-        # Split the data into inputs and targets
-        batch_inputs = batch_data[:,:-1,:]
-        batch_targets = batch_data[:,1:,:]
+        # # Split the data into inputs and targets
+        # batch_inputs = batch_data[:,:-1,:]
+        # batch_targets = batch_data[:,1:,:]
+
+        batch_inputs, batch_targets = preprocess_data(batch_data, pad_len=self.sequence_len, norm_fn=self.norm_fn)
 
         batch_info = {}
         if self.return_seq_len:

@@ -60,8 +60,21 @@ model.summary()
 # Load the mmap data and the byte offsets from the feature file
 print('\nLoading features into memory...')
 mmap_data, byte_offset = utilsDatagen.get_mmapdata_and_byteoffset(feature_dir)
+
 # Get min and max for each feature
-min_max_feature = utilsDatagen.get_min_max(mmap_data, byte_offset)
+MINMAX_FILENAME = 'minmax_features.csv'
+minmax_dir = os.path.join(args.rootdir, MINMAX_FILENAME)
+try:
+    with open(minmax_dir, 'r') as f:
+        min_max_feature_list = json.load(f)
+    min_max_feature = (np.array(min_max_feature_list[0]), np.array(min_max_feature_list[1]))
+except FileNotFoundError:
+    print('Min-max feature file does not exist')
+    min_max_feature = utilsDatagen.get_min_max(mmap_data, byte_offset)
+    min_max_feature_list = (min_max_feature[0].tolist(), min_max_feature[1].tolist())
+    with open(minmax_dir, 'w') as f:
+        json.dump(min_max_feature_list, f)
+
 # Split the dataset into train and test and return train/test indexes to the byte offset
 train_idx,test_idx = utilsDatagen.split_train_test(byte_offset, SPLIT_RATIO, SEED)
 # Initialize the normalization function
