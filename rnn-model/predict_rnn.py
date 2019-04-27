@@ -98,8 +98,6 @@ def test_model_on_generator(model, data_generator, featureinfo_dir, pcapname_dir
     squared_error_for_all_traffic = metrics['squared_error']
     mean_squared_error_for_all_traffic = metrics['mean_squared_error']
     idx_for_all_traffic = metrics['idx']
-    # predict_for_all_traffic = metrics['predict']
-    # true_for_all_traffic = metrics['true']
 
     # Extract dim names for identifying dim
     dim_names = []
@@ -154,24 +152,24 @@ def test_model_on_generator(model, data_generator, featureinfo_dir, pcapname_dir
     utilsPredict.summary_for_sampled_traffic(top_idx, mean_acc_for_all_traffic, acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, dim_names,
                                                 mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model, save_top10_dir)
 
-    ####  TEST 5 ####
-    save_sampled_dir = os.path.join(save_dir, 'sampledtraffic')
-    if not os.path.exists(save_sampled_dir):
-        os.makedirs(save_sampled_dir)
-    lower_limit_acc, upper_limit_acc = 0.79, 0.81
-    bounded_acc_idx = [(i,mean_acc) for i,mean_acc in enumerate(mean_acc_for_all_traffic) if mean_acc >= lower_limit_acc and mean_acc <= upper_limit_acc]
-    if len(bounded_acc_idx)>0:
-        try: 
-            random.seed(2018)
-            sampled_acc_idx = random.sample(bounded_acc_idx, 10)
-        except ValueError:
-            sampled_acc_idx = bounded_acc_idx
+    # ####  TEST 5 ####
+    # save_sampled_dir = os.path.join(save_dir, 'sampledtraffic')
+    # if not os.path.exists(save_sampled_dir):
+    #     os.makedirs(save_sampled_dir)
+    # lower_limit_acc, upper_limit_acc = 0.79, 0.81
+    # bounded_acc_idx = [(i,mean_acc) for i,mean_acc in enumerate(mean_acc_for_all_traffic) if mean_acc >= lower_limit_acc and mean_acc <= upper_limit_acc]
+    # if len(bounded_acc_idx)>0:
+    #     try: 
+    #         random.seed(2018)
+    #         sampled_acc_idx = random.sample(bounded_acc_idx, 10)
+    #     except ValueError:
+    #         sampled_acc_idx = bounded_acc_idx
 
-        sampled_idx, sampled_mean_acc = [list(t) for t in zip(*sampled_acc_idx)]
-        utilsPredict.summary_for_sampled_traffic(sampled_idx, mean_acc_for_all_traffic, acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, dim_names,
-                                                    mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model, save_sampled_dir)
-    else:
-        print("No traffic found within bound of {}-{}".format(lower_limit_acc, upper_limit_acc))
+    #     sampled_idx, sampled_mean_acc = [list(t) for t in zip(*sampled_acc_idx)]
+    #     utilsPredict.summary_for_sampled_traffic(sampled_idx, mean_acc_for_all_traffic, acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, dim_names,
+    #                                                 mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model, save_sampled_dir)
+    # else:
+    #     print("No traffic found within bound of {}-{}".format(lower_limit_acc, upper_limit_acc))
 
 
     logfile.close()
