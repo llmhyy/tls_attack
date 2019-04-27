@@ -120,18 +120,15 @@ def test_model_on_generator(model, data_generator, featureinfo_dir, pcapname_dir
     logfile = open(os.path.join(save_dir, 'predict_log.txt'),'w')
 
     # Save all results into python serialization format
-    print('Dumping results into json file...')
-    for k,v in metrics.items():
-        if type(v[0]) is np.ndarray:
-            metrics[k] = [nparray.tolist() for nparray in v] # due to not equal number in the traffic length dim
-        # metrics[k] = (np.array(v)).tolist()
-    
-    # Adding pcap filenames and dim names
-    metrics['dim_names'] = dim_names
-    metrics['pcap_filenames'] = [pcap_filename[idx] for idx in idx_for_all_traffic]
-    with open(os.path.join(save_dir,'data.json'), 'w') as f:
-        json.dump(metrics, f)
-    print('Dumped!')
+    # print('Dumping results into json file...')
+    # for k,v in metrics.items():
+    #     if type(v[0]) is np.ndarray:
+    #         metrics[k] = [nparray.tolist() for nparray in v] # due to unequal number in the traffic length dim
+    # metrics['dim_names'] = dim_names
+    # metrics['pcap_filenames'] = [pcap_filename[idx] for idx in idx_for_all_traffic]
+    # with open(os.path.join(save_dir,'data.json'), 'w') as f:
+    #     json.dump(metrics, f)
+    # print('Dumped!')
 
     ####  TEST 1 ####
     utilsPredict.test_accuracy_of_traffic(mean_acc_for_all_traffic, logfile, save_dir)
