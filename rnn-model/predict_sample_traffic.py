@@ -106,7 +106,7 @@ def evaluate_sampled_traffic_on_generator(model, data_generator, featureinfo_dir
     save_sampled_dir = os.path.join(save_dir, 'sampledtraffic_seed{}'.format(SEED))
     if not os.path.exists(save_sampled_dir):
         os.makedirs(save_sampled_dir)
-    lower_limit_acc, upper_limit_acc = 0.79, 0.81
+    lower_limit_acc, upper_limit_acc = 0.80, 1.00
     bounded_acc_idx = [(i,mean_acc) for i,mean_acc in enumerate(mean_acc_for_all_traffic) if mean_acc >= lower_limit_acc and mean_acc <= upper_limit_acc]
     if len(bounded_acc_idx)>0:
         try: 
@@ -124,13 +124,15 @@ def evaluate_sampled_traffic_on_generator(model, data_generator, featureinfo_dir
         sampled_input, sampled_true, sampled_seq_len = utilsDatagen.get_feature_vector([idx_for_all_traffic[i] for i in sampled_idx], mmap_data, byte_offset, SEQUENCE_LEN, norm_fn)
         sampled_predict = model.predict_on_batch(sampled_input)
 
+        # Generate the general summary for reference
+        utilsPredict.summary_for_sampled_traffic(sampled_idx, mean_acc_for_all_traffic, acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, dim_names,
+                                                    mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model, save_sampled_dir)
 
+        # Show the interactive plot
         utilsPlot.plot_interactive_summary_for_sampled_traffic(sampled_pcap_filename, sampled_mean_acc, sampled_acc, sampled_sqerr, dim_names,
                                                                     sampled_predict, sampled_true,
                                                                     save_sampled_dir, show=True)
 
-        # utilsPredict.summary_for_sampled_traffic(sampled_idx, mean_acc_for_all_traffic, acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, dim_names,
-        #                                             mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model, save_sampled_dir)
     else:
         print("No traffic found within bound of {}-{}".format(lower_limit_acc, upper_limit_acc))
 

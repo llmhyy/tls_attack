@@ -133,7 +133,9 @@ def plot_interactive_summary_for_sampled_traffic(pcap_filenames, mean_acc, pktwi
         for i, pkt_acc in enumerate(pktwise_acc[pointer]):
             ax[0].plot(i+1, pkt_acc, 'ro', picker=5)
             ax[0].text(i+1, (pkt_acc-0.05), i+1, fontsize=9, horizontalalignment='center')
+        ax[0].set_ylim([0.0,1.0])
         ax[1].clear()
+        ax2.clear()
         fig.canvas.draw_idle()
 
     pointer = 0
@@ -143,10 +145,10 @@ def plot_interactive_summary_for_sampled_traffic(pcap_filenames, mean_acc, pktwi
     plot_graph()
 
     def on_pick(event):
-        print(round(event.mouseevent.xdata))
-        print(round(event.mouseevent.ydata))
+        # print(round(event.mouseevent.xdata))
+        # print(round(event.mouseevent.ydata))
         # Create an arrow on top of the selected point
-        print('patches', ax[0].patches)
+        # print('patches', ax[0].patches)
         if len(ax[0].patches)!=0:
             ax[0].patches[0].remove()
         arrow = Arrow(round(event.mouseevent.xdata), event.mouseevent.ydata-0.11, 0, 0.05, width=0.1, color='red')
