@@ -8,6 +8,7 @@
 import os
 import re
 import json
+import time
 import numpy as np
 import fnmatch
 import pyshark
@@ -26,6 +27,8 @@ import utils_datagen as utilsDatagen
 import utils_metric as utilsMetric
 sys.path.append(os.path.join('..','feature-extraction'))
 import utils as utilsFeatureExtract
+
+import config
 
 # Initialize a yaml object for reading and writing yaml files
 yaml = YAML(typ='rt') # Round trip loading and dumping
@@ -146,9 +149,11 @@ class Ui_MainWindow(object):
         self.chooseModel.setEditable(False)
         self.chooseModel.setObjectName("chooseModel")
         self.chooseModel.addItem("- Model type -")
-        self.chooseModel.addItem("Normal model")
-        self.chooseModel.addItem("Thc-tls-dos model")
-        self.chooseModel.addItem("Sample model")
+        for m in config.model.keys():
+            self.chooseModel.addItem('{} model'.format(m.title()))
+        # self.chooseModel.addItem("Normal model")
+        # self.chooseModel.addItem("Thc-tls-dos model")
+        # self.chooseModel.addItem("Sample model")
 
         self.predictsOnLabel = QtWidgets.QLabel()
         self.predictsOnLabel.setStyleSheet("background-color: rgb(212, 217, 217);")
@@ -160,12 +165,15 @@ class Ui_MainWindow(object):
         self.chooseTraffic.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.chooseTraffic.setObjectName("chooseTraffic")
         self.chooseTraffic.addItem("- Traffic type -")
-        self.chooseTraffic.addItem("Normal (train)")
-        self.chooseTraffic.addItem("Normal (val)")
-        self.chooseTraffic.addItem("Thc-tls-dos (train)")
-        self.chooseTraffic.addItem("Thc-tls-dos (val)")
-        self.chooseTraffic.addItem("Sample (train)")
-        self.chooseTraffic.addItem("Sample (val)")
+        for f in config.features.keys():
+            self.chooseTraffic.addItem('{} (train)'.format(f.title()))
+            self.chooseTraffic.addItem('{} (val)'.format(f.title()))
+        # self.chooseTraffic.addItem("Normal (train)")
+        # self.chooseTraffic.addItem("Normal (val)")
+        # self.chooseTraffic.addItem("Thc-tls-dos (train)")
+        # self.chooseTraffic.addItem("Thc-tls-dos (val)")
+        # self.chooseTraffic.addItem("Sample (train)")
+        # self.chooseTraffic.addItem("Sample (val)")
 
         self.searchCriteriaLabel = QtWidgets.QLabel()
         self.searchCriteriaLabel.setStyleSheet("background-color: rgb(212, 217, 217);")
@@ -266,10 +274,11 @@ class Ui_MainWindow(object):
 
         # Get model name and load model
         model_name = str(self.chooseModel.currentText()).lower().replace(" model", "")
-        for root, dirs, files in os.walk(self.model_dirs):
-            for f in files:
-                if model_name in root and 'rnnmodel' in f:
-                    self.model = load_model(os.path.join(root, f))
+        tmp_path = os.path.join(self.model_dirs, config.model[model_name])
+        if not os.path.exists(tmp_path):
+            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Model not found. Check config.py')
+            return
+        self.model = load_model(tmp_path)
 
         SPLIT_RATIO = 0.05
         SEED = 2019
@@ -277,50 +286,52 @@ class Ui_MainWindow(object):
         FEATURE_FILENAME = 'features_tls_*.csv'
         FEATUREINFO_FILENAME = 'feature_info_*.csv'
         PCAPNAME_FILENAME = 'pcapname_*.csv'
+        
         tmp = str(self.chooseTraffic.currentText()).lower().split('(')
         dataset_name = tmp[0].strip()
         split_name = tmp[1].rstrip(')')
-        for root, dirs, files in os.walk(self.feature_dirs):
-            for d in dirs:
-                if d == dataset_name:
-                    self.feature_dir = os.path.join(root,d)
-                    filenames = os.listdir(self.feature_dir)
+        tmp_path = os.path.join(self.feature_dirs,config.features[dataset_name])
+        if not os.path.exists(tmp_path):
+            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Feature directory not found. Check config.py')
+            return
+        self.feature_dir = tmp_path
+        filenames = os.listdir(self.feature_dir)
 
-                    # Load the train/test indexes from split
-                    self.featurecsv_dir = os.path.join(root, d, fnmatch.filter(filenames, FEATURE_FILENAME)[0])
-                    # Get the number of lines in a file to determine split
-                    with open(self.featurecsv_dir) as f:
-                        for i, line in enumerate(f):
-                            pass
-                        line_count = i+1
-                    train_idx, test_idx = utilsDatagen.split_train_test(range(line_count), SPLIT_RATIO, SEED)
-                    print('line count: {}'.format(line_count))
-                    print('train idx: {}'.format(len(train_idx)))
-                    print('test idx: {}'.format(len(test_idx)))
-                    if split_name == 'train':
-                        self.dataset_idx = train_idx
-                    elif split_name == 'val':
-                        self.dataset_idx = test_idx
+        # Load the train/test indexes from split
+        self.featurecsv_dir = os.path.join(self.feature_dir, fnmatch.filter(filenames, FEATURE_FILENAME)[0])
+        # Get the number of lines in a file to determine split
+        with open(self.featurecsv_dir) as f:
+            for i, line in enumerate(f):
+                pass
+            line_count = i+1
+        train_idx, test_idx = utilsDatagen.split_train_test(range(line_count), SPLIT_RATIO, SEED)
+        print('line count: {}'.format(line_count))
+        print('train idx: {}'.format(len(train_idx)))
+        print('test idx: {}'.format(len(test_idx)))
+        if split_name == 'train':
+            dataset_idx = train_idx
+        elif split_name == 'val':
+            dataset_idx = test_idx
 
-                    # Load the pcap filenames from train/test indexes
-                    self.pcapname_dir = os.path.join(root, d, fnmatch.filter(filenames, PCAPNAME_FILENAME)[0])
-                    with open(self.pcapname_dir) as f:
-                        all_pcap_filenames = [row.strip() for row in f.readlines()]
-                        self.pcap_filename2idx = {all_pcap_filenames[idx]:idx for idx in self.dataset_idx}
+        # Load the pcap filenames from train/test indexes
+        self.pcapname_dir = os.path.join(self.feature_dir, fnmatch.filter(filenames, PCAPNAME_FILENAME)[0])
+        with open(self.pcapname_dir) as f:
+            lines = f.readlines()
+            self.pcap_filenames = [lines[idx].strip() for idx in dataset_idx]
 
-                    # Load the dimension names
-                    self.featureinfo_dir = os.path.join(root, d, fnmatch.filter(filenames, FEATUREINFO_FILENAME)[0])
-                    self.dim_names = []
-                    with open(self.featureinfo_dir, 'r') as f:
-                        features_info = f.readlines()[1:] # Ignore header
-                        for row in features_info:
-                            split_row = row.split(',')
-                            network_layer, tls_protocol, dim_name, feature_type, feature_enum_value = split_row[0].strip(), split_row[1].strip(), split_row[2].strip(), split_row[3].strip(), split_row[4].strip()
-                            if 'Enum' in feature_type:
-                                dim_name = dim_name+'-'+feature_enum_value
-                            if 'TLS' in network_layer:
-                                dim_name = '('+tls_protocol+')'+dim_name
-                            self.dim_names.append(dim_name)
+        # Load the dimension names
+        self.featureinfo_dir = os.path.join(self.feature_dir, fnmatch.filter(filenames, FEATUREINFO_FILENAME)[0])
+        self.dim_names = []
+        with open(self.featureinfo_dir, 'r') as f:
+            features_info = f.readlines()[1:] # Ignore header
+            for row in features_info:
+                split_row = row.split(',')
+                network_layer, tls_protocol, dim_name, feature_type, feature_enum_value = split_row[0].strip(), split_row[1].strip(), split_row[2].strip(), split_row[3].strip(), split_row[4].strip()
+                if 'Enum' in feature_type:
+                    dim_name = dim_name+'-'+feature_enum_value
+                if 'TLS' in network_layer:
+                    dim_name = '('+tls_protocol+')'+dim_name
+                self.dim_names.append(dim_name)
 
         # Load the traffic into ListWidget
         try:
@@ -329,26 +340,42 @@ class Ui_MainWindow(object):
             print(e)
 
     def loadTraffic(self, dataset_name):
+        tmp_path = os.path.join(self.pcap_dirs, config.pcapfiles[dataset_name])
+        if not os.path.exists(tmp_path):
+            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Pcap directory not found. Check config.py')
+            return
+        pcap_dir = tmp_path
         count = 0
         # Get the dataset from the pcap directory and add to ListWidget
-        split_pcap_filenames = self.pcap_filename2idx.keys()
-        normalized_split_pcap_filenames = [os.path.normcase(i) for i in split_pcap_filenames]
-        for pcap_dir in self.pcap_dirs:
-            if dataset_name in pcap_dir:
-                for root,dirs,files in os.walk(pcap_dir):
-                    for f in files:
-                        sliced_dirpath = os.path.join(root,f).replace(pcap_dir, "")
-                        if f.endswith('.pcap') and os.path.normcase(sliced_dirpath) in normalized_split_pcap_filenames:
-                            self.listWidget.addItem(sliced_dirpath)
-                            count+=1
+        normalized_pcap_filenames = [os.path.normcase(i) for i in self.pcap_filenames]
+        start = time.time()
+        pcap_dir_files = []
+        for root,dirs,files in os.walk(pcap_dir):
+            for f in files:
+                if f.endswith('.pcap'):
+                    pcap_dir_files.append(os.path.join(root,f))
+        sorted_pcap_dir_files = sorted(pcap_dir_files)
+        sorted_normalized_pcap_filenames = sorted(normalized_pcap_filenames)
+        pointer = 0
+        for pf in sorted_pcap_dir_files:
+            # print('Searching for {}'.format(pf))
+            for i in range(pointer, len(sorted_normalized_pcap_filenames)):
+                # print('Trying {}'.format(sorted_normalized_pcap_filenames[i]))
+                if sorted_normalized_pcap_filenames[i] in pf:
+                    self.listWidget.addItem(pf)
+                    pointer = i+1
+                    count+=1
+                    break
+        print('Time taken to search: {}'.format(time.time()-start))
         print('{} traffic loaded into ListWidget'.format(count))
         self.listWidget.itemClicked.connect(self.onClickTraffic)
 
     def onClickTraffic(self, item):
         # Load pcap table
-        self.selected_trafficname = item.text()
-        self.selected_trafficidx = self.pcap_filename2idx[self.selected_trafficname]
-        self.selected_pcapfile = self.findPcapFile()
+        # self.selected_trafficname = item.text()
+        # self.selected_trafficidx = self.pcap_filename2idx[self.selected_trafficname]
+        # self.selected_pcapfile = self.findPcapFile()
+        self.selected_pcapfile = item.text()
         if self.selected_pcapfile == 0:
             return
         self.loadPcapTable()
@@ -357,8 +384,12 @@ class Ui_MainWindow(object):
         ENUMS_FILENAME = 'enums_ref.yml'
         with open(os.path.join(self.feature_dirs, '..', ENUMS_FILENAME)) as f:
             enums = yaml.load(f)
-        tcp_features = utilsFeatureExtract.extract_tcp_features(self.selected_pcapfile, limit=200)
-        tls_features = utilsFeatureExtract.extract_tslssl_features(self.selected_pcapfile, enums, limit=200)
+        try:
+            tcp_features = utilsFeatureExtract.extract_tcp_features(self.selected_pcapfile, limit=200)
+            tls_features = utilsFeatureExtract.extract_tslssl_features(self.selected_pcapfile, enums, limit=200)
+        except (KeyError, AttributeError, TypeError):
+            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Feature extraction failed. Choose another traffic')
+            return
         traffic_features = np.concatenate((np.array(tcp_features), np.array(tls_features)), axis=1)
         traffic_features = traffic_features.reshape(1, *traffic_features.shape)     # Batchify the traffic features
         
