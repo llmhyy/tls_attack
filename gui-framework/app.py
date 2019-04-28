@@ -7,7 +7,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 parser = argparse.ArgumentParser()
 # parser.add_argument('-r', '--rootdir', help='Input the root directory path containing the data in json format for all trained model. Typically, foo/bar/rnn-model/trained-rnn/', required=True)
-parser.add_argument('-p', '--pcapdir', nargs='+', help='Input all directories to where pcap files are located', required=True)
+parser.add_argument('-p', '--pcapdir', help='Input all directories to where pcap files are located', required=True)
 parser.add_argument('-m', '--modeldir', help='Input the root directory of trained rnn models. Typically, foo/bar/rnn-model/trained-rnn', required=True)
 parser.add_argument('-f', '--featuredir', help='Input the root directory of the feature cvs files with other supporting files. Typically, foo/bar/feature-extraction/extracted-features', required=True)
 args = parser.parse_args()
