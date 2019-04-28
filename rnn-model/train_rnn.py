@@ -41,7 +41,7 @@ DATETIME_NOW = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 BATCH_SIZE = 64
 SEQUENCE_LEN = 100
 EPOCH = args.epoch
-SAVE_EVERY_EPOCH = 1
+SAVE_EVERY_EPOCH = 5
 SPLIT_RATIO = 0.05
 SEED = 2019
 
