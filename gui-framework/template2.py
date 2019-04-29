@@ -347,17 +347,20 @@ class Ui_MainWindow(object):
         pcap_dir = tmp_path
         count = 0
         # Get the dataset from the pcap directory and add to ListWidget
-        normalized_pcap_filenames = [os.path.normcase(i) for i in self.pcap_filenames]
+        normalized_pcap_filenames = [os.path.normpath(i) for i in self.pcap_filenames]
         start = time.time()
         pcap_dir_files = []
         for root,dirs,files in os.walk(pcap_dir):
             for f in files:
                 if f.endswith('.pcap'):
-                    pcap_dir_files.append(os.path.join(root,f))
+                    pcap_dir_files.append(os.path.normpath(os.path.join(root,f)))
         sorted_pcap_dir_files = sorted(pcap_dir_files)
         sorted_normalized_pcap_filenames = sorted(normalized_pcap_filenames)
+        # print(len(sorted_pcap_dir_files))
+        # print(len(sorted_normalized_pcap_filenames))
         pointer = 0
         for pf in sorted_pcap_dir_files:
+            fail_count = 0
             # print('Searching for {}'.format(pf))
             for i in range(pointer, len(sorted_normalized_pcap_filenames)):
                 # print('Trying {}'.format(sorted_normalized_pcap_filenames[i]))
@@ -365,6 +368,11 @@ class Ui_MainWindow(object):
                     self.listWidget.addItem(pf)
                     pointer = i+1
                     count+=1
+                    break
+                else:
+                    fail_count+=1
+
+                if fail_count>=3:
                     break
         print('Time taken to search: {}'.format(time.time()-start))
         print('{} traffic loaded into ListWidget'.format(count))
@@ -444,6 +452,8 @@ class Ui_MainWindow(object):
         self.pcapfile_info = []
         # Using tshark to extract information from pcap files
         tempfile = 'temp.csv'
+        open(self.selected_pcapfile)
+        print(self.selected_pcapfile)
         command = 'tshark -r '+self.selected_pcapfile+' -o gui.column.format:"No.","%m","Time","%t","Source","%s","Destination","%d","Protocol","%p","Length","%L","Info","%i"'
         with open(tempfile, 'w') as out:
             subprocess.run(command.split(' '), stdout=out)
