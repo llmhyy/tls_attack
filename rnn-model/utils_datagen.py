@@ -80,7 +80,7 @@ def get_feature_vector(selected_idx, mmap_data, byte_offset, sequence_len, norm_
         dataline = mmap_data[start:end+1].decode('ascii').strip().rstrip(',')
         selected_data.append(json.loads('['+dataline+']'))
     selected_seq_len = [len(data) for data in selected_data]
-    selected_input,selected_targets = preprocess_data(selected_data, pad_len=sequence_len, norm_fn=norm_fn)
+    selected_inputs,selected_targets = preprocess_data(selected_data, pad_len=sequence_len, norm_fn=norm_fn)
     # selected_data = pad_sequences(selected_data, maxlen=sequence_len, dtype='float32', padding='post', value=0.0)
     # selected_data = norm_fn(selected_data)
     # packet_zero = np.zeros((selected_data.shape[0],1,selected_data.shape[2]))
@@ -128,7 +128,7 @@ class BatchGenerator(Sequence):
             batch_data.append(json.loads('['+dataline+']'))
         
         if self.return_seq_len:
-            batch_seq_len = [len(data) for data in batch_data]
+             y = [len(data) for data in batch_data]
 
         # # Pad the sequence
         # batch_data = pad_sequences(batch_data, maxlen=self.sequence_len, dtype='float32', padding='post',value=0.0)
