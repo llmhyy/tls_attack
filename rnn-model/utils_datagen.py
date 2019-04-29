@@ -143,7 +143,7 @@ class BatchGenerator(Sequence):
         # # Split the data into inputs and targets
         # batch_inputs = batch_data[:,:-1,:]
         # batch_targets = batch_data[:,1:,:]
-
+        batch_seq_len = [len(data) for data in batch_data]
         batch_inputs, batch_targets = preprocess_data(batch_data, pad_len=self.sequence_len, norm_fn=self.norm_fn)
 
         batch_info = {}
