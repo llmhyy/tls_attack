@@ -1,0 +1,174 @@
+#####  TEST 1: OVERALL MEAN COSINE SIMILARITY  #####
+Overall Mean Accuracy:                                                             0.597324
+
+#####  TEST 2: MEAN SQUARED ERROR FOR EACH DIMENSION  #####
+Mean Squared Error for Protocol-SSL2.0:                                              0.000000
+Mean Squared Error for Flag-CWR:                                                     0.000000
+Mean Squared Error for Flag-URG:                                                     0.000000
+Mean Squared Error for (ClientHello)Signature hash algorithm-1537:                   0.000000
+Mean Squared Error for (ClientHello)Signature hash algorithm-515:                    0.000000
+Mean Squared Error for (ClientHello)Signature hash algorithm-1025:                   0.000000
+Mean Squared Error for (ClientHello)Signature hash algorithm-1026:                   0.000000
+Mean Squared Error for (ClientHello)Signature hash algorithm-0:                      0.000000
+Mean Squared Error for (Certificate)Signature algorithm-0:                           0.000000
+Mean Squared Error for Flag-ECE:                                                     0.000000
+Mean Squared Error for (ClientHello)Signature hash algorithm-1281:                   0.000000
+Mean Squared Error for Flag-NS:                                                      0.000000
+Mean Squared Error for (ClientHello)Extended master secret:                          0.000000
+Mean Squared Error for (ClientHello)Signature hash algorithm-513:                    0.000001
+Mean Squared Error for (ClientHello)Supported groups-0:                              0.000008
+Mean Squared Error for (ClientHello)Signature hash algorithm-771:                    0.000009
+Mean Squared Error for (ClientHello)Signature hash algorithm-1538:                   0.000010
+Mean Squared Error for (ClientHello)Cipher suites-0:                                 0.000011
+Mean Squared Error for (ClientHello)Signature hash algorithm-769:                    0.000017
+Mean Squared Error for (ClientHello)Compression method-0:                            0.000017
+Mean Squared Error for (ClientHello)Encrypt then mac length:                         0.000020
+Mean Squared Error for (ClientHello)Signature hash algorithm-1282:                   0.000024
+Mean Squared Error for Interval:                                                     0.000025
+Mean Squared Error for (ClientHello)Signature hash algorithm-1027:                   0.000046
+Mean Squared Error for (Certificate)Signature algorithm-1.2.840.113549.1.1.13:       0.000089
+Mean Squared Error for (ClientHello)Signature hash algorithm-770:                    0.000109
+Mean Squared Error for (ClientHello)Signature hash algorithm-1283:                   0.000113
+Mean Squared Error for (Server Hello Done)Length:                                    0.000146
+Mean Squared Error for (ClientHello)Signature hash algorithm-1539:                   0.000235
+Mean Squared Error for Protocol-TLS1.1:                                              0.000285
+Mean Squared Error for (Encrypted Handshake Message)Length:                          0.000417
+Mean Squared Error for (ClientHello)Signature hash algorithm-514:                    0.000432
+Mean Squared Error for (Certificate)Maximum certificate length:                      0.000622
+Mean Squared Error for (ClientHello)Cipher suites-49170:                             0.000789
+Mean Squared Error for (ClientHello)Cipher suites-133:                               0.000868
+Mean Squared Error for (ClientHello)Cipher suites-54:                                0.000868
+Mean Squared Error for (ClientHello)Cipher suites-66:                                0.000868
+Mean Squared Error for (ClientHello)Cipher suites-67:                                0.000868
+Mean Squared Error for (ClientHello)Cipher suites-13:                                0.000868
+Mean Squared Error for (ClientHello)Cipher suites-49165:                             0.000868
+Mean Squared Error for (ClientHello)Cipher suites-48:                                0.000868
+Mean Squared Error for (ClientHello)Cipher suites-19:                                0.000869
+Mean Squared Error for (ClientHello)Cipher suites-150:                               0.000869
+Mean Squared Error for (ClientHello)Cipher suites-153:                               0.000869
+Mean Squared Error for (ClientHello)Cipher suites-68:                                0.000869
+Mean Squared Error for (ClientHello)Cipher suites-55:                                0.000869
+Mean Squared Error for (ClientHello)Cipher suites-22:                                0.000870
+Mean Squared Error for (ClientHello)Cipher suites-49167:                             0.000872
+Mean Squared Error for (ClientHello)Cipher suites-69:                                0.000872
+Mean Squared Error for (ClientHello)Cipher suites-136:                               0.000873
+Mean Squared Error for (ClientHello)Cipher suites-16:                                0.000873
+Mean Squared Error for (ClientHello)Cipher suites-49156:                             0.000877
+Mean Squared Error for (ClientHello)Cipher suites-49166:                             0.000883
+Mean Squared Error for (ClientHello)Cipher suites-49160:                             0.000883
+Mean Squared Error for (ClientHello)Cipher suites-152:                               0.000899
+Mean Squared Error for (ClientHello)Cipher suites-10:                                0.000908
+Mean Squared Error for (Client Key Exchange)Pubkey length:                           0.000910
+Mean Squared Error for (ClientHello)Cipher suites-132:                               0.000934
+Mean Squared Error for (ClientHello)Cipher suites-151:                               0.000996
+Mean Squared Error for (ClientHello)Cipher suites-7:                                 0.001017
+Mean Squared Error for (ClientHello)Cipher suites-135:                               0.001080
+Mean Squared Error for (ClientHello)Cipher suites-49157:                             0.001120
+Mean Squared Error for (ClientHello)Cipher suites-49:                                0.001163
+Mean Squared Error for (ClientHello)Cipher suites-49155:                             0.001197
+Mean Squared Error for (Client Key Exchange)Length:                                  0.001240
+Mean Squared Error for (ClientHello)Cipher suites-154:                               0.001241
+Mean Squared Error for (ClientHello)Cipher suites-134:                               0.001241
+Mean Squared Error for (ClientHello)Supported group length:                          0.001423
+Mean Squared Error for (ClientHello)Cipher suites-65:                                0.001681
+Mean Squared Error for Length:                                                       0.001831
+Mean Squared Error for (Certificate)Signature algorithm-1.2.840.10045.4.3.3:         0.001909
+Mean Squared Error for (Certificate)Signature algorithm-1.2.840.10045.4.3.2:         0.002087
+Mean Squared Error for (Application Data Protocol)Length:                            0.002383
+Mean Squared Error for (Change Cipher Spec)Length:                                   0.003480
+Mean Squared Error for Flag-RST:                                                     0.004208
+Mean Squared Error for (Certificate)Signature algorithm-1.2.840.113549.1.1.5:        0.005098
+Mean Squared Error for (ClientHello)Length:                                          0.005650
+Mean Squared Error for (Certificate)Average certificate length:                      0.006019
+Mean Squared Error for (Certificate)Signature algorithm-1.2.840.113549.1.1.12:       0.007164
+Mean Squared Error for (ClientHello)Cipher suites length:                            0.008294
+Mean Squared Error for (Certificate)Minimum certificate length:                      0.008714
+Mean Squared Error for (ServerHello)Length:                                          0.009382
+Mean Squared Error for (Certificate)Number of Certificates:                          0.009675
+Mean Squared Error for Protocol-SSL3.0:                                              0.010983
+Mean Squared Error for (ClientHello)Compression method-0:                            0.012195
+Mean Squared Error for (ClientHello)Cipher suites-53:                                0.012391
+Mean Squared Error for (ClientHello)Cipher suites-255:                               0.012422
+Mean Squared Error for Protocol-TLS1.0:                                              0.016835
+Mean Squared Error for (ClientHello)Cipher suites-158:                               0.027011
+Mean Squared Error for (ClientHello)Cipher suites-49191:                             0.027068
+Mean Squared Error for (ClientHello)Cipher suites-49325:                             0.027131
+Mean Squared Error for (ClientHello)Cipher suites-52393:                             0.027133
+Mean Squared Error for (ClientHello)Cipher suites-49312:                             0.027133
+Mean Squared Error for (ClientHello)Cipher suites-49310:                             0.027134
+Mean Squared Error for (ClientHello)Cipher suites-52394:                             0.027134
+Mean Squared Error for (ClientHello)Cipher suites-49314:                             0.027134
+Mean Squared Error for (ClientHello)Cipher suites-49192:                             0.027136
+Mean Squared Error for (ClientHello)Cipher suites-49188:                             0.027136
+Mean Squared Error for (ClientHello)Cipher suites-49324:                             0.027136
+Mean Squared Error for (ClientHello)Cipher suites-49187:                             0.027136
+Mean Squared Error for (ClientHello)Cipher suites-162:                               0.027137
+Mean Squared Error for (ClientHello)Cipher suites-64:                                0.027137
+Mean Squared Error for (ClientHello)Cipher suites-49199:                             0.027137
+Mean Squared Error for (ClientHello)Cipher suites-49200:                             0.027137
+Mean Squared Error for (ClientHello)Cipher suites-163:                               0.027137
+Mean Squared Error for (ClientHello)Cipher suites-103:                               0.027137
+Mean Squared Error for (ClientHello)Cipher suites-159:                               0.027137
+Mean Squared Error for (ClientHello)Cipher suites-49308:                             0.027139
+Mean Squared Error for (ClientHello)Cipher suites-49315:                             0.027141
+Mean Squared Error for (ClientHello)Cipher suites-60:                                0.027141
+Mean Squared Error for (ClientHello)Supported groups-25:                             0.027141
+Mean Squared Error for (ClientHello)Cipher suites-61:                                0.027141
+Mean Squared Error for (ClientHello)Cipher suites-156:                               0.027145
+Mean Squared Error for (ClientHello)Cipher suites-52392:                             0.027154
+Mean Squared Error for (ClientHello)Supported groups-29:                             0.027180
+Mean Squared Error for (ClientHello)Cipher suites-49313:                             0.027237
+Mean Squared Error for (ClientHello)Cipher suites-49327:                             0.027253
+Mean Squared Error for (ClientHello)Cipher suites-106:                               0.027257
+Mean Squared Error for (ClientHello)Cipher suites-49326:                             0.027291
+Mean Squared Error for (ClientHello)Supported groups-23:                             0.027321
+Mean Squared Error for (ClientHello)Cipher suites-49311:                             0.027448
+Mean Squared Error for (ClientHello)Supported groups-24:                             0.027450
+Mean Squared Error for (ClientHello)Cipher suites-49309:                             0.027473
+Mean Squared Error for (ClientHello)Cipher suites-157:                               0.027616
+Mean Squared Error for (ClientHello)Cipher suites-49195:                             0.027856
+Mean Squared Error for (ClientHello)Cipher suites-49171:                             0.027904
+Mean Squared Error for (ClientHello)Cipher suites-49162:                             0.028001
+Mean Squared Error for (ClientHello)Cipher suites-56:                                0.028002
+Mean Squared Error for (ClientHello)Cipher suites-49196:                             0.028003
+Mean Squared Error for (ClientHello)Cipher suites-51:                                0.028049
+Mean Squared Error for (ClientHello)Cipher suites-57:                                0.028084
+Mean Squared Error for (ClientHello)Cipher suites-49172:                             0.028193
+Mean Squared Error for (ClientHello)Cipher suites-49161:                             0.028217
+Mean Squared Error for (ClientHello)Cipher suites-107:                               0.028400
+Mean Squared Error for (ClientHello)Cipher suites-50:                                0.028434
+Mean Squared Error for (ServerHello)Renegotiation info length:                       0.029786
+Mean Squared Error for (ClientHello)Cipher suites-47:                                0.029919
+Mean Squared Error for (Certificate)Signature algorithm-1.2.840.113549.1.1.11:       0.031365
+Mean Squared Error for Flag-FIN:                                                     0.045384
+Mean Squared Error for Flag-ACK:                                                     0.115149
+Mean Squared Error for Protocol-TLS1.2:                                              0.196829
+Mean Squared Error for Protocol-TCP:                                                 0.211416
+Mean Squared Error for Flag-PSH:                                                     0.215753
+Mean Squared Error for Flag-SYN:                                                     0.269735
+Mean Squared Error for Come/Leave:                                                   0.536888
+Mean Squared Error for Windows Size:                                                 0.549425
+
+#####  TEST 3: OUTLIER TRAFFIC IN MEAN COSINE SIMILARITY  #####
+Bottom 10 Performing Traffic
+Mean Accuracy for output_TLS/breach/2/discussions.agilebits.com_2019-01-23_21-57-10.pcap:  0.145500
+Mean Accuracy for output_TLS/breach/1/assistant.google.com_2019-01-23_17-38-25.pcap:  0.145512
+Mean Accuracy for output_TLS/breach/2/dressagetoday.com_2019-01-23_23-10-47.pcap:  0.145519
+Mean Accuracy for output_TLS/breach/2/www.binary.com_2019-01-24_00-05-36.pcap:  0.145526
+Mean Accuracy for output_TLS/breach/2/www.syfy.com_2019-01-23_20-33-00.pcap:    0.248303
+Mean Accuracy for output_TLS/breach/1/www.marketinsightsreports.com_2019-01-23_21-24-25.pcap:  0.248303
+Mean Accuracy for output_TLS/breach/2/politics.theonion.com_2019-01-23_21-52-19.pcap:  0.248303
+Mean Accuracy for output_TLS/breach/3/www.hellyhansen.com_2019-01-24_21-49-45.pcap:  0.248303
+Mean Accuracy for output_TLS/breach/1/braveandbold.fandom.com_2019-01-24_00-07-45.pcap:  0.248303
+Mean Accuracy for output_TLS/breach/1/whitewolf.fandom.com_2019-01-23_22-39-10.pcap:  0.248303
+Top 10 Performing Traffic
+Mean Accuracy for output_TLS/breach/1/disrecognizedspace.wordpress.com_2019-01-24_02-17-55.pcap:  0.752076
+Mean Accuracy for output_TLS/breach/3/www.universitychevrolet.com_2019-01-24_18-35-03.pcap:  0.752814
+Mean Accuracy for output_TLS/breach/1/crippledscholar.com_2019-01-24_01-11-25.pcap:  0.753847
+Mean Accuracy for output_TLS/breach/1/www.canadiansolar.com_2019-01-23_23-43-42.pcap:  0.755142
+Mean Accuracy for output_TLS/breach/2/www.canadiansolar.com_2019-01-23_23-43-35.pcap:  0.755803
+Mean Accuracy for output_TLS/breach/3/business.linkedin.com_2019-01-24_15-54-34.pcap:  0.755973
+Mean Accuracy for output_TLS/RC4/1/www.easp.es_2019-01-22_14-39-31.pcap:        0.757220
+Mean Accuracy for output_TLS/RC4/2/www.easp.es_2019-01-22_14-39-31.pcap:        0.757751
+Mean Accuracy for output_TLS/breach/3/www.wherewisemenfish.com_2019-01-24_22-30-53.pcap:  0.758083
+Mean Accuracy for output_TLS/secure_client_renego/2/www.sofoot.com_2019-01-22_20-26-18.pcap:  0.763519
