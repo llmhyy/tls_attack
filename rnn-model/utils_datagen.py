@@ -92,7 +92,7 @@ def get_feature_vector(selected_idx, mmap_data, byte_offset, sequence_len, norm_
 
 def preprocess_data(batch_data, pad_len, norm_fn):
     # Step 1: Pad sequences
-    batch_data = pad_sequences(batch_data, maxlen=pad_len, dtype='float32', padding='post', value=0.0)
+    batch_data = pad_sequences(batch_data, maxlen=pad_len, dtype='float32', padding='post', truncating='post', value=0.0)
     # Step 2: Scale features with a normalization function
     batch_data = norm_fn(batch_data)
     # Step 3: Append zero to start of the sequence
