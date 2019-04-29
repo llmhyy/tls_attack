@@ -61,6 +61,7 @@ def plot_summary_for_sampled_traffic(pcap_filename, mse_dim, dim_name, mean_acc,
                                 predict_for_top5_dim, true_for_top5_dim, top5dim, 
                                 predict_for_bottom5_dim, true_for_bottom5_dim, bottom5dim,
                                 save_dir, show=False, trough_marker=False):
+    
     fig=plt.gcf()
     fig.set_size_inches(25,18)
     fig.suptitle('Summary Stats for {}\nAcc: {}'.format(pcap_filename, mean_acc))
@@ -105,6 +106,10 @@ def plot_summary_for_sampled_traffic(pcap_filename, mse_dim, dim_name, mean_acc,
         ax_bottom.set_title('{} (B)'.format(dim_name[bottom5dim[i]]))
     handles,labels = ax_top.get_legend_handles_labels()
     fig.legend(handles, labels, loc=(0.85,0.05))
+    if '/' in pcap_filename:
+        pcap_filename = pcap_filename.replace('/','_')
+    elif '\\' in pcap_filename:
+        pcap_filename = pcap_filename.replace('\\', '_')
     plt.savefig(os.path.join(save_dir, '{}.png'.format(pcap_filename)))
     if show:
         plt.show()
