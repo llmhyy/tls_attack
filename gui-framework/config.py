@@ -3,7 +3,7 @@
 # given path: rnn-model/trained-rnn/ 
 model = {
 	'normal':'normal/expt_2019-04-28_19-18-34/rnnmodel_2019-04-28_19-18-34.h5',
-	'thc-tls-dos':'thc-tls-dos/expt_2019-04-28_19-20-02/rnnmodel_2019-04-28_19-20-02.h5'
+	'thc-tls-dos':'thc-tls-dos/expt_2019-04-30_07-31-14/rnnmodel_2019-04-30_07-31-14.h5'
 }
 
 # given path: feature_extraction/extracted-features/
