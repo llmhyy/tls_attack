@@ -39,7 +39,6 @@ results = {
             'train':'thc-tls-dos/expt_2019-04-30_07-31-14/predict_results/predict_on_normal/train/results.csv',
             'val':'thc-tls-dos/expt_2019-04-30_07-31-14/predict_results/predict_on_normal/val/results.csv',
         },
-
         'thc-tls-dos':{
             'train':'thc-tls-dos/expt_2019-04-30_07-31-14/predict_results/predict_on_thc-tls-dos/train/results.csv',
             'val':'thc-tls-dos/expt_2019-04-30_07-31-14/predict_results/predict_on_thc-tls-dos/val/results.csv'
