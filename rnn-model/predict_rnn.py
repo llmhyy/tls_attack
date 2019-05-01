@@ -171,6 +171,13 @@ def test_model_on_generator(model, data_generator, featureinfo_dir, pcapname_dir
     # else:
     #     print("No traffic found within bound of {}-{}".format(lower_limit_acc, upper_limit_acc))
 
+    # Record the prediction accuracy into file
+    RESULTS_FILENAME = 'results.csv'
+    zipped = zip(idx_for_all_traffic, mean_acc_for_all_traffic)
+    sorted_acc = [x for _, x in sorted(zipped)]
+    with open(os.path.join(save_dir, RESULTS_FILENAME), 'w') as f:
+        for x in sorted_acc:
+            f.write(str(x)+'\n')
 
     logfile.close()
 
