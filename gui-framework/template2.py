@@ -20,6 +20,7 @@ from matplotlib.backends.qt_compat import QtCore, QtWidgets
 from matplotlib.backends.backend_qt5agg import (FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
 from matplotlib.figure import Figure
 from ruamel.yaml import YAML
+from functools import partial
 
 import sys
 sys.path.append(os.path.join('..','rnn-model'))
@@ -151,9 +152,6 @@ class Ui_MainWindow(object):
         self.chooseModel.addItem("- Model type -")
         for m in config.model.keys():
             self.chooseModel.addItem('{} model'.format(m.title()))
-        # self.chooseModel.addItem("Normal model")
-        # self.chooseModel.addItem("Thc-tls-dos model")
-        # self.chooseModel.addItem("Sample model")
 
         self.predictsOnLabel = QtWidgets.QLabel()
         self.predictsOnLabel.setStyleSheet("background-color: rgb(212, 217, 217);")
@@ -168,12 +166,6 @@ class Ui_MainWindow(object):
         for f in config.features.keys():
             self.chooseTraffic.addItem('{} (train)'.format(f.title()))
             self.chooseTraffic.addItem('{} (val)'.format(f.title()))
-        # self.chooseTraffic.addItem("Normal (train)")
-        # self.chooseTraffic.addItem("Normal (val)")
-        # self.chooseTraffic.addItem("Thc-tls-dos (train)")
-        # self.chooseTraffic.addItem("Thc-tls-dos (val)")
-        # self.chooseTraffic.addItem("Sample (train)")
-        # self.chooseTraffic.addItem("Sample (val)")
 
         self.searchCriteriaLabel = QtWidgets.QLabel()
         self.searchCriteriaLabel.setStyleSheet("background-color: rgb(212, 217, 217);")
@@ -184,8 +176,15 @@ class Ui_MainWindow(object):
         self.chooseSearchCriteria.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.chooseSearchCriteria.setObjectName("chooseSearchCriteria")
         self.chooseSearchCriteria.addItem("search...")
-        self.chooseSearchCriteria.addItem("Low Accuracy (<0.5)")
-        self.chooseSearchCriteria.addItem("High Accuracy (>0.8)")
+        for c in config.criteria.keys():
+            if c == 'low':
+                self.chooseSearchCriteria.addItem('Low Accuracy (<{})'.format(config.criteria[c]))
+            elif c == 'high':
+                self.chooseSearchCriteria.addItem('High Accuracy (>{})'.format(config.criteria[c]))
+            elif c is 'none':
+                self.chooseSearchCriteria.addItem('None')
+        # self.chooseSearchCriteria.addItem("Low Accuracy (<0.5)")
+        # self.chooseSearchCriteria.addItem("High Accuracy (>0.8)")
 
         self.searchButton = QtWidgets.QPushButton()
         self.searchButton.setStyleSheet("background-color: rgb(255, 255, 255);")
@@ -273,8 +272,8 @@ class Ui_MainWindow(object):
         self.accGraph.draw()
 
         # Get model name and load model
-        model_name = str(self.chooseModel.currentText()).lower().replace(" model", "")
-        tmp_path = os.path.join(self.model_dirs, config.model[model_name])
+        self.model_name = str(self.chooseModel.currentText()).lower().replace(" model", "")
+        tmp_path = os.path.join(self.model_dirs, config.model[self.model_name])
         if not os.path.exists(tmp_path):
             QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Model not found. Check config.py')
             return
@@ -288,9 +287,9 @@ class Ui_MainWindow(object):
         PCAPNAME_FILENAME = 'pcapname_*.csv'
         
         tmp = str(self.chooseTraffic.currentText()).lower().split('(')
-        dataset_name = tmp[0].strip()
-        split_name = tmp[1].rstrip(')')
-        tmp_path = os.path.join(self.feature_dirs,config.features[dataset_name])
+        self.dataset_name = tmp[0].strip()
+        self.split_name = tmp[1].rstrip(')')
+        tmp_path = os.path.join(self.feature_dirs,config.features[self.dataset_name])
         if not os.path.exists(tmp_path):
             QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Feature directory not found. Check config.py')
             return
@@ -308,15 +307,21 @@ class Ui_MainWindow(object):
         print('line count: {}'.format(line_count))
         print('train idx: {}'.format(len(train_idx)))
         print('test idx: {}'.format(len(test_idx)))
-        if split_name == 'train':
+        if self.split_name == 'train':
             dataset_idx = train_idx
-        elif split_name == 'val':
+        elif self.split_name == 'val':
             dataset_idx = test_idx
+        # print(0 in dataset_idx)
+        # print(1 in dataset_idx)
+        # print(2 in dataset_idx)
+        # print(3 in dataset_idx)
+        # print(4 in dataset_idx)
 
         # Load the pcap filenames from train/test indexes
         self.pcapname_dir = os.path.join(self.feature_dir, fnmatch.filter(filenames, PCAPNAME_FILENAME)[0])
         with open(self.pcapname_dir) as f:
             lines = f.readlines()
+            dataset_idx = sorted(dataset_idx)
             self.pcap_filenames = [lines[idx].strip() for idx in dataset_idx]
 
         # Load the dimension names
@@ -333,21 +338,64 @@ class Ui_MainWindow(object):
                     dim_name = '('+tls_protocol+')'+dim_name
                 self.dim_names.append(dim_name)
 
+        # Get the search critiera
+        tmp = str(self.chooseSearchCriteria.currentText()).lower()
+        if 'low' in tmp:
+            level = 'low'
+            value = float(tmp.split('<')[1].rstrip(')'))
+        elif 'high' in tmp:
+            level = 'high'
+            value = float(tmp.split('>')[1].rstrip(')'))
+        elif 'none' in tmp:
+            level = None
+            value = None
+        else:
+            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Please select a criteria')
+            return
+
+        def filterTraffic(level, value):
+            def filterTraffic2(x, level, value):
+                if level is 'low':
+                    if x < value:
+                        return True
+                    else:
+                        return False
+                elif level is 'high':
+                    if x > value:
+                        return True
+                    else:
+                        return False
+                elif level is None:
+                    return True
+            return partial(filterTraffic2, level=level, value=value)
+        
+        self.filter_fn = filterTraffic(level,value)
+
         # Load the traffic into ListWidget
         try:
-            self.loadTraffic(dataset_name)
+            self.loadTraffic()
         except AttributeError as e:
             print(e)
 
-    def loadTraffic(self, dataset_name):
-        tmp_path = os.path.join(self.pcap_dirs, config.pcapfiles[dataset_name])
+    def loadTraffic(self):
+        tmp_path = os.path.join(self.pcap_dirs, config.pcapfiles[self.dataset_name])
         if not os.path.exists(tmp_path):
             QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Pcap directory not found. Check config.py')
             return
         pcap_dir = tmp_path
-        count = 0
+
+        tmp_path = os.path.join(self.model_dirs, config.results[self.model_name][self.dataset_name][self.split_name])
+        if not os.path.exists(tmp_path):
+            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Directory to results.csv not found. Check config.py')
+            return
+        results_dir = tmp_path
+        with open(results_dir) as f:
+            mean_acc_for_all_traffic = [float(l.strip()) for l in f.readlines()]
+        
         # Get the dataset from the pcap directory and add to ListWidget
+        count = 0
         normalized_pcap_filenames = [os.path.normpath(i) for i in self.pcap_filenames]
+        zipped_name_acc = zip(normalized_pcap_filenames, mean_acc_for_all_traffic)
         start = time.time()
         pcap_dir_files = []
         for root,dirs,files in os.walk(pcap_dir):
@@ -355,20 +403,26 @@ class Ui_MainWindow(object):
                 if f.endswith('.pcap'):
                     pcap_dir_files.append(os.path.normpath(os.path.join(root,f)))
         sorted_pcap_dir_files = sorted(pcap_dir_files)
-        sorted_normalized_pcap_filenames = sorted(normalized_pcap_filenames)
-        # print(len(sorted_pcap_dir_files))
-        # print(len(sorted_normalized_pcap_filenames))
+        sorted_zipped_name_acc = sorted(zipped_name_acc)
         pointer = 0
         for pf in sorted_pcap_dir_files:
-            fail_count = 0
             # print('Searching for {}'.format(pf))
-            for i in range(pointer, len(sorted_normalized_pcap_filenames)):
-                # print('Trying {}'.format(sorted_normalized_pcap_filenames[i]))
-                if sorted_normalized_pcap_filenames[i] in pf:
-                    self.listWidget.addItem(pf)
-                    pointer = i+1
-                    count+=1
-                    break
+            fail_count = 0
+            for i in range(pointer, len(sorted_zipped_name_acc)):
+                name,acc = sorted_zipped_name_acc[i]
+                # print('Trying {} {}'.format(name,acc))
+                # print(self.filter_fn(acc))
+                if name in pf:
+                    if self.filter_fn(acc):
+                        # print('THIS IS THE ACC {}'.format(acc))
+                        item = QtWidgets.QListWidgetItem(pf)
+                        item.setToolTip(pf)
+                        self.listWidget.addItem(item)
+                        pointer = i+1
+                        count+=1
+                        break
+                    else:
+                        pointer+=1
                 else:
                     fail_count+=1
 
