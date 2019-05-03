@@ -21,6 +21,7 @@ from matplotlib.backends.backend_qt5agg import (FigureCanvas, NavigationToolbar2
 from matplotlib.figure import Figure
 from ruamel.yaml import YAML
 from functools import partial
+from collections import OrderedDict
 
 import sys
 sys.path.append(os.path.join('..','rnn-model'))
@@ -83,6 +84,27 @@ class DimCanvas(FigureCanvas):
                             alpha=self.opacity, color='r', label='True')
         self.dim_ax.set_xticks([i+(self.bar_width/2) for i in index])
         self.dim_ax.set_xticklabels(dim_names, rotation='vertical', fontsize=6)
+        xticklabels = self.dim_ax.get_xticklabels()
+        switch = False
+        picker = 0
+        nice_color = ['#466365', '#B49A67','#CEB3AB','#C4C6E7','#BAA5FF']
+        for i in range(1, len(xticklabels)):
+            xticklabels_curr_str = xticklabels[i].get_text()
+            xticklabels_prev_str = xticklabels[i-1].get_text()
+            curr_idx = xticklabels_curr_str.find('-')
+            prev_idx = xticklabels_prev_str.find('-')
+            if curr_idx!=-1 and prev_idx!=-1:
+                if xticklabels_curr_str[curr_idx-4:curr_idx]==xticklabels_prev_str[prev_idx-4:prev_idx]:
+                    if not switch:
+                        xticklabels[i].set_color(nice_color[picker%len(nice_color)])
+                        xticklabels[i-1].set_color(nice_color[picker%len(nice_color)])
+                    else:
+                        xticklabels[i].set_color(nice_color[picker%len(nice_color)])
+                else:
+                    picker+=1
+            elif prev_idx!=-1:
+                switch=False
+                picker+=1
         self.dim_ax.legend(loc='upper left', fontsize=7)
         self.dim_ax.set_ylabel('Predict/True output')
 
@@ -327,11 +349,28 @@ class Ui_MainWindow(object):
         # Load the dimension names
         self.featureinfo_dir = os.path.join(self.feature_dir, fnmatch.filter(filenames, FEATUREINFO_FILENAME)[0])
         self.dim_names = []
+        # self.dim_names = OrderedDict()
         with open(self.featureinfo_dir, 'r') as f:
             features_info = f.readlines()[1:] # Ignore header
             for row in features_info:
                 split_row = row.split(',')
                 network_layer, tls_protocol, dim_name, feature_type, feature_enum_value = split_row[0].strip(), split_row[1].strip(), split_row[2].strip(), split_row[3].strip(), split_row[4].strip()
+
+                ###############################################################
+                # if tls_protocol != '-':
+                #     feature_group = tls_protocol + ' ' + dim_name
+                # else:
+                #     feature_group = dim_name
+
+                # if feature_group not in self.dim_names:
+                #     if feature_type=='Enum':
+                #         self.dim_names[feature_group] = [feature_enum_value]
+
+                #     else:
+                #         self.dim_names[feature_group] = feature_group
+                # else:
+                #     self.dim_names[feature_group].append(feature_enum_value)
+                ###############################################################
                 if 'Enum' in feature_type:
                     dim_name = dim_name+'-'+feature_enum_value
                 if 'TLS' in network_layer:
