@@ -1,5 +1,6 @@
 import os
 import json
+import shutil
 import fnmatch
 import random
 import argparse
@@ -16,7 +17,7 @@ PREDICT RNN
 
 Note: PREDICT RNN is a script for standard evaluation of the model. It should be a one-off execution of the script and not executed repeatedly
 
-This script is used to evaluate the performance of the model. A series of tests will be conducted to gain insights into the model
+This script is used to evaluate the performance of the model. A series of tests will be conducted to evaulate the performance of the model
 
 TEST 1 (acc-traffic)
 • Calculate the mean cosine similarity over each traffic (true packets) and plot its distribution. 
@@ -86,12 +87,11 @@ test_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, test_idx, B
                                                 return_seq_len=True, return_batch_idx=True)
 
 
-def test_model_on_generator(model, data_generator, featureinfo_dir, pcapname_dir, save_dir):
+def evaluate_model_on_generator(model, data_generator, featureinfo_dir, pcapname_dir, save_dir):
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
     # Compute metrics used for conducting tests
-    # acc_for_all_traffic, mean_acc_for_all_traffic, squared_error_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic = utilsPredict.compute_metrics(model, data_generator)
     metrics = utilsPredict.compute_metrics(model, data_generator, return_output=True)
     acc_for_all_traffic = metrics['acc']
     mean_acc_for_all_traffic = metrics['mean_acc']
@@ -134,25 +134,25 @@ def test_model_on_generator(model, data_generator, featureinfo_dir, pcapname_dir
     ####  TEST 2 ####
     utilsPredict.test_mse_dim_of_traffi(squared_error_for_all_traffic, dim_names, logfile, save_dir)
 
-    ####  TEST 3 ####
+    # Get outliers from traffic based on mean acc
     outlier_count = 10
     bottom_idx, top_idx = utilsPredict.find_outlier(outlier_count, mean_acc_for_all_traffic)
+
+    ####  TEST 3a ####
     utilsPredict.test_mse_dim_of_outlier(bottom_idx, top_idx, mean_acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, logfile, save_dir)
 
-    ####  TEST 4 ####
-    save_bottom10_dir = os.path.join(save_dir, 'bottom10traffic')
-    if not os.path.exists(save_bottom10_dir):
-        os.makedirs(save_bottom10_dir)
-    utilsPredict.summary_for_sampled_traffic(bottom_idx, mean_acc_for_all_traffic, acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, dim_names,
-                                                mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model, save_bottom10_dir)
+    ####  TEST 3b ####
+    outlier_traffic_types = ['bottom10traffic', 'top10traffic']
+    outlier_traffic_idx = [bottom_idx, top_idx]
+    for i in range(len(outlier_traffic_types)):
+        save_traffic_dir = os.path.join(save_dir,  outlier_traffic_types[i])
+        if os.path.exists(save_traffic_dir):
+            shutil.rmtree(save_traffic_dir)
+        os.makedirs(save_traffic_dir)
+        utilsPredict.summary_for_sampled_traffic(outlier_traffic_idx[i], mean_acc_for_all_traffic, acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, dim_names,
+                                                    mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model, save_traffic_dir)
 
-    save_top10_dir = os.path.join(save_dir, 'top10traffic')
-    if not os.path.exists(save_top10_dir):
-        os.makedirs(save_top10_dir)
-    utilsPredict.summary_for_sampled_traffic(top_idx, mean_acc_for_all_traffic, acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, dim_names,
-                                                mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model, save_top10_dir)
-
-    # ####  TEST 5 ####
+    # ####  TEST 4 ####
     # save_sampled_dir = os.path.join(save_dir, 'sampledtraffic')
     # if not os.path.exists(save_sampled_dir):
     #     os.makedirs(save_sampled_dir)
@@ -181,7 +181,14 @@ def test_model_on_generator(model, data_generator, featureinfo_dir, pcapname_dir
 
     logfile.close()
 
-print('Computing metrics for train traffic...')
-test_model_on_generator(model, train_generator, featureinfo_dir, pcapname_dir, os.path.join(args.savedir, 'train'))
-print('Computing metrics for val traffic...')
-test_model_on_generator(model, test_generator, featureinfo_dir, pcapname_dir, os.path.join(args.savedir, 'val'))
+
+dataset_name = ['train', 'val']
+dataset_generator = [train_generator, test_generator]
+for i in range(len(dataset_name)):
+    print('Computing metrics for {} traffic...'.format(dataset_name[i]))
+    evaluate_model_on_generator(model, dataset_generator[i], featureinfo_dir, pcapname_dir, os.path.join(args.savedir, dataset_name[i]))
+
+# print('Computing metrics for train traffic...')
+# evaluate_model_on_generator(model, train_generator, featureinfo_dir, pcapname_dir, os.path.join(args.savedir, 'train'))
+# print('Computing metrics for val traffic...')
+# evaluate_model_on_generator(model, test_generator, featureinfo_dir, pcapname_dir, os.path.join(args.savedir, 'val'))
