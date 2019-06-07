@@ -52,7 +52,7 @@ def test_accuracy_of_traffic(mean_acc_for_all_traffic, logfile, save_dir):
     logfile.write("#####  TEST 1: OVERALL MEAN COSINE SIMILARITY  #####\n")
     logfile.write('Overall Mean Accuracy{:60}{:>10.6f}\n'.format(':', overall_mean_acc))
 
-def test_mse_dim_of_traffi(squared_error_for_all_traffic, dim_names, logfile, save_dir):
+def test_mse_dim_of_traffic(squared_error_for_all_traffic, dim_names, logfile, save_dir):
     n = sum([sqerr.shape[0] for sqerr in squared_error_for_all_traffic])
     mean_squared_error_for_features = np.sum([np.sum(sqerr,axis=0) for sqerr in squared_error_for_all_traffic], axis=0)/n
     utilsPlot.plot_mse_for_dim(mean_squared_error_for_features, dim_names, save_dir)
@@ -92,18 +92,36 @@ def test_mse_dim_of_outlier(bottom_idx, top_idx, mean_acc_for_all_traffic, mean_
     gen_plot(bottom_idx, 'bottom')
     gen_plot(top_idx, 'top')
 
-def summary_for_sampled_traffic(sampled_idx, mean_acc_for_all_traffic, acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, dim_names, mmap_data, byte_offset, sequence_len, norm_fn, model, save_dir):
-    
+def get_metrics_from_idx(sampled_idx, mean_acc_for_all_traffic, acc_for_all_traffic,
+                squared_error_for_all_traffic, mean_squared_error_for_all_traffic,
+                idx_for_all_traffic, pcap_filename,
+                mmap_data, byte_offset, sequence_len, norm_fn, model):
     sampled_pcap_filename = [pcap_filename[idx_for_all_traffic[i]] for i in sampled_idx]
     sampled_acc = [acc_for_all_traffic[i] for i in sampled_idx]
     sampled_mean_acc = [mean_acc_for_all_traffic[i] for i in sampled_idx]
-    sampled_mse_dim = [mean_squared_error_for_all_traffic[i] for i in sampled_idx]
+    # sampled_mse_dim = [mean_squared_error_for_all_traffic[i] for i in sampled_idx]
+    sampled_sqerr = [squared_error_for_all_traffic[i] for i in sampled_idx]
+    sampled_mean_sqerr = [mean_squared_error_for_all_traffic[i] for i in sampled_idx]
     sampled_input, sampled_true, sampled_seq_len = utilsDatagen.get_feature_vector([idx_for_all_traffic[i] for i in sampled_idx], mmap_data, byte_offset, sequence_len, norm_fn)
     sampled_predict = model.predict_on_batch(sampled_input)
+    metrics = {'acc':sampled_acc, 'mean_acc':sampled_mean_acc,
+                'squared_error':sampled_sqerr, 'mean_squared_error':sampled_mean_sqerr,
+                'true':sampled_true, 'predict':sampled_predict,
+                'pcap_filename':sampled_pcap_filename, 'seq_len':sampled_seq_len}
+    return metrics
+
+def summary_for_sampled_traffic(sampled_metrics, dim_names, save_dir):
+    sampled_pcap_filename = sampled_metrics['pcap_filename']
+    sampled_acc = sampled_metrics['acc']
+    sampled_mean_acc = sampled_metrics['mean_acc']
+    sampled_mean_sqerr = sampled_metrics['mean_squared_error']
+    sampled_true = sampled_metrics['true']
+    sampled_predict = sampled_metrics['predict']
+    sampled_seq_len = sampled_metrics['seq_len']
     for i in range(len(sampled_pcap_filename)):
-        top5dim = sorted(range(len(sampled_mse_dim[i])), key=lambda k:sampled_mse_dim[i][k])[:5]
-        bottom5dim = sorted(range(len(sampled_mse_dim[i])), key=lambda k:sampled_mse_dim[i][k])[-5:]
-        utilsPlot.plot_summary_for_sampled_traffic(sampled_pcap_filename[i], sampled_mse_dim[i], dim_names, sampled_mean_acc[i], sampled_acc[i],
+        top5dim = sorted(range(len(sampled_mean_sqerr[i])), key=lambda k:sampled_mean_sqerr[i][k])[:5]
+        bottom5dim = sorted(range(len(sampled_mean_sqerr[i])), key=lambda k:sampled_mean_sqerr[i][k])[-5:]
+        utilsPlot.plot_summary_for_sampled_traffic(sampled_pcap_filename[i], sampled_mean_sqerr[i], dim_names, sampled_mean_acc[i], sampled_acc[i],
                                             sampled_predict[:,:,top5dim][i,:sampled_seq_len[i]], sampled_true[:,:,top5dim][i,:sampled_seq_len[i]], top5dim,
                                             sampled_predict[:,:,bottom5dim][i,:sampled_seq_len[i]], sampled_true[:,:,bottom5dim][i,:sampled_seq_len[i]], bottom5dim,
                                             save_dir, trough_marker=True)

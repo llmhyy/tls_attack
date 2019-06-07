@@ -33,11 +33,31 @@ TEST 3 (outlier)
 
 '''
 
+def restricted_float(x):
+    x = float(x)
+    if x < 0.0 or x > 1.0:
+        raise argparse.ArgumentTypeError('{} not in range [0.0, 1.0]'.format(x))
+    return x
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model', help='Input directory path of existing model to be used for prediction', required=True)
 parser.add_argument('-r', '--rootdir', help='Input the root directory path containing the feature csv file and other supporting files')
 parser.add_argument('-s', '--savedir', help='Input the directory path to save the prediction results', required=True)  # e.g foo/bar/trained-rnn/normal/expt_2019-03-15_21-52-20/predict_results/predict_on_normal/
+parser.add_argument('-o', '--mode', help='Input the combination of test for evaluation of the model', default=0, type=int, choices=[0,1,2])
+parser.add_argument('-l', '--lower', help='Input the lower bound for sampling traffic', default=0, type=restricted_float)
+parser.add_argument('-u', '--upper', help='Input upper bound for sampling traffic', default=1, type=restricted_float)
 args = parser.parse_args()
+
+# Switches to run the test
+if args.mode == 0:
+    BASIC_TEST_SWITCH = True
+    SAMPLE_TRAFFIC_SWITCH = False
+elif args.mode == 1:
+    BASIC_TEST_SWITCH = False
+    SAMPLE_TRAFFIC_SWITCH = True
+elif args.mode == 2:
+    BASIC_TEST_SWITCH = True
+    SAMPLE_TRAFFIC_SWITCH = True
 
 # Obtain relevant filenames using string matches
 FEATURE_FILENAME = 'features_tls_*.csv'
@@ -114,8 +134,6 @@ def evaluate_model_on_generator(model, data_generator, featureinfo_dir, pcapname
     # Extract the pcap filename for traffic identification
     with open(pcapname_dir) as f:
         pcap_filename = [row.strip() for row in f.readlines()]
-    # Create a log file for logging in each tests
-    logfile = open(os.path.join(save_dir, 'predict_log.txt'),'w')
 
     # Save all results into python serialization format
     # print('Dumping results into json file...')
@@ -128,48 +146,68 @@ def evaluate_model_on_generator(model, data_generator, featureinfo_dir, pcapname
     #     json.dump(metrics, f)
     # print('Dumped!')
 
-    ####  TEST 1 ####
-    utilsPredict.test_accuracy_of_traffic(mean_acc_for_all_traffic, logfile, save_dir)
+    if BASIC_TEST_SWITCH:
 
-    ####  TEST 2 ####
-    utilsPredict.test_mse_dim_of_traffi(squared_error_for_all_traffic, dim_names, logfile, save_dir)
+        # Create a log file for logging in each tests
+        logfile = open(os.path.join(save_dir, 'predict_log.txt'),'w')
 
-    # Get outliers from traffic based on mean acc
-    outlier_count = 10
-    bottom_idx, top_idx = utilsPredict.find_outlier(outlier_count, mean_acc_for_all_traffic)
+        ####  TEST 1 ####
+        utilsPredict.test_accuracy_of_traffic(mean_acc_for_all_traffic, logfile, save_dir)
 
-    ####  TEST 3a ####
-    utilsPredict.test_mse_dim_of_outlier(bottom_idx, top_idx, mean_acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, logfile, save_dir)
+        ####  TEST 2 ####
+        utilsPredict.test_mse_dim_of_traffic(squared_error_for_all_traffic, dim_names, logfile, save_dir)
 
-    ####  TEST 3b ####
-    outlier_traffic_types = ['bottom10traffic', 'top10traffic']
-    outlier_traffic_idx = [bottom_idx, top_idx]
-    for i in range(len(outlier_traffic_types)):
-        save_traffic_dir = os.path.join(save_dir,  outlier_traffic_types[i])
-        if os.path.exists(save_traffic_dir):
-            shutil.rmtree(save_traffic_dir)
-        os.makedirs(save_traffic_dir)
-        utilsPredict.summary_for_sampled_traffic(outlier_traffic_idx[i], mean_acc_for_all_traffic, acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, dim_names,
-                                                    mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model, save_traffic_dir)
+        # Get outliers from traffic based on mean acc
+        outlier_count = 10
+        bottom_idx, top_idx = utilsPredict.find_outlier(outlier_count, mean_acc_for_all_traffic)
 
-    # ####  TEST 4 ####
-    # save_sampled_dir = os.path.join(save_dir, 'sampledtraffic')
-    # if not os.path.exists(save_sampled_dir):
-    #     os.makedirs(save_sampled_dir)
-    # lower_limit_acc, upper_limit_acc = 0.79, 0.81
-    # bounded_acc_idx = [(i,mean_acc) for i,mean_acc in enumerate(mean_acc_for_all_traffic) if mean_acc >= lower_limit_acc and mean_acc <= upper_limit_acc]
-    # if len(bounded_acc_idx)>0:
-    #     try: 
-    #         random.seed(2018)
-    #         sampled_acc_idx = random.sample(bounded_acc_idx, 10)
-    #     except ValueError:
-    #         sampled_acc_idx = bounded_acc_idx
+        ####  TEST 3a ####
+        utilsPredict.test_mse_dim_of_outlier(bottom_idx, top_idx, mean_acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, logfile, save_dir)
 
-    #     sampled_idx, sampled_mean_acc = [list(t) for t in zip(*sampled_acc_idx)]
-    #     utilsPredict.summary_for_sampled_traffic(sampled_idx, mean_acc_for_all_traffic, acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, dim_names,
-    #                                                 mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model, save_sampled_dir)
-    # else:
-    #     print("No traffic found within bound of {}-{}".format(lower_limit_acc, upper_limit_acc))
+        ####  TEST 3b ####
+        outlier_traffic_types = ['bottom10traffic', 'top10traffic']
+        outlier_traffic_idx = [bottom_idx, top_idx]
+        for i in range(len(outlier_traffic_types)):
+            save_traffic_dir = os.path.join(save_dir,  outlier_traffic_types[i])
+            if os.path.exists(save_traffic_dir):
+                shutil.rmtree(save_traffic_dir)
+            os.makedirs(save_traffic_dir)
+            utilsPredict.summary_for_sampled_traffic(outlier_traffic_idx[i], mean_acc_for_all_traffic, acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, dim_names,
+                                                        mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model, save_traffic_dir)
+
+        logfile.close()
+
+    if SAMPLE_TRAFFIC_SWITCH:
+        ####  TEST 4 ####
+        save_sampled_dir = os.path.join(save_dir, 'sampledtraffic_L{}_U{}'.format(args.lower, args.upper))
+        if os.path.exists(save_sampled_dir):
+            shutil.rmtree(save_sampled_dir)
+        os.makedirs(save_sampled_dir)
+        bounded_acc_idx = [(i,mean_acc) for i,mean_acc in enumerate(mean_acc_for_all_traffic) if mean_acc >= args.lower and mean_acc <= args.upper]
+        if len(bounded_acc_idx)>0:
+            print("{} traffic found within bound of {}-{}".format(len(bounded_acc_idx), args.lower, args.upper))
+            
+            try: 
+                random.seed(2018)
+                sampled_acc_idx = random.sample(bounded_acc_idx, 10)
+            except ValueError:
+                sampled_acc_idx = bounded_acc_idx
+
+            print("Sampling {} traffic".format(len(sampled_acc_idx)))
+            sampled_idx,_ = [list(t) for t in zip(*sampled_acc_idx)]
+            sampled_metrics = utilsPredict.get_metrics_from_idx(sampled_idx, mean_acc_for_all_traffic, acc_for_all_traffic, 
+                                                        squared_error_for_all_traffic, mean_squared_error_for_all_traffic, 
+                                                        idx_for_all_traffic, pcap_filename,
+                                                        mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model)
+
+            # General summary of sampled traffic
+            utilsPredict.summary_for_sampled_traffic(sampled_metrics, dim_names, save_sampled_dir)
+
+            # Interactive plot for sampled traffic
+            utilsPlot.plot_interactive_summary_for_sampled_traffic(sampled_metrics, dim_names, save_sampled_dir, show=True)
+
+        else:
+            print("No traffic found within bound of {}-{}".format(args.lower, args.upper))
 
     # Record the prediction accuracy into file
     RESULTS_FILENAME = 'results.csv'
@@ -178,8 +216,6 @@ def evaluate_model_on_generator(model, data_generator, featureinfo_dir, pcapname
     with open(os.path.join(save_dir, RESULTS_FILENAME), 'w') as f:
         for x in sorted_acc:
             f.write(str(x)+'\n')
-
-    logfile.close()
 
 dataset_name = ['train', 'val']
 dataset_generator = [train_generator, test_generator]

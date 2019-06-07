@@ -8,6 +8,7 @@ from matplotlib.pyplot import figure
 from matplotlib.widgets import Slider, Button, RadioButtons
 from matplotlib.patches import Arrow
 
+
 #defaults to rcParams["figure.figsize"] = [6.4, 4.8]
 
 #########   Prediction   ##########
@@ -50,7 +51,8 @@ def plot_mse_for_dim_for_outliers(pcap_filename, mean_acc, mse_dim, typename, sa
     fig.set_size_inches(25, 18)
     for i in range(n):
         ax[i//col,i%col].bar(np.arange(len(mse_dim[i])), mse_dim[i])
-        ax[i//col,i%col].set_title(str(pcap_filename[i])+'\nAcc: '+str(mean_acc[i]), fontsize=10)
+        path, file = os.path.split(pcap_filename[i])
+        ax[i//col,i%col].set_title(path+'\n'+file+'\nAcc: '+str(mean_acc[i]), fontsize=10)
     fig.suptitle('MSE score for each dimension for {} {} outlier'.format(typename, n), fontsize=24)
     plt.savefig(os.path.join(save_dir, 'outlier({}{})'.format(typename,n)))
     if show:
@@ -113,7 +115,7 @@ def plot_summary_for_sampled_traffic(pcap_filename, mse_dim, dim_name, mean_acc,
     plt.savefig(os.path.join(save_dir, '{}.png'.format(pcap_filename)))
     if show:
         plt.show()
-    plt.clf()
+    plt.close()
 
 def plot_mse_for_dim(mse_dim, dim_name, save_dir, show=False):
     fig = plt.gcf()
@@ -128,9 +130,13 @@ def plot_mse_for_dim(mse_dim, dim_name, save_dir, show=False):
         plt.show()
     plt.clf()
 
-def plot_interactive_summary_for_sampled_traffic(pcap_filenames, mean_acc, pktwise_acc, pkwise_sqerr, dim_names,
-                                                    predict, true,
-                                                    save_dir, show=False):
+def plot_interactive_summary_for_sampled_traffic(sampled_metrics, dim_names, save_dir, show=False):
+    pcap_filenames = sampled_metrics['pcap_filename']
+    mean_acc = sampled_metrics['mean_acc']
+    pktwise_acc = sampled_metrics['acc']
+    pkwise_sqerr = sampled_metrics['squared_error']
+    predict = sampled_metrics['predict']
+    true = sampled_metrics['true']
 
     def plot_graph():
         fig.suptitle('{}\nAcc: {}'.format(pcap_filenames[pointer], mean_acc[pointer]))
