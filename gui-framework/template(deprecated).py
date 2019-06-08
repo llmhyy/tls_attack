@@ -275,7 +275,7 @@ class Ui_MainWindow(object):
         SEED = 2019
         SEQUENCE_LEN = 100
         FEATURE_FILENAME = 'features_tls_*.csv'
-        FEATUREINFO_FILENAME = 'feature_info_*.csv'
+        FEATUREINFO_FILENAME = 'features_info_*.csv'
         PCAPNAME_FILENAME = 'pcapname_*.csv'
         tmp = str(self.chooseTraffic.currentText()).lower().split('(')
         dataset_name = tmp[0].strip()
@@ -341,7 +341,7 @@ class Ui_MainWindow(object):
         SEED = 2019
         SEQUENCE_LEN = 100
         FEATURE_FILENAME = 'features_tls_*.csv'
-        FEATUREINFO_FILENAME = 'feature_info_*.csv'
+        FEATUREINFO_FILENAME = 'features_info_*.csv'
         PCAPNAME_FILENAME = 'pcapname_*.csv'
         tmp = str(self.chooseTraffic.currentText()).lower().split('(')
         dataset_name = tmp[0].strip()
@@ -437,9 +437,9 @@ class Ui_MainWindow(object):
         
         # Preprocess the features
         SEQUENCE_LEN = 100
-        MINMAX_FILENAME = 'minmax_features.csv'
+        MINMAX_FILENAME = 'features_minmax_*.csv'
         try:
-            with open(os.path.join(self.feature_dir, MINMAX_FILENAME), 'r') as f:
+            with open(os.path.join(self.feature_dir, fnmatch.filter(os.listdir(self.feature_dir), MINMAX_FILENAME)), 'r') as f:
                 min_max_feature_list = json.load(f)
             min_max_feature = (np.array(min_max_feature_list[0]), np.array(min_max_feature_list[1]))
         except FileNotFoundError:

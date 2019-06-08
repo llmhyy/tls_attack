@@ -1,11 +1,15 @@
 import os
+import sys
+import json
 import logging
 import argparse
 import numpy as np
 from datetime import datetime
 from ruamel.yaml import YAML
 
-import utils 
+import utils
+sys.path.append(os.path.join('..', 'rnn-model'))
+import utils_datagen as utilsDatagen
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-p', '--pcapdir', help='Input the directory path containing the pcap files for extraction', required=True)
@@ -48,7 +52,6 @@ def search_and_extract(pcap_dir, features_dir, pcapname_dir, enums):
                         features_file.write('\n')
 
                         # Write the filename of the pcap file into a file for reference
-                        # print(str(os.path.join(root,f)).replace(pcap_dir,""))
                         pcapname_file.write(str(os.path.join(root,f)).replace(pcap_dir,"")+'\n')
 
                         success+=1
@@ -61,7 +64,6 @@ def search_and_extract(pcap_dir, features_dir, pcapname_dir, enums):
                         failed+=1
                         continue
 
-    # print("{} pcap files have been successfully parsed from {} with features generated. {} pcap files have failed".format(success, pcap_dir, failed))
     print("Extracted features from pcap files: {} success, {} failure".format(success, failed))
 
 if args.refenum:
@@ -83,9 +85,9 @@ else:
         yaml.dump(enums, f)
 
 # File for updating information on feature extracted in this feature extraction
-feature_info_filename = 'feature_info.csv'
-new_feature_info_filename = os.path.join(args.savedir, 'feature_info_{}.csv'.format(datetime_now.strftime('%Y-%m-%d_%H-%M-%S')))
-with open(feature_info_filename,'r') as in_file, open(new_feature_info_filename,'w') as out_file:
+features_info_filename = 'features_info.csv'
+new_features_info_filename = os.path.join(args.savedir, 'features_info_{}.csv'.format(datetime_now.strftime('%Y-%m-%d_%H-%M-%S')))
+with open(features_info_filename,'r') as in_file, open(new_features_info_filename,'w') as out_file:
     for line in in_file:
         enum_list = None
         split_line = line.split(',')
@@ -109,8 +111,17 @@ with open(feature_info_filename,'r') as in_file, open(new_feature_info_filename,
         else:
             out_file.write(line)
 
-# File for storing extracted features
+# Generate file for storing extracted features
+print('Iterating through PCAP files and extracting features...')
 features_dir = os.path.join(args.savedir, 'features_tls_{}.csv'.format(datetime_now.strftime('%Y-%m-%d_%H-%M-%S')))
 pcapname_dir = os.path.join(args.savedir, 'pcapname_{}.csv'.format(datetime_now.strftime('%Y-%m-%d_%H-%M-%S')))
 search_and_extract(args.pcapdir, features_dir, pcapname_dir, enums)
 
+# Generate file for storing min-max of extracted features file
+print('Determining min-max for each dimension from extracted features...')
+minmax_dir = os.path.join(args.savedir, 'features_minmax_{}.csv'.format(datetime_now.strftime('%Y-%m-%d_%H-%M-%S')))
+mmap_data, byte_offset = utilsDatagen.get_mmapdata_and_byteoffset(features_dir)
+min_max_feature = utilsDatagen.get_min_max(mmap_data, byte_offset)
+min_max_feature_list = (min_max_feature[0].tolist(), min_max_feature[1].tolist())
+with open(minmax_dir, 'w') as f:
+    json.dump(min_max_feature_list, f)

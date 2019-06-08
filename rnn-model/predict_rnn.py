@@ -41,7 +41,7 @@ def restricted_float(x):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model', help='Input directory path of existing model to be used for prediction', required=True)
-parser.add_argument('-r', '--rootdir', help='Input the root directory path containing the feature csv file and other supporting files')
+parser.add_argument('-r', '--rootdir', help='Input the directory path of the folder containing the feature file and other supporting files')
 parser.add_argument('-s', '--savedir', help='Input the directory path to save the prediction results', required=True)  # e.g foo/bar/trained-rnn/normal/expt_2019-03-15_21-52-20/predict_results/predict_on_normal/
 parser.add_argument('-o', '--mode', help='Input the combination of test for evaluation of the model', default=0, type=int, choices=[0,1,2])
 parser.add_argument('-l', '--lower', help='Input the lower bound for sampling traffic', default=0, type=restricted_float)
@@ -59,14 +59,16 @@ elif args.mode == 2:
     BASIC_TEST_SWITCH = True
     SAMPLE_TRAFFIC_SWITCH = True
 
-# Obtain relevant filenames using string matches
+# Define filenames from args.rootdir
 FEATURE_FILENAME = 'features_tls_*.csv'
-FEATUREINFO_FILENAME = 'feature_info_*.csv'
+FEATUREINFO_FILENAME = 'features_info_*.csv'
 PCAPNAME_FILENAME = 'pcapname_*.csv'
+MINMAX_FILENAME = 'features_minmax_*.csv'
 rootdir_filenames = os.listdir(args.rootdir)
 feature_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, FEATURE_FILENAME)[0])
 featureinfo_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, FEATUREINFO_FILENAME)[0])
 pcapname_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, PCAPNAME_FILENAME)[0])
+minmax_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, MINMAX_FILENAME)[0])
 
 BATCH_SIZE = 64
 SEQUENCE_LEN = 100
@@ -83,18 +85,13 @@ print('\nLoading features into memory...')
 mmap_data, byte_offset = utilsDatagen.get_mmapdata_and_byteoffset(feature_dir)
 
 # Get min and max for each feature
-MINMAX_FILENAME = 'minmax_features.csv'
-minmax_dir = os.path.join(args.rootdir, MINMAX_FILENAME)
 try:
     with open(minmax_dir, 'r') as f:
         min_max_feature_list = json.load(f)
     min_max_feature = (np.array(min_max_feature_list[0]), np.array(min_max_feature_list[1]))
 except FileNotFoundError:
-    print('Min-max feature file does not exist')
-    min_max_feature = utilsDatagen.get_min_max(mmap_data, byte_offset)
-    min_max_feature_list = (min_max_feature[0].tolist(), min_max_feature[1].tolist())
-    with open(minmax_dir, 'w') as f:
-        json.dump(min_max_feature_list, f)
+    print('Error: Min-max feature file does not exist in args.rootdir')
+    exit()
 
 # Split the dataset into train and test and return train/test indexes to the byte offset
 train_idx,test_idx = utilsDatagen.split_train_test(byte_offset, SPLIT_RATIO, SEED)

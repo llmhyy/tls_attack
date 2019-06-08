@@ -3,6 +3,7 @@ import sys
 import json
 import math
 import mmap
+import fnmatch
 import argparse
 import tracemalloc
 import numpy as np
@@ -30,11 +31,18 @@ import utils_metric as utilsMetric
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-e', '--epoch', help='Input epoch for training', default=100, type=int)
-parser.add_argument('-f', '--featuredir', help='Input the directory path of feature file to be used', required=True)
+parser.add_argument('-r', '--rootdir', help='Input the directory path of the folder containing the feature file and other supporting files', required=True)
 parser.add_argument('-s', '--savedir', help='Input the directory path to save the rnn model and its training results', required=True)  # e.g foo/bar/trained-rnn/normal/
 parser.add_argument('-o', '--show', help='Flag for displaying plots', action='store_true', default=False)
 parser.add_argument('-m', '--model', help='Input directory for existing model to be trained')
 args = parser.parse_args()
+
+# Define filenames from args.rootdir
+FEATURE_FILENAME = 'features_tls_*.csv'
+MINMAX_FILENAME = 'features_minmax_*.csv'
+rootdir_filenames = os.listdir(args.rootdir)
+feature_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, FEATURE_FILENAME)[0])
+minmax_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, MINMAX_FILENAME)[0])
 
 # Config info
 DATETIME_NOW = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
@@ -53,10 +61,17 @@ tracemalloc.start()
 #####################################################
 
 # Load the mmap data and the byte offsets from the feature file
-mmap_data, byte_offset = utilsDatagen.get_mmapdata_and_byteoffset(args.featuredir)
+mmap_data, byte_offset = utilsDatagen.get_mmapdata_and_byteoffset(feature_dir)
 
 # Get min and max for each feature
-min_max_feature = utilsDatagen.get_min_max(mmap_data, byte_offset)
+try:
+    with open(minmax_dir, 'r') as f:
+        min_max_feature_list = json.load(f)
+    min_max_feature = (np.array(min_max_feature_list[0]), np.array(min_max_feature_list[1]))
+except FileNotFoundError:
+    print('Error: Min-max feature file does not exist in args.rootdir')
+    exit()
+# min_max_feature = utilsDatagen.get_min_max(mmap_data, byte_offset)
 
 # Split the dataset into train and test and return train/test indexes to the byte offset
 train_idx, test_idx = utilsDatagen.split_train_test(byte_offset, SPLIT_RATIO, SEED)
@@ -241,7 +256,7 @@ with open(os.path.join(results_dir, 'train_log.txt'),'w') as logfile:
     logfile.write('Training Start Time: {}\n'.format(DATETIME_NOW.split('_')[1]))
     logfile.write('Batch Size: {}\n'.format(BATCH_SIZE))
     logfile.write('Epoch: {}\n'.format(EPOCH))
-    logfile.write('Feature file used: {}\n'.format(os.path.basename(args.featuredir)))
+    logfile.write('Feature file used: {}\n'.format(os.path.basename(feature_dir)))
     logfile.write("Existing model used: {}\n".format(args.model))
     logfile.write("Split Ratio: {}\n".format(SPLIT_RATIO))
     logfile.write("Seed: {}\n".format(SEED))
