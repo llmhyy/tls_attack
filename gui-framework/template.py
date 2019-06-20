@@ -16,7 +16,7 @@ import subprocess
 from keras.models import load_model
 from PyQt5 import QtCore, QtGui, QtWidgets
 import matplotlib.pyplot as plt
-from matplotlib.backends.qt_compat import QtCore, QtWidgets
+# from matplotlib.backends.qt_compat import QtCore, QtWidgets
 from matplotlib.backends.backend_qt5agg import (FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
 from matplotlib.figure import Figure
 from ruamel.yaml import YAML
@@ -153,13 +153,34 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1838, 963)
-        MainWindow.setStyleSheet("background-color: rgb(74, 136, 204);")
+        MainWindow.setStyleSheet("""
+            #centralwidget{
+                background-color: rgb(74, 136, 204)
+            }
+            QMessageBox{
+                background-color: rgb(255,255,255);
+            }
+            QLabel{
+                background-color: rgb(212, 217, 217);
+            }
+            QComboBox{
+                background-color: rgb(255, 255, 255);
+            }
+            QPushButton{
+                background-color: rgb(255, 255, 255);
+            }
+            QListWidget{
+                background-color: rgb(255, 255, 255);
+            }
+            QTableWidget{
+                background-color: rgb(255, 255, 255);
+            }
+            """)
         
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
 
         self.background = QtWidgets.QLabel(self.centralwidget)
-        self.background.setStyleSheet("background-color: rgb(212, 217, 217);")
         self.background.setText("")
         self.background.setObjectName("background")
         
@@ -168,7 +189,6 @@ class Ui_MainWindow(object):
         self.centralwidget.setLayout(self.vbox1)
 
         self.chooseModel = QtWidgets.QComboBox()
-        self.chooseModel.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.chooseModel.setEditable(False)
         self.chooseModel.setObjectName("chooseModel")
         self.chooseModel.addItem("- Model type -")
@@ -176,13 +196,11 @@ class Ui_MainWindow(object):
             self.chooseModel.addItem('{} model'.format(m.title()))
 
         self.predictsOnLabel = QtWidgets.QLabel()
-        self.predictsOnLabel.setStyleSheet("background-color: rgb(212, 217, 217);")
         self.predictsOnLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.predictsOnLabel.setObjectName("predictsOnLabel")
         self.predictsOnLabel.setText('predicts on')
         
         self.chooseTraffic = QtWidgets.QComboBox()
-        self.chooseTraffic.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.chooseTraffic.setObjectName("chooseTraffic")
         self.chooseTraffic.addItem("- Traffic type -")
         for f in config.features.keys():
@@ -190,12 +208,10 @@ class Ui_MainWindow(object):
             self.chooseTraffic.addItem('{} (val)'.format(f.title()))
 
         self.searchCriteriaLabel = QtWidgets.QLabel()
-        self.searchCriteriaLabel.setStyleSheet("background-color: rgb(212, 217, 217);")
         self.searchCriteriaLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.searchCriteriaLabel.setObjectName("searchCriteriaLabel")
         
         self.chooseSearchCriteria = QtWidgets.QComboBox()
-        self.chooseSearchCriteria.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.chooseSearchCriteria.setObjectName("chooseSearchCriteria")
         self.chooseSearchCriteria.addItem("search...")
         for c in config.criteria.keys():
@@ -205,17 +221,13 @@ class Ui_MainWindow(object):
                 self.chooseSearchCriteria.addItem('High Accuracy (>{})'.format(config.criteria[c]))
             elif c is 'none':
                 self.chooseSearchCriteria.addItem('None')
-        # self.chooseSearchCriteria.addItem("Low Accuracy (<0.5)")
-        # self.chooseSearchCriteria.addItem("High Accuracy (>0.8)")
 
         self.searchButton = QtWidgets.QPushButton()
-        self.searchButton.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.searchButton.setObjectName("searchButton")
         self.searchButton.setText('Search')
         self.searchButton.clicked.connect(self.onSearch)
         
         self.settingButton = QtWidgets.QPushButton()
-        self.settingButton.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.settingButton.setObjectName("settingButton")
         self.settingButton.setText('Settings')
 
@@ -238,7 +250,6 @@ class Ui_MainWindow(object):
         self.trafficLabel.setText('Traffic')
         
         self.listWidget = QtWidgets.QListWidget()
-        self.listWidget.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.listWidget.setObjectName("listWidget")
 
         self.vbox3 = QtWidgets.QVBoxLayout()
@@ -252,7 +263,6 @@ class Ui_MainWindow(object):
         self.dimGraph.setParent(self.dimGraphWidget)
 
         self.tableWidget = QtWidgets.QTableWidget()
-        self.tableWidget.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.tableWidget.setShowGrid(True)
         self.tableWidget.setObjectName("tableWidget")
         self.tableWidget.setColumnCount(0)
@@ -417,20 +427,21 @@ class Ui_MainWindow(object):
             print(e)
 
     def loadTraffic(self):
-        tmp_path = os.path.join(self.pcap_dirs, config.pcapfiles[self.dataset_name])
-        if not os.path.exists(tmp_path):
+        try:
+            pcap_dir = os.path.join(self.pcap_dirs, config.pcapfiles[self.dataset_name])
+        except KeyError:
             QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Pcap directory not found. Check config.py')
             return
-        pcap_dir = tmp_path
 
-        tmp_path = os.path.join(self.model_dirs, config.results[self.model_name][self.dataset_name][self.split_name])
-        if not os.path.exists(tmp_path):
+        try:
+            results_dir = os.path.join(self.model_dirs, config.results[self.model_name][self.dataset_name][self.split_name])
+        except KeyError:
             QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Directory to results.csv not found. Check config.py')
             return
-        results_dir = tmp_path
+
         with open(results_dir) as f:
             mean_acc_for_all_traffic = [float(l.strip()) for l in f.readlines()]
-        
+
         # Get the dataset from the pcap directory and add to ListWidget
         count = 0
         normalized_pcap_filenames = [os.path.normpath(i) for i in self.pcap_filenames]
