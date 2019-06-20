@@ -1,8 +1,7 @@
 import os
 import sys
 import argparse
-# from template import Ui_MainWindow
-from template2 import Ui_MainWindow
+from template import Ui_MainWindow
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 parser = argparse.ArgumentParser()
