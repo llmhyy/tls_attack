@@ -47,11 +47,10 @@ def split_train_test(byte_offset, split_ratio, seed):
     indices = np.random.RandomState(seed=seed).permutation(len(byte_offset)) 
     split_idx = math.ceil((1-split_ratio)*len(byte_offset))
     train_idx, test_idx = indices[:split_idx], indices[split_idx:]
-    # train_byte_offset = [byte_offset[idx] for idx in train_idx]
-    # test_byte_offset = [byte_offset[idx] for idx in test_idx]
-    # if return_idx:
-        # return (train_byte_offset, test_byte_offset, train_idx, test_idx)
-    # return (train_byte_offset, test_byte_offset)
+    # Avoid an empty list in test set
+    if len(test_idx) == 0:
+        test_idx = train_idx[-1:]
+        train_idx = train_idx[:-1]
     return train_idx, test_idx
 
 def normalize(option, min_max_feature=None):

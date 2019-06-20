@@ -154,23 +154,24 @@ def evaluate_model_on_generator(model, data_generator, featureinfo_dir, pcapname
         ####  TEST 2 ####
         utilsPredict.test_mse_dim_of_traffic(squared_error_for_all_traffic, dim_names, logfile, save_dir)
 
-        # Get outliers from traffic based on mean acc
-        outlier_count = 10
-        bottom_idx, top_idx = utilsPredict.find_outlier(outlier_count, mean_acc_for_all_traffic)
+        if len(idx_for_all_traffic) > 100: # find outliers only for sufficiently large datasets
+            # Get outliers from traffic based on mean acc
+            outlier_count = 10
+            bottom_idx, top_idx = utilsPredict.find_outlier(outlier_count, mean_acc_for_all_traffic)
 
-        ####  TEST 3a ####
-        utilsPredict.test_mse_dim_of_outlier(bottom_idx, top_idx, mean_acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, logfile, save_dir)
+            ####  TEST 3a ####
+            utilsPredict.test_mse_dim_of_outlier(bottom_idx, top_idx, mean_acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, logfile, save_dir)
 
-        ####  TEST 3b ####
-        outlier_traffic_types = ['bottom10traffic', 'top10traffic']
-        outlier_traffic_idx = [bottom_idx, top_idx]
-        for i in range(len(outlier_traffic_types)):
-            save_traffic_dir = os.path.join(save_dir,  outlier_traffic_types[i])
-            if os.path.exists(save_traffic_dir):
-                shutil.rmtree(save_traffic_dir)
-            os.makedirs(save_traffic_dir)
-            utilsPredict.summary_for_sampled_traffic(outlier_traffic_idx[i], mean_acc_for_all_traffic, acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, dim_names,
-                                                        mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model, save_traffic_dir)
+            ####  TEST 3b ####
+            outlier_traffic_types = ['bottom10traffic', 'top10traffic']
+            outlier_traffic_idx = [bottom_idx, top_idx]
+            for i in range(len(outlier_traffic_types)):
+                save_traffic_dir = os.path.join(save_dir,  outlier_traffic_types[i])
+                if os.path.exists(save_traffic_dir):
+                    shutil.rmtree(save_traffic_dir)
+                os.makedirs(save_traffic_dir)
+                utilsPredict.summary_for_sampled_traffic(outlier_traffic_idx[i], mean_acc_for_all_traffic, acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, dim_names,
+                                                            mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model, save_traffic_dir)
 
         logfile.close()
 

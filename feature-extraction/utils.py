@@ -84,12 +84,18 @@ def extract_tcp_features(pcapfile, limit):
         # 5: FLAG
         num_of_flags = 9
         # Convert hex into binary and pad left with 0 to fill 9 flags
-        flags = list(bin(int(packet.tcp.flags, 16))[2:].zfill(num_of_flags))
-        features.extend(list(map(int, flags)))
+        try:
+            flags = list(bin(int(packet.tcp.flags, 16))[2:].zfill(num_of_flags))
+            features.extend(list(map(int, flags)))
+        except AttributeError:
+            features.extend([0]*num_of_flags)
 
         # 6: WINDOW SIZE
         # Append the calculated window size (window size value * scaling factor)
-        features.append(int(packet.tcp.window_size))
+        try:
+            features.append(int(packet.tcp.window_size))
+        except AttributeError:
+            features.append(0)
 
         traffic_features.append(features)
 
@@ -605,6 +611,8 @@ def extract_tslssl_features(pcapfile, enums, limit):
 
         if handshake:
             certificates = handshake.certificates.certificate_tree
+            if type(certificates) != list:
+                certificates = [certificates]
             for certificate in certificates:
                 algo_id = str(certificate.algorithmIdentifier_element.id)
                 if algo_id in enumSignatureHashCert:
@@ -615,6 +623,8 @@ def extract_tslssl_features(pcapfile, enums, limit):
 
         elif handshake2:
             certificates = handshake2['ssl.handshake.certificates']['ssl.handshake.certificate_tree']
+            if type(certificates) != list:
+                certificates = [certificates]
             for certificate in certificates:
                 for k,v in certificate.items():
                     if 'algorithmIdentifier_element' in k:
@@ -749,7 +759,7 @@ if __name__ == '__main__':
     # Test whether all features are extracted
     # sample = 'sample/ari.nus.edu.sg_2018-12-24_14-30-02.pcap'
     # sample = 'sample/www.zeroaggressionproject.org_2018-12-21_16-19-03.pcap'
-    sample = 'sample/www.stripes.com_2018-12-21_16-20-12.pcap'
+
     # sample = 'sample/australianmuseum.net.au_2018-12-21_16-15-59.pcap'
     # sample = 'sample/openssl102n.pcap'
 
@@ -762,6 +772,9 @@ if __name__ == '__main__':
     
     # sample = 'sample/sslv3/www.ceemjournal.org_2018-12-28_17-18-46_0.pcap'
     # sample = 'sample/sslv3/www.britishmuseum.org_2018-12-28_17-22-11_0.pcap'
+
+    sample = 'sample_pcap/trickbot_to_87.101.70.109.pcap'
+    # sample = 'sample_pcap/www.stripes.com_2018-12-21_16-20-12.pcap'
 
     # enumCipherSuites,enumCompressionMethods, enumSupportedGroups, enumSignatureHashClient, enumSignatureHashCert = [],[],[],[],[]
     # enumCipherSuites = enums['ciphersuites']
