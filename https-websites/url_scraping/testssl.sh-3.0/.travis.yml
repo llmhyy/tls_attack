@@ -1,0 +1,14 @@
+language: perl
+perl:
+  - "5.18"
+addons:
+  apt:
+    packages:
+    - dnsutils
+install:
+  - cpanm Test::More
+  - cpanm Data::Dumper
+  - cpanm JSON
+  - cpanm JSON::Validator
+script:
+  - prove -v

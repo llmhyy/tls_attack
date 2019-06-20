@@ -17,5 +17,3 @@ with open("urls.csv", "r") as f:
                 h.writerow(i)
         print(type(i))
         print(c_string)
-   
-        
