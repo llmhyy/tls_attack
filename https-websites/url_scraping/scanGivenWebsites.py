@@ -2,9 +2,10 @@ import os
 import csv
 import logging
 import argparse
+import subprocess
 from itertools import islice
 
-from url_scraping import urlScrapping
+import urlScrapping
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--csv_input', help='Input the csv file to read. URL must be on the first column')
@@ -29,7 +30,10 @@ def main():
             print(processing_url_msg)
             logging.info(processing_url_msg)
             if vulnerabilityScanner.isResponsive(url) and vulnerabilityScanner.isHttps(url):
-                vulnerabilityScanner.scanURL(url)
+                try:
+                    vulnerabilityScanner.scanURL(url)
+                except subprocess.TimeoutExpired:
+                    continue
                 vulnerabilityScanner.writeIntoReport()
 
 if __name__ == '__main__':

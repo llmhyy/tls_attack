@@ -141,7 +141,10 @@ class VulnerabilityScanner:
         if os.path.exists(self.tempFilepath):
             os.remove(self.tempFilepath)
         cmd = 'testssl.sh-3.0/testssl.sh --csvfile ' + self.tempFilepath + ' -U ' + url
-        subprocess.run(cmd.split(' '), stdout=subprocess.DEVNULL)
+        try:
+            subprocess.run(cmd.split(' '), stdout=subprocess.DEVNULL, timeout=1800) # timeout after 30 mins
+        except subprocess.TimeoutExpired:
+            logging.warning('testssl has timeout on {}'.format(url))
 
     def writeIntoReport(self):
         rows = self.getRowForReport()
@@ -235,7 +238,12 @@ class FinderScannerWorker(threading.Thread):
                         processing_url_msg = 'Thread-{}: Processing url {}'.format(self.threadID, domainName)
                         print(processing_url_msg)
                         logging.info(processing_url_msg)
-                        self.vulnerabilityScanner.scanURL(url)
+
+                        try:
+                            self.vulnerabilityScanner.scanURL(url)
+                        except subprocess.TimeoutExpired:
+                            continue
+
                         try:
                             self.threadLock.acquire()
                             self.vulnerabilityScanner.writeIntoReport()
