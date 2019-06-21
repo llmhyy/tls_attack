@@ -131,18 +131,41 @@ class AccCanvas(FigureCanvas):
         self.data = data
         acc = self.data['acc'][0]
         mean_acc = self.data['mean_acc'][0]
-        self.acc_ax.plot(acc, [i+1 for i in range(len(acc))])
+        self.line, = self.acc_ax.plot(acc, [i+1 for i in range(len(acc))])
         for i,pkt_acc in enumerate(acc):
-            self.acc_ax.plot(pkt_acc, i+1, 'ro', picker=5)
-            self.acc_ax.text((pkt_acc-0.05), i+1, i+1, fontsize=8, horizontalalignment='center')
+            self.acc_ax.plot(pkt_acc, i+1, 'ro', picker=True, markersize=3)
+            # self.acc_ax.text((pkt_acc-0.05), i+1, i+1, fontsize=7, horizontalalignment='center', verticalalignment='center')
         self.acc_ax.invert_yaxis()
         self.acc_ax.set_title('Mean Acc: {}'.format(mean_acc))
         self.acc_ax.set_xlabel('Acc')
+        self.annot = self.acc_ax.annotate('', xy=(0.5,0.5), xytext=(-1, 5), textcoords='offset points', horizontalalignment='center')
+        self.annot.set_visible(False)
         self.acc_fig.canvas.mpl_connect('pick_event', self.on_pick)
+        self.acc_fig.canvas.mpl_connect('motion_notify_event', self.hover)
         self.draw()
 
     def on_pick(self, event):
         self.dimcanvas.plot(event, self.data)
+
+    def update_annot(self, idx):
+        x,y = self.line.get_data()
+        self.annot.xy = (x[idx['ind'][0]], y[idx['ind'][0]])
+        text = '{}'.format(y[idx['ind'][0]])
+        self.annot.set_text(text)
+        # self.annot.get_bbox_patch().set_alpha(0.4)
+
+    def hover(self, event):
+        vis = self.annot.get_visible()
+        if event.inaxes == self.acc_ax:
+            is_contain, idx = self.line.contains(event)
+            if is_contain:
+                self.update_annot(idx)
+                self.annot.set_visible(True)
+                self.draw_idle()
+            else:
+                if vis:
+                    self.annot.set_visible(False)
+                    self.draw_idle()
 
 class Ui_MainWindow(object):
     def __init__(self, pcap_dirs, model_dirs, feature_dirs):
@@ -160,13 +183,13 @@ class Ui_MainWindow(object):
             QMessageBox{
                 background-color: rgb(255,255,255);
             }
-            QLabel{
+            #background, #predictsOnLabel, #searchCriteriaLabel{
                 background-color: rgb(212, 217, 217);
             }
             QComboBox{
                 background-color: rgb(255, 255, 255);
             }
-            QPushButton{
+            #searchButton, #settingButton{
                 background-color: rgb(255, 255, 255);
             }
             QListWidget{
@@ -256,6 +279,7 @@ class Ui_MainWindow(object):
         self.vbox3.addWidget(self.trafficLabel)
         self.vbox3.addWidget(self.listWidget)
         self.vbox3.setSpacing(0)
+        self.vbox3.setContentsMargins(0,0,0,0)
         
         self.dimGraph = DimCanvas()
         self.dimGraphWidget = PlotWidget()
@@ -273,22 +297,43 @@ class Ui_MainWindow(object):
         self.accGraphWidget = PlotWidget()
         self.accGraphWidget.add_canvas(self.accGraph)
         self.accGraph.setParent(self.accGraphWidget)
+        # self.scroll2 = QtWidgets.QScrollArea()
+        # self.scroll2.setWidget(self.accGraphWidget)
+        # self.scroll2.setWidgetResizable(True)
 
-        self.hbox3 = QtWidgets.QHBoxLayout()
-        self.hbox3.addWidget(self.tableWidget, 6.5)
-        self.hbox3.addWidget(self.accGraphWidget, 3.5)
+        # self.hbox3 = QtWidgets.QHBoxLayout()
+        # self.hbox3.addWidget(self.tableWidget, 6.5)
+        # self.hbox3.addWidget(self.accGraphWidget, 3.5)
+        self.hsplitter1 = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+        self.hsplitter1.addWidget(self.tableWidget)
+        self.hsplitter1.addWidget(self.accGraphWidget)
+        self.hsplitter1.setStretchFactor(0, 7)
+        self.hsplitter1.setStretchFactor(1, 3)
 
-        self.vbox4 = QtWidgets.QVBoxLayout()
-        self.vbox4.addLayout(self.hbox3, 6)
-        self.vbox4.addWidget(self.dimGraphWidget, 4)
+        # self.vbox4 = QtWidgets.QVBoxLayout()
+        # self.vbox4.addLayout(self.hbox3, 6)
+        # self.vbox4.addWidget(self.dimGraphWidget, 4)
+        self.vsplitter1 = QtWidgets.QSplitter(QtCore.Qt.Vertical)
+        self.vsplitter1.addWidget(self.hsplitter1)
+        self.vsplitter1.addWidget(self.dimGraphWidget)
+        self.vsplitter1.setStretchFactor(0, 4.5)
+        self.vsplitter1.setStretchFactor(1, 5.5)
 
-        self.hbox2 = QtWidgets.QHBoxLayout()
-        self.hbox2.addLayout(self.vbox3, 1.75)
-        self.hbox2.addLayout(self.vbox4, 8.25)
+        # self.hbox2 = QtWidgets.QHBoxLayout()
+        # self.hbox2.addLayout(self.vbox3, 1.75)
+        # self.hbox2.addLayout(self.vbox4, 8.25)
+        self.hsplitter2 = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+        self.hbox2_widget = QtWidgets.QWidget()
+        self.hbox2_widget.setLayout(self.vbox3)
+        self.hsplitter2.addWidget(self.hbox2_widget)
+        self.hsplitter2.addWidget(self.vsplitter1)
+        self.hsplitter2.setStretchFactor(0, 2.5)
+        self.hsplitter2.setStretchFactor(1, 7.5)
         
         self.vbox2 = QtWidgets.QVBoxLayout()
         self.vbox2.addLayout(self.hbox1, 1)
-        self.vbox2.addLayout(self.hbox2, 9)
+        # self.vbox2.addLayout(self.hbox2, 9)
+        self.vbox2.addWidget(self.hsplitter2, 9)
         self.background.setLayout(self.vbox2)
 
         MainWindow.setCentralWidget(self.centralwidget)
