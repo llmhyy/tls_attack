@@ -10,6 +10,7 @@ import re
 import json
 import time
 import numpy as np
+import shlex
 import fnmatch
 import pyshark
 import subprocess
@@ -111,6 +112,8 @@ class DimCanvas(FigureCanvas):
         self.dim_ax2.plot(index, sqerr[packet_num], color='#000000', linewidth=0.7)
         self.dim_ax2.set_ylabel('Sq err')
 
+        self.dim_ax.set_title('Packet No. {}'.format(packet_num+1))
+
         self.draw()
 
 # MATPLOTLIB CANVAS WIDGET FOR PLOTTING PACKET ACCURACY
@@ -133,7 +136,7 @@ class AccCanvas(FigureCanvas):
         mean_acc = self.data['mean_acc'][0]
         self.line, = self.acc_ax.plot(acc, [i+1 for i in range(len(acc))])
         for i,pkt_acc in enumerate(acc):
-            self.acc_ax.plot(pkt_acc, i+1, 'ro', picker=True, markersize=3)
+            self.acc_ax.plot(pkt_acc, i+1, 'ro', picker=2, markersize=3)
             # self.acc_ax.text((pkt_acc-0.05), i+1, i+1, fontsize=7, horizontalalignment='center', verticalalignment='center')
         self.acc_ax.invert_yaxis()
         self.acc_ax.set_title('Mean Acc: {}'.format(mean_acc))
@@ -601,11 +604,10 @@ class Ui_MainWindow(object):
         self.pcapfile_info = []
         # Using tshark to extract information from pcap files
         tempfile = 'temp.csv'
-        open(self.selected_pcapfile)
-        print(self.selected_pcapfile)
-        command = 'tshark -r '+self.selected_pcapfile+' -o gui.column.format:"No.","%m","Time","%t","Source","%s","Destination","%d","Protocol","%p","Length","%L","Info","%i"'
+        selected_pcapfile_raw = '\\ '.join([i for i in self.selected_pcapfile.split(' ')])
+        command = 'tshark -r '+selected_pcapfile_raw+' -o gui.column.format:"No.","%m","Time","%t","Source","%s","Destination","%d","Protocol","%p","Length","%L","Info","%i"'
         with open(tempfile, 'w') as out:
-            subprocess.run(command.split(' '), stdout=out)
+            subprocess.run(shlex.split(command), stdout=out)
         with open(tempfile) as tmp_f:
             for line in tmp_f.readlines():
                 pkt_info = []
