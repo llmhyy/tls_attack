@@ -170,8 +170,11 @@ def evaluate_model_on_generator(model, data_generator, featureinfo_dir, pcapname
                 if os.path.exists(save_traffic_dir):
                     shutil.rmtree(save_traffic_dir)
                 os.makedirs(save_traffic_dir)
-                utilsPredict.summary_for_sampled_traffic(outlier_traffic_idx[i], mean_acc_for_all_traffic, acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, dim_names,
-                                                            mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model, save_traffic_dir)
+                sampled_metrics = utilsPredict.get_metrics_from_idx(outlier_traffic_idx[i], mean_acc_for_all_traffic, acc_for_all_traffic, 
+                                                                    squared_error_for_all_traffic, mean_squared_error_for_all_traffic,
+                                                                    idx_for_all_traffic, pcap_filename,
+                                                                    mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model)
+                utilsPredict.summary_for_sampled_traffic(sampled_metrics, dim_names, save_traffic_dir)
 
         logfile.close()
 
