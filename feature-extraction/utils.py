@@ -10,6 +10,10 @@ import numpy as np
 import ipaddress
 from sklearn.preprocessing import OneHotEncoder
 
+class ZeroPacketError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
 def extract_tcp_features(pcapfile, limit):
     """
     ** NEED EDITS **
@@ -98,6 +102,9 @@ def extract_tcp_features(pcapfile, limit):
             features.append(0)
 
         traffic_features.append(features)
+
+    if len(traffic_features) == 0:
+        raise ZeroPacketError('Pcap file contains no packet')
 
     return traffic_features
 
@@ -736,6 +743,9 @@ def extract_tslssl_features(pcapfile, enums, limit):
         features = [float(i) for i in features]
         traffic_features.append(features)
 
+    if len(traffic_features) == 0:
+        raise ZeroPacketError('Pcap file contains no packet')
+
     return traffic_features
 
 if __name__ == '__main__':
@@ -775,6 +785,7 @@ if __name__ == '__main__':
 
     sample = 'sample_pcap/trickbot_to_87.101.70.109.pcap'
     # sample = 'sample_pcap/www.stripes.com_2018-12-21_16-20-12.pcap'
+    sample = 'sample_pcap/14.139.45.145_1.pcap'
 
     # enumCipherSuites,enumCompressionMethods, enumSupportedGroups, enumSignatureHashClient, enumSignatureHashCert = [],[],[],[],[]
     # enumCipherSuites = enums['ciphersuites']
