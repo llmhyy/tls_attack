@@ -13,6 +13,7 @@ import numpy as np
 import shlex
 import fnmatch
 import pyshark
+import traceback
 import subprocess
 from keras.models import load_model
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -352,12 +353,20 @@ class Ui_MainWindow(object):
         self.accGraph.draw()
 
         # Get model name and load model
-        self.model_name = str(self.chooseModel.currentText()).lower().replace(" model", "")
-        tmp_path = os.path.join(self.model_dirs, config.model[self.model_name])
-        if not os.path.exists(tmp_path):
-            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Model not found. Check config.py')
+        try:
+            self.model_name = str(self.chooseModel.currentText()).lower().replace(" model", "")
+            model_dir = os.path.join(self.model_dirs, config.model[self.model_name])
+            self.model = load_model(model_dir)
+        except FileNotFoundError:
+            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Model {} not found in directory path {}. Check config.py'.format(self.model_name, model_dirpath))
             return
-        self.model = load_model(tmp_path)
+        except KeyError:
+            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Model {} is not listed in the configuration file. Check config.py'.format(self.model_name))
+            return
+        except Exception as e:
+            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Serious error. Check console for error message')
+            print(e)
+            return
 
         SPLIT_RATIO = 0.05
         SEED = 2019
@@ -366,15 +375,25 @@ class Ui_MainWindow(object):
         FEATUREINFO_FILENAME = 'features_info_*.csv'
         PCAPNAME_FILENAME = 'pcapname_*.csv'
         
-        tmp = str(self.chooseTraffic.currentText()).lower().split('(')
-        self.dataset_name = tmp[0].strip()
-        self.split_name = tmp[1].rstrip(')')
-        tmp_path = os.path.join(self.feature_dirs,config.features[self.dataset_name])
-        if not os.path.exists(tmp_path):
-            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Feature directory not found. Check config.py')
+        try:
+            tmp = str(self.chooseTraffic.currentText()).lower().split('(')
+            self.dataset_name = tmp[0].strip()
+            self.split_name = tmp[1].rstrip(')')
+            self.feature_dir = os.path.join(self.feature_dirs,config.features[self.dataset_name])
+            filenames = os.listdir(self.feature_dir)
+        except FileNotFoundError:
+            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Dataset {} not found in directory path {}. Check config.py'.format(self.dataset_name, self.feature_dir))
             return
-        self.feature_dir = tmp_path
-        filenames = os.listdir(self.feature_dir)
+        except KeyError:
+            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Dataset {} is not listed in the configuration file. Check config.py'.format(self.dataset_name))
+            return
+        except IndexError:
+            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Dataset {} is not an appropriate option. Try again'.format(self.dataset_name))
+            return
+        except Exception as e:
+            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Serious error. Check console for error message')
+            traceback.print_exc()
+            return
 
         # Load the train/test indexes from split
         self.featurecsv_dir = os.path.join(self.feature_dir, fnmatch.filter(filenames, FEATURE_FILENAME)[0])
@@ -478,57 +497,66 @@ class Ui_MainWindow(object):
         try:
             pcap_dir = os.path.join(self.pcap_dirs, config.pcapfiles[self.dataset_name])
         except KeyError:
-            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Pcap directory not found. Check config.py')
+            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Pcap directory for dataset {} is not listed in the configuration file. Check config.py'.format(self.dataset_name))
             return
 
         try:
             results_dir = os.path.join(self.model_dirs, config.results[self.model_name][self.dataset_name][self.split_name])
         except KeyError:
-            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Directory to results.csv not found. Check config.py')
+            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Accuracy results directory for model {} and dataset {} is not listed in the configuration file. Check config.py'.format(self.model_name, self.dataset_name))
             return
 
-        with open(results_dir) as f:
-            mean_acc_for_all_traffic = [float(l.strip()) for l in f.readlines()]
+        try:
+            with open(results_dir) as f:
+                mean_acc_for_all_traffic = [float(l.strip()) for l in f.readlines()]
 
-        # Get the dataset from the pcap directory and add to ListWidget
-        count = 0
-        normalized_pcap_filenames = [os.path.normpath(i) for i in self.pcap_filenames]
-        zipped_name_acc = zip(normalized_pcap_filenames, mean_acc_for_all_traffic)
-        start = time.time()
-        pcap_dir_files = []
-        for root,dirs,files in os.walk(pcap_dir):
-            for f in files:
-                if f.endswith('.pcap'):
-                    pcap_dir_files.append(os.path.normpath(os.path.join(root,f)))
-        sorted_pcap_dir_files = sorted(pcap_dir_files)
-        sorted_zipped_name_acc = sorted(zipped_name_acc)
-        pointer = 0
-        for pf in sorted_pcap_dir_files:
-            # print('Searching for {}'.format(pf))
-            fail_count = 0
-            for i in range(pointer, len(sorted_zipped_name_acc)):
-                name,acc = sorted_zipped_name_acc[i]
-                # print('Trying {} {}'.format(name,acc))
-                # print(self.filter_fn(acc))
-                if name in pf:
-                    if self.filter_fn(acc):
-                        # print('THIS IS THE ACC {}'.format(acc))
-                        item = QtWidgets.QListWidgetItem(pf)
-                        item.setToolTip(pf)
-                        self.listWidget.addItem(item)
-                        pointer = i+1
-                        count+=1
-                        break
+            # Get the dataset from the pcap directory and add to ListWidget
+            count = 0
+            normalized_pcap_filenames = [os.path.normpath(i) for i in self.pcap_filenames]
+            zipped_name_acc = zip(normalized_pcap_filenames, mean_acc_for_all_traffic)
+            start = time.time()
+            pcap_dir_files = []
+            for root,dirs,files in os.walk(pcap_dir):
+                for f in files:
+                    if f.endswith('.pcap'):
+                        pcap_dir_files.append(os.path.normpath(os.path.join(root,f)))
+            if len(pcap_dir_files) == 0:
+                QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Pcap directory {} for dataset {} does not contain any pcap files.'.format(pcap_dir ,self.dataset_name))
+                return
+
+            sorted_pcap_dir_files = sorted(pcap_dir_files)
+            sorted_zipped_name_acc = sorted(zipped_name_acc)
+            pointer = 0
+            for pf in sorted_pcap_dir_files:
+                # print('Searching for {}'.format(pf))
+                fail_count = 0
+                for i in range(pointer, len(sorted_zipped_name_acc)):
+                    name,acc = sorted_zipped_name_acc[i]
+                    # print('Trying {} {}'.format(name,acc))
+                    # print(self.filter_fn(acc))
+                    if name in pf:
+                        if self.filter_fn(acc):
+                            # print('THIS IS THE ACC {}'.format(acc))
+                            item = QtWidgets.QListWidgetItem(pf)
+                            item.setToolTip(pf)
+                            self.listWidget.addItem(item)
+                            pointer = i+1
+                            count+=1
+                            break
+                        else:
+                            pointer+=1
                     else:
-                        pointer+=1
-                else:
-                    fail_count+=1
+                        fail_count+=1
 
-                if fail_count>=3:
-                    break
-        print('Time taken to search: {}'.format(time.time()-start))
-        print('{} traffic loaded into ListWidget'.format(count))
-        self.listWidget.itemClicked.connect(self.onClickTraffic)
+                    if fail_count>=3:
+                        break
+            print('Time taken to search: {}'.format(time.time()-start))
+            print('{} traffic loaded into ListWidget'.format(count))
+            self.listWidget.itemClicked.connect(self.onClickTraffic)
+
+        except FileNotFoundError as e:
+            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', e)
+            return
 
     def onClickTraffic(self, item):
         # Load pcap table
