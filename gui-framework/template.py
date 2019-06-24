@@ -637,10 +637,11 @@ class Ui_MainWindow(object):
         self.pcapfile_info = []
         # Using tshark to extract information from pcap files
         tempfile = 'temp.csv'
-        selected_pcapfile_raw = '\\ '.join([i for i in self.selected_pcapfile.split(' ')])
-        command = 'tshark -r '+selected_pcapfile_raw+' -o gui.column.format:"No.","%m","Time","%t","Source","%s","Destination","%d","Protocol","%p","Length","%L","Info","%i"'
+        command = 'tshark -r -o gui.column.format:"No.","%m","Time","%t","Source","%s","Destination","%d","Protocol","%p","Length","%L","Info","%i"'
+        command_split = command.split(' ')
+        command_split.insert(2, self.selected_pcapfile)
         with open(tempfile, 'w') as out:
-            subprocess.run(shlex.split(command), stdout=out)
+            subprocess.run(command_split, stdout=out)
         with open(tempfile) as tmp_f:
             for line in tmp_f.readlines():
                 pkt_info = []
@@ -666,7 +667,7 @@ class Ui_MainWindow(object):
                 self.tableWidget.setItem(i, j, QtWidgets.QTableWidgetItem(self.pcapfile_info[i][j]))
         self.tableWidget.resizeColumnsToContents()
 
-        subprocess.run(['rm', tempfile])
+        os.remove(tempfile)
 
     def loadAccuracyGraph(self, data):
         self.accGraph.plot(data)
