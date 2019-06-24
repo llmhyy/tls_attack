@@ -396,7 +396,12 @@ class Ui_MainWindow(object):
             return
 
         # Load the train/test indexes from split
-        self.featurecsv_dir = os.path.join(self.feature_dir, fnmatch.filter(filenames, FEATURE_FILENAME)[0])
+        try:
+            self.featurecsv_dir = os.path.join(self.feature_dir, fnmatch.filter(filenames, FEATURE_FILENAME)[0])
+        except IndexError:
+            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Feature file {} not found in directory path {}. Did you remember to run file_joiner.py?'.format(FEATURE_FILENAME, self.feature_dir))
+            return
+
         # Get the number of lines in a file to determine split
         with open(self.featurecsv_dir) as f:
             for i, line in enumerate(f):
