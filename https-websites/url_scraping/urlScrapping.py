@@ -167,7 +167,11 @@ class VulnerabilityScanner:
                      'BEAST_CBC_TLS1','BEAST','LUCKY13','RC4']
 
         # Identify unique ip addresses in rows and group together
-        unique_ips = set(list(zip(*rows))[1])
+        try:
+            unique_ips = set(list(zip(*rows))[1])
+        except IndexError:
+            logging.error('Rows appear to be missing')
+            raise IndexError
         rows_groupby_ip_groups = []
         for ip in unique_ips:
             rows_groupby_ip_groups.append({row[0]:row for row in rows if row[1]==ip})

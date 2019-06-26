@@ -34,7 +34,10 @@ def main():
                     vulnerabilityScanner.scanURL(url)
                 except subprocess.TimeoutExpired:
                     continue
-                vulnerabilityScanner.writeIntoReport()
+                try:
+                    vulnerabilityScanner.writeIntoReport()
+                except IndexError:
+                    continue
 
 if __name__ == '__main__':
     main()
