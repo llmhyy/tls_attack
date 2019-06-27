@@ -1,112 +1,95 @@
 import os
-import csv
-import json
+import math
 import time
-# from scapy.all import *
 import pyshark
 from pyshark.packet.layer import JsonLayer
 import logging
 import numpy as np
 import ipaddress
-from sklearn.preprocessing import OneHotEncoder
 
 class ZeroPacketError(Exception):
     def __init__(self, message):
         super().__init__(message)
 
 def extract_tcp_features(pcapfile, limit):
-    """
-    ** NEED EDITS **
-    Extract features from a pcap file and returns a feature vector. The feature vector is a 
-    n row x m column 2D matrix, where n is the number of packets and m is the number of features
-
-    Parameters:
-    pcapfile (file): pcap file to be parsed
-
-    Returns:
-    list: returns a list of packet tcp features. E.g. if there are 8 packets in the pcapfile, it will be a list
-    of 8 vectors of 20 features
-    
-    Key Considerations:
-    * The index of the feature is fixed in the feature vector. E.g. come/leave will always occupy the first
-    column, hence it would not make sense to have a strategy pattern where we can augment/subtract features
-    * Hence, by extension, the number of features is FIXED. If the feature does not exist, we just zero them
-    * Need to consider tls record layer as the most basic unit of traffic if frame contains ssl layer 
-    since each record layer has a different goal
-    """
-
-    # Traffic features for storing features of packets
     traffic_features = []
-
-    # Protocol version value to encode into one-hot vector
-    # prot: ['TCP' (-), 'SSL2.0' (0x0200), 'SSL3.0' (0x0300), 'TLS1.0' (0x0301), 'TLS1.1' (0x0302), 'TLS1.2' (0x0303)]
-    protcol_ver = [0, 512, 768, 769, 770, 771]
-
-
-    ####################################################################################
-    ## USING PYSHARK ##
-
     packets = pyshark.FileCapture(pcapfile)
-
     for i, packet in enumerate(packets):
-        # Break the loop when limit is reached
-        if i>=limit:
+        if i >= limit:
             break
 
-        features = []
+        packet_features = []
 
-        # 1: COME/LEAVE
-        if ipaddress.ip_address(str(packet.ip.dst)).is_private:
-            features.append(1)
-        else:
-            features.append(0)
+        comeLeaveFeature = extractComeLeaveFromPacket(packet)
+        protocolFeature = extractProtocolFromPacket(packet)
+        lengthFeature = extractLengthFromPacket(packet)
+        intervalFeature = extractIntervalFromPacket(packet)
+        flagFeature = extractFlagFromPacket(packet)
+        windowSizeFeature = extractWindowSizeFromPacket(packet)
 
-        # 2: PROTOCOL
-        protocol_id = 0
-        protocol_onehot = [0] * len(protcol_ver)
-        # Checks for SSL layer in packet. Bug in detecting SSL layer despite plain TCP packet
-        if ('ssl' in packet) and (packet.ssl.get('record_version') != None):
-            # Convert hex into integer and return the index in the ref list
-            prot = int(packet.ssl.record_version, 16)
-            try:
-                protocol_id = protcol_ver.index(prot)
-                protocol_onehot[protocol_id] = 1
-            except ValueError:
-                logging.warning('Found SSL packet with unknown SSL type {} in file {}'.format(prot, pcapfile))
-        # TCP Packet
-        else:
-            protocol_onehot[0] = 1
-
-        features.extend(protocol_onehot)
-
-        # 3: LENGTH
-        features.append(int(packet.length))
-
-        # 4: INTERVAL
-        features.append(float(packet.frame_info.time_delta) * 1000)
-
-        # 5: FLAG
-        num_of_flags = 9
-        # Convert hex into binary and pad left with 0 to fill 9 flags
-        try:
-            flags = list(bin(int(packet.tcp.flags, 16))[2:].zfill(num_of_flags))
-            features.extend(list(map(int, flags)))
-        except AttributeError:
-            features.extend([0]*num_of_flags)
-
-        # 6: WINDOW SIZE
-        # Append the calculated window size (window size value * scaling factor)
-        try:
-            features.append(int(packet.tcp.window_size))
-        except AttributeError:
-            features.append(0)
-
-        traffic_features.append(features)
+        packet_features.extend(comeLeaveFeature)
+        packet_features.extend(protocolFeature)
+        packet_features.extend(lengthFeature)
+        packet_features.extend(intervalFeature)
+        packet_features.extend(flagFeature)
+        packet_features.extend(windowSizeFeature)
+        traffic_features.append(packet_features)
 
     if len(traffic_features) == 0:
         raise ZeroPacketError('Pcap file contains no packet')
 
     return traffic_features
+
+def extractComeLeaveFromPacket(packet):
+    feature = []
+    if ipaddress.ip_address(str(packet.ip.dst)).is_private:
+        feature.append(1)
+    else:
+        feature.append(0)
+    return feature
+
+def extractProtocolFromPacket(packet):
+    # Protocol version value to encode into one-hot vector
+    # prot: ['TCP' (-), 'SSL2.0' (0x0200), 'SSL3.0' (0x0300), 'TLS1.0' (0x0301), 'TLS1.1' (0x0302), 'TLS1.2' (0x0303)]
+    protcol_ver = [0, 512, 768, 769, 770, 771]
+    feature = [0] * len(protcol_ver)
+    # Bug in detecting SSL layer despite plain TCP packet
+    if ('ssl' in packet) and (packet.ssl.get('record_version') != None):
+        # Convert hex into integer and return the index in the ref list
+        prot = int(packet.ssl.record_version, 16)
+        try:
+            protocol_id = protcol_ver.index(prot)
+            feature[protocol_id] = 1
+        except ValueError:
+            logging.warning('Found SSL packet with unknown SSL type {}'.format(prot))
+    else:
+        feature[0] = 1
+
+    return feature
+
+def extractLengthFromPacket(packet):
+    return [int(packet.length)]
+
+def extractIntervalFromPacket(packet):
+    return [float(packet.frame_info.time_delta) * 1000]
+
+def extractFlagFromPacket(packet):
+    num_of_flags = 9
+    try:
+        # Convert hex into binary and pad left with 0 to fill 9 flags
+        feature = list(bin(int(packet.tcp.flags, 16))[2:].zfill(num_of_flags))
+        feature = list(map(int, feature))
+    except AttributeError:
+        feature = [0] * num_of_flags
+    return feature
+
+def extractWindowSizeFromPacket(packet):
+    try:
+        # Window size = window size value * scaling factor
+        feature = [int(packet.tcp.window_size)]
+    except AttributeError:
+        feature = [0]
+    return feature
 
 def searchEnums(rootdir, limit):
     """
@@ -749,57 +732,79 @@ def extract_tslssl_features(pcapfile, enums, limit):
     return traffic_features
 
 if __name__ == '__main__':
-    testcsv = 'test_tcp_features2.csv'
-    rootdir = '/Users/YiLong/Desktop/SUTD/NUS-Singtel_Research/tls_atack/legitimate traffic'
+    enums = {'ciphersuites': [], 'compressionmethods': [], 'supportedgroups': [], 'sighashalgorithms_client': [],
+             'sighashalgorithms_cert': []}
+    sample = 'sample-pcap/www.stripes.com_2018-12-21_16-20-12.pcap'
 
-    # Test whether tcp features are extracted
-    # extract_tcp_features('sample/ari.nus.edu.sg_2018-12-24_14-30-02.pcap')
-    # extract_tcp_features('sample/australianmuseum.net.au_2018-12-21_16-15-59.pcap')
-    # extract_tcp_features('sample/www.stripes.com_2018-12-21_16-20-12.pcap')
-    # extract_tcp_features('sample/www.zeroaggressionproject.org_2018-12-21_16-19-03.pcap')
+    # TEST CASES
+    packets = [packet for packet in pyshark.FileCapture(sample)]
+    packet1 = packets[0]
+    packet4 = packets[3]
+    packet5 = packets[4]
+    packet8 = packets[7]
+    packet11 = packets[10]
+    packet25 = packets[24]
+
+    # Test function extractComeLeaveFromPacket()
+    output = extractComeLeaveFromPacket(packet1)
+    expected = [0]
+    assert output == expected
+    output = extractComeLeaveFromPacket(packet25)
+    expected = [1]
+    assert output == expected
+    # Test function extractProtocolFromPacket()
+    output = extractProtocolFromPacket(packet1)
+    expected = [1,0,0,0,0,0]
+    assert output == expected
+    output = extractProtocolFromPacket(packet4)
+    expected = [0,0,0,1,0,0]
+    assert output == expected
+    output = extractProtocolFromPacket(packet8)
+    expected = [0,0,0,0,0,1]
+    assert output == expected
+    # Test function extractLengthFromPacket()
+    output = extractLengthFromPacket(packet1)
+    expected = [66]
+    assert output == expected
+    output = extractLengthFromPacket(packet5)
+    expected = [1514]
+    assert output == expected
+    # Test function extractIntervalFromPacket()
+    output = extractIntervalFromPacket(packet1)
+    expected = [0.0]
+    assert math.isclose(output[0], expected[0])
+    output = extractIntervalFromPacket(packet4)
+    expected = [20.716]
+    assert math.isclose(output[0], expected[0])
+    # Test function extractFlagFromPacket()
+    output = extractFlagFromPacket(packet1)
+    expected = [0,0,0,0,0,0,0,1,0]
+    assert output == expected
+    output = extractFlagFromPacket(packet11)
+    expected = [0,0,0,0,1,1,0,0,0]
+    assert output == expected
+    # Test function extractWindowSizeFromPacket(packet1)
+    output = extractWindowSizeFromPacket(packet1)
+    expected = [64240]
+    assert output == expected
+    output = extractWindowSizeFromPacket(packet4)
+    expected = [66048]
+    assert output == expected
+    # Test function extract_tcp_features()
+    output = extract_tcp_features(sample, limit=100)
+    expected_len = 100
+    assert len(output) == expected_len
+    expected_dim = 19
+    assert len(output[0]) == expected_dim
+
+    print('TEST PASSED!')
+
+
+
+    # Test whether tls/ssl features are extracted
 
     # Test whether all enums are generated
-    # enums = searchEnums(rootdir, limit=5)
-    #enumCipherSuites = searchCipherSuites(rootdir)
-    #enumCompressionMethods = searchCompressionMethods(rootdir)
-    #enumSupportedGroups = searchSupportedGroups(rootdir)
-    #enumSignatureHashClient = searchSignatureHash_ClientHello(rootdir)
-    #enumSignatureHashCert = searchSignatureHash_Certificate(rootdir)
-    
+
     # Test whether all features are extracted
-    # sample = 'sample/ari.nus.edu.sg_2018-12-24_14-30-02.pcap'
-    # sample = 'sample/www.zeroaggressionproject.org_2018-12-21_16-19-03.pcap'
-
-    # sample = 'sample/australianmuseum.net.au_2018-12-21_16-15-59.pcap'
-    # sample = 'sample/openssl102n.pcap'
-
-    # sample = 'sample/tls/www.tmr.qld.gov.au_2018-12-24_17-20-56.pcap'
-    # sample = 'sample/tls/www.orkin.com_2018-12-24_17-10-27.pcap'
-    # sample = 'sample/tls/whc.unesco.org_2018-12-24_17-09-08.pcap'
-    # sample = 'sample/tls/dataverse.harvard.edu_2018-12-24_17-16-00.pcap'
-    # sample = 'sample/tls/www.cancerresearchuk.org_2018-12-24_17-15-46.pcap'
-    # sample = 'sample/tls/alis.alberta.ca_2019-01-22_19-26-05.pcap'
-    
-    # sample = 'sample/sslv3/www.ceemjournal.org_2018-12-28_17-18-46_0.pcap'
-    # sample = 'sample/sslv3/www.britishmuseum.org_2018-12-28_17-22-11_0.pcap'
-
-    sample = 'sample_pcap/trickbot_to_87.101.70.109.pcap'
-    # sample = 'sample_pcap/www.stripes.com_2018-12-21_16-20-12.pcap'
-    sample = 'sample_pcap/14.139.45.145_1.pcap'
-
-    # enumCipherSuites,enumCompressionMethods, enumSupportedGroups, enumSignatureHashClient, enumSignatureHashCert = [],[],[],[],[]
-    # enumCipherSuites = enums['ciphersuites']
-    # enumCompressionMethods = enums['compressionmethods']
-    # enumSupportedGroups = enums['supportedgroups']
-    # enumSignatureHashClient = enums['sighashalgorithms_client']
-    # enumSignatureHashCert = enums['sighashalgorithms_cert']
-    enums = {'ciphersuites':[], 'compressionmethods':[], 'supportedgroups':[], 'sighashalgorithms_client':[], 'sighashalgorithms_cert':[]}
-    
-    # Test whether tls/ssl features are extracted
-    # sample_t = extract_tcp_features(sample,limit=75)
-    sample_t = extract_tslssl_features(sample, enums,limit=75)
-    print(len(sample_t))
-    print(len(sample_t[0]))
 
     # Test whether directory is searched correctly with features extracted 
-    # search_and_extract(rootdir, testcsv)
