@@ -255,6 +255,8 @@ class FinderScannerWorker(threading.Thread):
                         except csv.Error:
                             logging.warning('Unable to write into csv files')
                             continue
+                        except IndexError:
+                            continue
                         finally:
                             self.threadLock.release()
 
