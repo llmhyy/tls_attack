@@ -2,6 +2,7 @@ import os
 import math
 import time
 import pyshark
+import traceback
 from pyshark.packet.layer import JsonLayer
 import logging
 import numpy as np
@@ -234,7 +235,6 @@ def searchEnums(rootdir, limit):
     # return (ciphersuites, compressionmethods, supportedgroups, sighashalgorithms_client, sighashalgorithms_cert)
     return enum
 
-# For handling data structure of jsonlayer type
 def find_handshake(obj, target_type):
     if type(obj) == list:
         final = None
@@ -258,20 +258,11 @@ def find_handshake(obj, target_type):
         elif obj.layer_name=='record' and hasattr(obj, 'handshake') and not(type(obj.handshake)==JsonLayer) and target_type==99:
             return obj
 
-# For handling data structure of dict type
-def find_handshake2(obj, target_type):
-    if type(obj) == list:
-        final = None
-        for a_obj in obj:
-            temp = find_handshake2(a_obj, target_type)
-            if temp:
-                final = temp
-        return final
     elif type(obj) == dict:
         if 'ssl.record' in obj:
-            return find_handshake2(obj['ssl.record'], target_type)
+            return find_handshake(obj['ssl.record'], target_type)
         elif 'ssl.handshake' in obj:
-            return find_handshake2(obj['ssl.handshake'], target_type)
+            return find_handshake(obj['ssl.handshake'], target_type)
         elif 'ssl.handshake.type' in obj and int(obj['ssl.handshake.type'])==target_type:
             return obj
 
@@ -344,222 +335,52 @@ def extract_tslssl_features(pcapfile, enums, limit):
 
         # HANDSHAKE PROTOCOL
         ##################################################################
+        # 1: ClientHello - LENGTH
         clienthelloLengthFeature = extractClienthelloLength(packet_json)
         packet_features.extend(clienthelloLengthFeature)
-
+        # 2: ClientHello - CIPHER SUITE
         clienthelloCiphersuiteFeature = extractClienthelloCiphersuiteAndEncode(packet_json, enumCipherSuites)
         packet_features.extend(clienthelloCiphersuiteFeature)
-
-
         # 3: ClientHello - CIPHER SUITE LENGTH
-        try:
-            handshake = find_handshake(packet_json.ssl, target_type=1)
-            if handshake:
-                packet_features.append(int(handshake.cipher_suites_length))
-            else:
-                packet_features.append(0)
-        except AttributeError:
-            packet_features.append(0)
-
+        clienthelloCiphersuiteLengthFeature = extractClienthelloCiphersuiteLength(packet_json)
+        packet_features.extend(clienthelloCiphersuiteLengthFeature)
         # 4: ClientHello - COMPRESSION METHOD
-        compressionmethod_feature = np.zeros_like(enumCompressionMethods)
-        compressionmethod_feature = np.concatenate((compressionmethod_feature, np.array([0]))) # For unknown dim
-        try:
-            handshake = find_handshake(packet_json.ssl, target_type=1)
-            if handshake:
-                compression_methods = handshake._all_fields['ssl.handshake.comp_methods']['ssl.handshake.comp_method']
-                for compression_method in compression_methods:
-                    compression_method_int = int(compression_method, 16) # in hdexdecimal
-                    if compression_method_int in enumCompressionMethods:
-                        compressionmethod_feature[enumCompressionMethods.index(compression_method_int)] = 1
-                    else:
-                        logging.warning('Unseen compression method ({}) in file {}'.format(compression_method,pcapfile))
-                        compressionmethod_feature[-1] = 1
-                packet_features.extend(compressionmethod_feature)
-            else:
-                packet_features.extend(compressionmethod_feature)
-        except AttributeError:
-            packet_features.extend(compressionmethod_feature)
-
+        clienthelloCompressionMethodFeature = extractClienthelloCompressionmethodAndEncode(packet_json,
+                                                                                           enumCompressionMethods)
+        packet_features.extend(clienthelloCompressionMethodFeature)
         # 5: ClientHello - SUPPORTED GROUP LENGTH
-        try:
-            handshake = find_handshake(packet_json.ssl, target_type=1)
-            if handshake:
-                supported_group_len = 0
-                for k,v in handshake._all_fields.items():
-                    if 'supported_groups' in k:
-                        supported_group_len = int(v['ssl.handshake.extension.len'])
-                packet_features.append(supported_group_len)
-            else:
-                packet_features.append(0)
-        except AttributeError:
-            packet_features.append(0)
-
+        clienthelloSupportedgroupLengthFeature = extractClienthelloSupportedgroupLength(packet_json)
+        packet_features.extend(clienthelloSupportedgroupLengthFeature)
         # 6: ClientHello - SUPPORTED GROUPS
-        supportedgroup_feature = np.zeros_like(enumSupportedGroups)
-        supportedgroup_feature = np.concatenate((supportedgroup_feature, np.array([0]))) # For unknown dim
-        try:
-            handshake = find_handshake(packet_json.ssl, target_type=1)
-            if handshake:
-                for k,v in handshake._all_fields.items():
-                    if 'supported_groups' in k:
-                        supported_groups = v['ssl.handshake.extensions_supported_groups']['ssl.handshake.extensions_supported_group']
-                        for supported_group in supported_groups:
-                            supported_group_int = int(supported_group,16) # in hexadecimal
-                            if supported_group_int in enumSupportedGroups:
-                                supportedgroup_feature[enumSupportedGroups.index(supported_group_int)] = 1
-                            else:
-                                logging.warning('Unseen supported group ({}) in file {}'.format(supported_group,pcapfile))
-                                supportedgroup_feature[-1] = 1
-                packet_features.extend(supportedgroup_feature)
-            else:
-                packet_features.extend(supportedgroup_feature)
-        except AttributeError:
-            packet_features.extend(supportedgroup_feature)
-
+        clienthelloSupportedgroupFeature = extractClienthelloSupportedgroupAndEncode(packet_json, enumSupportedGroups)
+        packet_features.extend(clienthelloSupportedgroupFeature)
         # 7: ClientHello - ENCRYPT THEN MAC LENGTH
-        try:
-            handshake = find_handshake(packet_json.ssl, target_type=1)
-            if handshake:
-                encrypt_then_mac_len = 0
-                for k,v in handshake._all_fields.items():
-                    if 'encrypt_then_mac' in k:
-                        encrypt_then_mac_len = int(v['ssl.handshake.extension.len'])
-                packet_features.append(encrypt_then_mac_len)
-            else:
-                packet_features.append(0)
-        except AttributeError:
-            packet_features.append(0)
-
+        clienthelloEncryptthenmacLengthFeature = extractClienthelloEncryptthenmacLength(packet_json)
+        packet_features.extend(clienthelloEncryptthenmacLengthFeature)
         # 8: ClientHello - EXTENDED MASTER SECRET
-        try:
-            handshake = find_handshake(packet_json.ssl, target_type=1)
-            if handshake:
-                extended_master_secret_len = 0
-                for k,v in handshake._all_fields.items():
-                    if 'extended_master_secret' in k:
-                        extended_master_secret_len = int(v['ssl.handshake.extension.len'])
-                packet_features.append(extended_master_secret_len)
-            else:
-                packet_features.append(0)
-        except AttributeError:
-            packet_features.append(0)
-
+        clienthelloExtendedmastersecretLengthFeature = extractClienthelloExtendedmastersecretLength(packet_json)
+        packet_features.extend(clienthelloExtendedmastersecretLengthFeature)
         # 9: ClientHello - SIGNATURE HASH ALGORITHM
-        sighash_features_client = np.zeros_like(enumSignatureHashClient)
-        sighash_features_client = np.concatenate((sighash_features_client, np.array([0]))) # For unknown dim
-        try:
-            handshake = find_handshake(packet_json.ssl, target_type=1)
-            if handshake:
-                for k,v in handshake._all_fields.item():
-                    if 'signature_algorithms' in k:
-                        signature_algorithms = v['ssl.handshake.sig_hash_algs']['ssl.handshake.sig_hash_alg']
-                        for signature_algorithm in signature_algorithms:
-                            signature_algorithm_int = int(signature_algorithm,16)
-                            if signature_algorithm_int in enumSignatureHashClient:
-                                sighash_features_client[enumSignatureHashClient.index(signature_algorithm_int)]=1
-                            else:
-                                logging.warning('Unseen signature hash algo in Clienthello ({}) in file {}'.format(signature_algorithm,pcapfile))
-                                sighash_features_client[-1] = 1
-                packet_features.extend(sighash_features_client)
-            else:
-                packet_features.extend(sighash_features_client)
-        except AttributeError:
-            packet_features.extend(sighash_features_client)
-
+        clienthelloSignaturehashFeature = extractClienthelloSignaturehashAndEncode(packet_json, enumSignatureHashClient)
+        packet_features.extend(clienthelloSignaturehashFeature)
         # 10: ServerHello - LENGTH
-        try:
-            handshake = find_handshake(packet_json.ssl, target_type=2)
-            if handshake:
-                packet_features.append(int(handshake.length))
-            else:
-                packet_features.append(0)
-        except AttributeError:
-            packet_features.append(0)
-
+        serverhelloLengthFeature = extractServerhelloLength(packet_json)
+        packet_features.extend(serverhelloLengthFeature)
         # 11: ServerHello - EXTENDED MASTER SECRET
-        # ????????????????
-
+        # ServerHello Extended Master Secret cannot be found in the packet
         # 12: ServerHello - RENEGOTIATION INFO LENGTH
-        try:
-            handshake = find_handshake(packet_json.ssl, target_type=2)
-            if handshake:
-                renegotiation_info_len = 0
-                for k,v in handshake._all_fields.items():
-                    if 'renegotiation_info' in k:
-                        renegotiation_info_len = int(v['ssl.handshake.extension.len'])
-                packet_features.append(renegotiation_info_len)
-            else:
-                packet_features.append(0)
-        except AttributeError as e:
-            packet_features.append(0)
-
+        serverhelloRenegoLengthFeature = extractServerhelloRenegoLength(packet_json)
+        packet_features.extend(serverhelloRenegoLengthFeature)
         # 13,14,15,16: Certificate - NUM_CERT, AVERAGE, MIN, MAX CERTIFICATE LENGTH
-        # Attempt 1: use find_handshake()
-        try:
-            handshake = find_handshake(packet_json.ssl, target_type=11)
-        except AttributeError:
-            handshake = None
-        # Attempt 2: certificate is more difficult to identify. Use hardcode
-        try: 
-            handshake2 = find_handshake2(packet_json.ssl.value, target_type=11)
-        except AttributeError:
-            handshake2 = None
-
-        if handshake:
-            certificates_length = [int(i) for i in handshake.certificates.certificate_length]
-            mean_cert_len = sum(certificates_length)/float(len(certificates_length))
-            packet_features.extend([len(certificates_length), mean_cert_len, max(certificates_length), min(certificates_length)])
-        elif handshake2:
-            certificates_length = handshake2['ssl.handshake.certificates']['ssl.handshake.certificate_length']
-            certificates_length = [int(i) for i in certificates_length]
-            mean_cert_len = sum(certificates_length)/float(len(certificates_length))
-            packet_features.extend([len(certificates_length), mean_cert_len, max(certificates_length), min(certificates_length)])
-        else:
-            packet_features.extend([0, 0, 0, 0])
-
+        certificateLengthInfoFeature = extractCertificateLengthInfo(packet_json)
+        packet_features.extend(certificateLengthInfoFeature)
         # 17: Certificate - SIGNATURE ALGORITHM
-        sighash_features_cert = np.zeros_like(enumSignatureHashCert, dtype='int32') # enumSignatureHashCert is the ref list
-        sighash_features_cert = np.concatenate((sighash_features_cert, np.array([0]))) # For unknown dim
-        try: 
-            handshake = find_handshake(packet_json.ssl, target_type = 11)
-        except:
-            handshake = None
-        try:
-            handshake2 = find_handshake2(packet_json.ssl.value, target_type = 11)
-        except:
-            handshake2 = None
-
-        if handshake:
-            certificates = handshake.certificates.certificate_tree
-            if type(certificates) != list:
-                certificates = [certificates]
-            for certificate in certificates:
-                algo_id = str(certificate.algorithmIdentifier_element.id)
-                if algo_id in enumSignatureHashCert:
-                    sighash_features_cert[enumSignatureHashCert.index(algo_id)] = 1
-                else:
-                    logging.warning('Unseen signature hash algo in Cert ({}) in file {}'.format(algo_id, pcapfile))
-                    sighash_features_cert[-1] = 1
-
-        elif handshake2:
-            certificates = handshake2['ssl.handshake.certificates']['ssl.handshake.certificate_tree']
-            if type(certificates) != list:
-                certificates = [certificates]
-            for certificate in certificates:
-                for k,v in certificate.items():
-                    if 'algorithmIdentifier_element' in k:
-                        for kk,vv in v.items():
-                            if 'algorithm.id' in kk:
-                                if str(vv) in enumSignatureHashCert:
-                                    sighash_features_cert[enumSignatureHashCert.index(str(vv))] = 1
-                                else:
-                                    logging.warning('Unseen signature hash algo in Cert ({}) in file {}'.format(str(vv), pcapfile))
-                                    sighash_features_cert[-1] = 1
-
-        packet_features.extend(sighash_features_cert)
+        certificateFeature = extractCertificateAndEncode(packet_json, enumSignatureHashCert)
+        packet_features.extend(certificateFeature)
 
         # 18: ServerHelloDone - LENGTH
+        serverhellodoneLengthFeature = extractServerhellodoneLength(packet_json)
+        packet_features.extend(serverhellodoneLengthFeature)
         try:
             handshake = find_handshake(packet_json.ssl, target_type=14)
             if handshake:
@@ -674,16 +495,9 @@ def extractClienthelloLength(packet):
 
 def extractClienthelloCiphersuiteAndEncode(packet, enum):
     ciphersuites = extractClienthelloCiphersuite(packet)
-
-    unknown_dim = [0]
-    encoded_ciphersuites = [0] * len(enum) + unknown_dim
-    if ciphersuites:
-        for ciphersuite in ciphersuites:
-            if ciphersuite in enum:
-                encoded_ciphersuites[enum.index(ciphersuite)] = 1
-            else:
-                logging.warning('Unseen cipher suite ({})'.format(ciphersuite))
-                encoded_ciphersuites[-1] = 1
+    encoded_ciphersuites = encodeEnumIntoManyHotVec(ciphersuites, enum)
+    if encoded_ciphersuites[-1] == 1:
+        logging.warning('Cipher suites contain unseen enums. Refer to above')
     return encoded_ciphersuites
 
 def extractClienthelloCiphersuite(packet):
@@ -695,6 +509,210 @@ def extractClienthelloCiphersuite(packet):
     except AttributeError:
         pass
     return feature
+
+def extractClienthelloCiphersuiteLength(packet):
+    feature = [0]
+    try:
+        handshake = find_handshake(packet.ssl, target_type=1)
+        if handshake:
+            feature = [int(handshake.cipher_suites_length)]
+    except AttributeError:
+        pass
+    return feature
+
+def extractClienthelloCompressionmethodAndEncode(packet, enum):
+    compressionmethods = extractClienthelloCompressionmethod(packet)
+    encoded_compressionmethods = encodeEnumIntoManyHotVec(compressionmethods, enum)
+    if encoded_compressionmethods[-1] == 1:
+        logging.warning('Compression methods contain unseen enums. Refer to above')
+    return encoded_compressionmethods
+
+def extractClienthelloCompressionmethod(packet):
+    feature = []
+    try:
+        handshake = find_handshake(packet.ssl, target_type=1)
+        if handshake:
+            feature = [int(compressionmethod, 16) for compressionmethod in
+                       handshake._all_fields['ssl.handshake.comp_methods']['ssl.handshake.comp_method']]
+    except (AttributeError, KeyError):
+        pass
+    return feature
+
+def extractClienthelloSupportedgroupLength(packet):
+    feature = [0]
+    try:
+        handshake = find_handshake(packet.ssl, target_type=1)
+        if handshake:
+            contains_supported_groups = [v for k,v in handshake._all_fields.items() if 'supported_groups' in k]
+            feature = [int(contains_supported_groups[0]['ssl.handshake.extension.len'])] # Choose the first object
+    except (AttributeError, KeyError, IndexError):
+        pass
+    return feature
+
+def extractClienthelloSupportedgroupAndEncode(packet, enum):
+    supportedgroups = extractClienthelloSupportedgroup(packet)
+    encoded_supportedgroups = encodeEnumIntoManyHotVec(supportedgroups, enum)
+    if encoded_supportedgroups[-1] == 1:
+        logging.warning('Supported groups contain unseen enums. Refer to above')
+    return encoded_supportedgroups
+
+def extractClienthelloSupportedgroup(packet):
+    feature = []
+    try:
+        handshake = find_handshake(packet.ssl, target_type=1)
+        if handshake:
+            contains_supported_groups = [v for k, v in handshake._all_fields.items() if 'supported_groups' in k]
+            feature = [int(supported_group, 16) for supported_group in contains_supported_groups[0]  # Choose the first object
+                                                                        ['ssl.handshake.extensions_supported_groups']
+                                                                        ['ssl.handshake.extensions_supported_group']]
+    except (AttributeError, KeyError, IndexError):
+        pass
+    return feature
+
+def extractClienthelloEncryptthenmacLength(packet):
+    feature = [0]
+    try:
+        handshake = find_handshake(packet.ssl, target_type=1)
+        if handshake:
+            contains_encrypt_then_mac = [v for k, v in handshake._all_fields.items() if 'encrypt_then_mac' in k]
+            feature = [int(contains_encrypt_then_mac[0]['ssl.handshake.extension.len'])] # Choose the first object
+    except (AttributeError, KeyError, IndexError):
+        pass
+    return feature
+
+def extractClienthelloExtendedmastersecretLength(packet):
+    feature = [0]
+    try:
+        handshake = find_handshake(packet.ssl, target_type=1)
+        if handshake:
+            contains_extended_master_secret = [v for k, v in handshake._all_fields.items() if 'extended_master_secret' in k]
+            feature = [int(contains_extended_master_secret[0]['ssl.handshake.extension.len'])] # Choose the first object
+    except (AttributeError, KeyError, IndexError):
+        pass
+    return feature
+
+def extractClienthelloSignaturehashAndEncode(packet, enum):
+    signaturehashes = extractClienthelloSignaturehash(packet)
+    encoded_signaturehashes = encodeEnumIntoManyHotVec(signaturehashes, enum)
+    if encoded_signaturehashes[-1] == 1:
+        logging.warning('Signature hash contains unseen enums. Refer to above')
+    return encoded_signaturehashes
+
+def extractClienthelloSignaturehash(packet):
+    feature = []
+    try:
+        handshake = find_handshake(packet.ssl, target_type=1)
+        if handshake:
+            contains_signature_algorithms = [v for k, v in handshake._all_fields.items() if 'signature_algorithms' in k]
+            feature = [int(signature_hash, 16) for signature_hash in contains_signature_algorithms[0]
+                                                                                ['ssl.handshake.sig_hash_algs']
+                                                                                ['ssl.handshake.sig_hash_alg']]
+    except (AttributeError, KeyError, IndexError):
+        pass
+    return feature
+
+def extractServerhelloLength(packet):
+    feature = [0]
+    try:
+        handshake = find_handshake(packet.ssl, target_type=2)
+        if handshake:
+            feature = [int(handshake.length)]
+    except (AttributeError):
+        pass
+    return feature
+
+def extractServerhelloRenegoLength(packet):
+    feature = [0]
+    try:
+        handshake = find_handshake(packet.ssl, target_type=2)
+        contains_renego_info = [v for k,v in handshake._all_fields.items() if 'renegotiation_info' in k]
+        feature = [int(contains_renego_info[0]['ssl.handshake.extension.len'])]
+    except (AttributeError, KeyError, IndexError):
+        pass
+    return feature
+
+def extractCertificateLengthInfo(packet):
+    feature = [0,0,0,0]
+    try:
+        if hasattr(packet.ssl, 'value'):
+            handshake = find_handshake(packet.ssl.value, target_type=11)
+        else:
+            handshake = find_handshake(packet.ssl, target_type=11)
+
+        if handshake:
+            cert_len = None
+            if type(handshake) == JsonLayer:
+                cert_len = [int(i) for i in handshake.certificates.certificate_length]
+            elif type(handshake) == dict:
+                cert_len = [int(i) for i in handshake['ssl.handshake.certificates']['ssl.handshake.certificate_length']]
+
+            if cert_len:
+                num_cert = len(cert_len)
+                mean_cert_len = sum(cert_len)/float(num_cert)
+                max_cert_len = max(cert_len)
+                min_cert_len = min(cert_len)
+                feature = [num_cert, mean_cert_len, max_cert_len, min_cert_len]
+    except (AttributeError, KeyError):
+        pass
+    return feature
+
+def extractCertificateAndEncode(packet, enum):
+    certs = extractCertificate(packet)
+    encoded_certs = encodeEnumIntoManyHotVec(certs, enum)
+    if encoded_certs[-1] == 1:
+        logging.warning('Certificates contains unseen enums. Refer to above')
+    return encoded_certs
+
+def extractCertificate(packet):
+    feature = []
+    try:
+        if hasattr(packet.ssl, 'value'):
+            handshake = find_handshake(packet.ssl.value, target_type=11)
+        else:
+            handshake = find_handshake(packet.ssl, target_type=11)
+        if handshake:
+            if type(handshake) == JsonLayer:
+                temp = handshake.certificates.certificate_tree
+                if type(temp) != list:
+                    temp = [temp]
+                feature = [str(i_temp.algorithmIdentifier_element.id) for i_temp in temp]
+            elif type(handshake) == dict:
+                temp = handshake['ssl.handshake.certificates']['ssl.handshake.certificate_tree']
+                if type(temp) != list:
+                    temp = [temp]
+                contains_algoidentifier_element = [v for i_temp in temp for k,v in i_temp.items() if 'algorithmIdentifier_element' in k]
+                contains_algo_id = [v for k,v in contains_algoidentifier_element[0] if 'algorithm.id' in k]
+                feature = [str(cert) for cert in contains_algo_id[0]]
+
+    except (AttributeError, KeyError, IndexError):
+        pass
+    return feature
+
+def extractServerhellodoneLength(packet):
+    feature = [0]
+    try:
+        handshake = find_handshake(packet.ssl, target_type=14)
+        if handshake:
+            feature = [int(handshake.length)]
+    except AttributeError:
+        pass
+    return feature
+
+
+
+def encodeEnumIntoManyHotVec(listOfEnum, refEnum):
+    unknown_dim = [0]
+    # The unknown dim occupies the last position
+    encoded_enums = [0] * len(refEnum) + unknown_dim
+    if listOfEnum:
+        for enum in listOfEnum:
+            if enum in refEnum:
+                encoded_enums[refEnum.index(enum)] = 1
+            else:
+                encoded_enums[-1] = 1
+                logging.warning('Unseen enum {}'.format(enum))
+    return encoded_enums
+
 
 if __name__ == '__main__':
     enums = {'ciphersuites': [], 'compressionmethods': [], 'supportedgroups': [], 'sighashalgorithms_client': [],
@@ -772,10 +790,23 @@ if __name__ == '__main__':
     sample2 = 'sample-pcap/australianmuseum.net.au_2018-12-21_16-15-59.pcap'
     sample3 = 'sample-pcap/ari.nus.edu.sg_2018-12-24_14-30-02.pcap'
     sample4 = 'sample-pcap/www.zeroaggressionproject.org_2018-12-21_16-19-03.pcap'
+    sample5 = 'sample-pcap/alis.alberta.ca_2019-01-22_19-26-05.pcap'
+    sample6 = 'sample-pcap/dataverse.harvard.edu_2018-12-24_17-16-00.pcap'
+    sample7 = 'sample-pcap/whc.unesco.org_2018-12-24_17-09-08.pcap'
+    sample8 = 'sample-pcap/www.cancerresearchuk.org_2018-12-24_17-15-46.pcap'
+    sample9 = 'sample-pcap/www.orkin.com_2018-12-24_17-10-27.pcap'
+    sample10 = 'sample-pcap/www.tmr.qld.gov.au_2018-12-24_17-20-56.pcap'
+
     sample1_packets = [packet for packet in pyshark.FileCapture(sample1, use_json=True)]
     sample2_packets = [packet for packet in pyshark.FileCapture(sample2, use_json=True)]
     sample3_packets = [packet for packet in pyshark.FileCapture(sample3, use_json=True)]
     sample4_packets = [packet for packet in pyshark.FileCapture(sample4, use_json=True)]
+    sample5_packets = [packet for packet in pyshark.FileCapture(sample5, use_json=True)]
+    sample6_packets = [packet for packet in pyshark.FileCapture(sample6, use_json=True)]
+    sample7_packets = [packet for packet in pyshark.FileCapture(sample7, use_json=True)]
+    sample8_packets = [packet for packet in pyshark.FileCapture(sample8, use_json=True)]
+    sample9_packets = [packet for packet in pyshark.FileCapture(sample9, use_json=True)]
+    sample10_packets = [packet for packet in pyshark.FileCapture(sample10, use_json=True)]
 
     sample1_clienthello = sample1_packets[3]
     sample1_serverhello_cert_serverhellodone = sample1_packets[7]
@@ -800,7 +831,7 @@ if __name__ == '__main__':
     sample3_appdata_pure = sample3_packets[9]
     sample3_appdata_segment = sample3_packets[26]
 
-    sample4_clienthhello = sample4_packets[3]
+    sample4_clienthello = sample4_packets[3]
     sample4_serverhello = sample4_packets[5]
     sample4_cert = sample4_packets[8]
     sample4_serverhellodone = sample4_packets[9]
@@ -809,6 +840,11 @@ if __name__ == '__main__':
     sample4_appdata_pure = sample4_packets[13]
     sample4_appdata_segment = sample4_packets[27]
     sample4_appdata_double = sample4_packets[15]
+
+    sample5_cert = sample5_packets[16] # double ssl layer
+    sample6_cert = sample6_packets[8] # double ssl layer
+    sample7_cert = sample7_packets[8] # double ssl layer
+    sample10_cert = sample10_packets[10]
 
     # Test function extractClienthelloLength()
     output = extractClienthelloLength(sample1_clienthello)
@@ -820,7 +856,7 @@ if __name__ == '__main__':
     output = extractClienthelloLength(sample3_clienthello)
     expected = [226]
     assert output == expected
-    output = extractClienthelloLength(sample4_clienthhello)
+    output = extractClienthelloLength(sample4_clienthello)
     expected = [241]
     assert output == expected
 
@@ -838,10 +874,124 @@ if __name__ == '__main__':
     output = extractClienthelloCiphersuiteAndEncode(sample3_clienthello, enums)
     expected = [1,1,1,0,1]
     assert output == expected
-    output = extractClienthelloCiphersuiteAndEncode(sample4_clienthhello, enums)
+    output = extractClienthelloCiphersuiteAndEncode(sample4_clienthello, enums)
     expected = [1,1,1,0,1]
     assert output == expected
 
+    # Test function extractClienthelloCiphersuiteLength
+    output = extractClienthelloCiphersuiteLength(sample1_clienthello)
+    expected = [92]
+    assert output == expected
+    output = extractClienthelloCiphersuiteLength(sample1_normal)
+    expected = [0]
+    assert output == expected
+    # output = extractClienthelloCiphersuiteLength(sample2_clienthello)
+    # expected = []
+    # assert output == expected
+    # output = extractClienthelloCiphersuiteLength(sample3_clienthello)
+    # expected = []
+    # assert output == expected
+    # output = extractClienthelloCiphersuiteLength(sample4_clienthello)
+    # expected = []
+    # assert output == expected
+
+    # Test function extractClienthelloCompressionmethodAndEncode
+    enums = [0]
+    output = extractClienthelloCompressionmethodAndEncode(sample1_clienthello, enums)
+    expected = [1,0]
+    assert output == expected
+    output = extractClienthelloCompressionmethodAndEncode(sample1_normal, enums)
+    expected = [0,0]
+    assert output == expected
+    # Test function extractClienthelloSupportedgroupLength
+    output = extractClienthelloSupportedgroupLength(sample1_clienthello)
+    expected = [10]
+    assert output == expected
+    output = extractClienthelloSupportedgroupLength(sample1_normal)
+    expected = [0]
+    assert output == expected
+    # Test function extractClienthelloSupportedgroupAndEncode
+    enums = [29, 23]
+    output = extractClienthelloSupportedgroupAndEncode(sample1_clienthello, enums)
+    expected = [1,1,1]
+    assert output == expected
+    output = extractClienthelloSupportedgroupAndEncode(sample1_normal, enums)
+    expected = [0,0,0]
+    assert output == expected
+    # Test function extractClienthelloEncryptthenmacLength
+    output = extractClienthelloEncryptthenmacLength(sample1_clienthello)
+    expected = [0]
+    assert output == expected
+    output = extractClienthelloEncryptthenmacLength(sample1_normal)
+    expected = [0]
+    assert output == expected
+    # Test function extractClienthelloExtendedmastersecretLength
+    output = extractClienthelloExtendedmastersecretLength(sample1_clienthello)
+    expected = [0]
+    assert output == expected
+    output = extractClienthelloExtendedmastersecretLength(sample1_normal)
+    expected = [0]
+    assert output == expected
+    # Test function extractClienthelloSignaturehashAndEncode
+    enums = [1537, 769]
+    output = extractClienthelloSignaturehashAndEncode(sample1_clienthello, enums)
+    expected = [1,1,1]
+    assert output == expected
+    output = extractClienthelloSignaturehashAndEncode(sample1_normal, enums)
+    expected = [0,0,0]
+    assert output == expected
+    # Test function extractServerhelloLength
+    output = extractServerhelloLength(sample1_serverhello_cert_serverhellodone)
+    expected = [81]
+    assert output == expected
+    output = extractServerhelloLength(sample1_normal)
+    expected = [0]
+    assert output == expected
+    # Test function extractServerhelloRenegoLength
+    output = extractServerhelloRenegoLength(sample1_serverhello_cert_serverhellodone)
+    expected = [1]
+    assert output == expected
+    output = extractServerhelloRenegoLength(sample1_normal)
+    expected = [0]
+    assert output == expected
+    # Test function extractCertificateInfo
+    output = extractCertificateLengthInfo(sample1_serverhello_cert_serverhellodone)
+    expected = [2, 1275.0, 1374, 1176]
+    assert all([math.isclose(output[i], expected[i]) for i in range(len(expected))])
+    output = extractCertificateLengthInfo(sample1_normal)
+    expected = [0,0,0,0]
+    assert all([math.isclose(output[i], expected[i]) for i in range(len(expected))])
+    # Test function extractCertificateAndEncode
+    enums = ['1.2.840.113549.1.1.11', '1.2.840.113549.1.1.13', '1.2.840.113549.1.1.5']
+    output = extractCertificateAndEncode(sample1_serverhello_cert_serverhellodone, enums)
+    expected = [1,0,0,0]
+    assert output == expected
+    output = extractCertificateAndEncode(sample1_normal, enums)
+    expected = [0,0,0,0]
+    assert output == expected
+    # Test function extractServerhellodoneLength
+    output = extractServerhellodoneLength(sample1_serverhello_cert_serverhellodone)
+    expected = [0]
+    assert output == expected
+    output = extractServerhellodoneLength(sample1_normal)
+    expected = [0]
+
+    # pkt = sample1_serverhello_cert_serverhellodone
+    # print(pkt)
+    # pkt = sample2_cert_serverhellodone
+    # print(pkt)
+    # pkt = sample3_serverhello_cert_serverhellodone
+    # print(pkt)
+    # pkt = sample4_cert
+    # print(pkt)
+    # pkt = sample5_cert
+    # print(pkt)
+    # pkt = sample6_cert
+    # print(pkt)
+    # pkt = sample7_cert
+    # print(pkt)
+    # pkt = sample10_cert
+    # print(pkt)
 
     print('TEST PASSED!')
     # Test whether all enums are generated
