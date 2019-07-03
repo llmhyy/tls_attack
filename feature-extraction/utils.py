@@ -235,87 +235,8 @@ def searchEnums(rootdir, limit):
     # return (ciphersuites, compressionmethods, supportedgroups, sighashalgorithms_client, sighashalgorithms_cert)
     return enum
 
-def find_handshake(obj, target_type):
-    if type(obj) == list:
-        final = None
-        for a_obj in obj:
-            temp = find_handshake(a_obj, target_type)
-            if temp:
-                final = temp
-        return final
-
-    elif type(obj) == JsonLayer:    
-        if obj.layer_name=='ssl' and hasattr(obj, 'record'):
-            return find_handshake(obj.record, target_type)
-        # elif obj.layer_name=='ssl' and hasattr(obj, 'handshake'):
-        #     return find_handshake(obj.handshake, target_type)
-        elif obj.layer_name=='record' and hasattr(obj, 'handshake') and target_type!=99:
-            return find_handshake(obj.handshake, target_type)
-        # If correct handshake is identified
-        elif obj.layer_name=='handshake' and int(obj.type)==target_type:
-            return obj
-        # Return record containing Encrypted Handshake Message (only handshake msg without a type)
-        elif obj.layer_name=='record' and hasattr(obj, 'handshake') and not(type(obj.handshake)==JsonLayer) and target_type==99:
-            return obj
-
-    elif type(obj) == dict:
-        if 'ssl.record' in obj:
-            return find_handshake(obj['ssl.record'], target_type)
-        elif 'ssl.handshake' in obj:
-            return find_handshake(obj['ssl.handshake'], target_type)
-        elif 'ssl.handshake.type' in obj and int(obj['ssl.handshake.type'])==target_type:
-            return obj
-
-def find_changecipher(obj):
-    if type(obj) == list:
-        final = None
-        for a_obj in obj:
-            temp = find_changecipher(a_obj)
-            if temp:
-                final = temp
-        return final
-    elif type(obj)==JsonLayer:
-        if obj.layer_name=='ssl' and hasattr(obj, 'record'):
-            return find_changecipher(obj.record)
-        elif obj.layer_name=='record' and hasattr(obj, 'change_cipher_spec'):
-            return obj
-
-# For identifying pure Application Data
-def find_appdata(obj):
-    if type(obj) == list:
-        final = None
-        for a_obj in obj:
-            temp = find_appdata(a_obj)
-            if temp:
-                final = temp
-        return final
-    elif type(obj)==JsonLayer:
-        if obj.layer_name=='ssl' and hasattr(obj, 'record'):
-            return find_appdata(obj.record)
-        elif obj.layer_name=='record' and hasattr(obj, 'app_data'):
-            return obj
-
-# For identifying Application Data [TCP segment of a reassembled PDU]
-def find_appdata2(obj):
-    if type(obj) == list:
-        final = None
-        for a_obj in obj:
-            temp = find_appdata2(a_obj)
-            if temp:
-                final = temp
-        return final
-    elif type(obj) == dict:
-        if 'ssl.record' in obj:
-            return find_appdata2(obj['ssl.record'])
-        elif 'ssl.app_data' in obj:
-            return obj
 
 def extract_tslssl_features(pcapfile, enums, limit):
-
-    # TODO: implement dynamic features
-    # Each packet will have its own record layer. If the layer does not exist, the features in that layer
-    # will be zero-ed. Hence, we still assume one packet/Eth frame as the most basic unit of traffic
-
     enumCipherSuites = enums['ciphersuites']
     enumCompressionMethods = enums['compressionmethods']
     enumSupportedGroups = enums['supportedgroups']
@@ -338,42 +259,55 @@ def extract_tslssl_features(pcapfile, enums, limit):
         # 1: ClientHello - LENGTH
         clienthelloLengthFeature = extractClienthelloLength(packet_json)
         packet_features.extend(clienthelloLengthFeature)
+
         # 2: ClientHello - CIPHER SUITE
         clienthelloCiphersuiteFeature = extractClienthelloCiphersuiteAndEncode(packet_json, enumCipherSuites)
         packet_features.extend(clienthelloCiphersuiteFeature)
+
         # 3: ClientHello - CIPHER SUITE LENGTH
         clienthelloCiphersuiteLengthFeature = extractClienthelloCiphersuiteLength(packet_json)
         packet_features.extend(clienthelloCiphersuiteLengthFeature)
+
         # 4: ClientHello - COMPRESSION METHOD
         clienthelloCompressionMethodFeature = extractClienthelloCompressionmethodAndEncode(packet_json,
                                                                                            enumCompressionMethods)
         packet_features.extend(clienthelloCompressionMethodFeature)
+
         # 5: ClientHello - SUPPORTED GROUP LENGTH
         clienthelloSupportedgroupLengthFeature = extractClienthelloSupportedgroupLength(packet_json)
         packet_features.extend(clienthelloSupportedgroupLengthFeature)
+
         # 6: ClientHello - SUPPORTED GROUPS
         clienthelloSupportedgroupFeature = extractClienthelloSupportedgroupAndEncode(packet_json, enumSupportedGroups)
         packet_features.extend(clienthelloSupportedgroupFeature)
+
         # 7: ClientHello - ENCRYPT THEN MAC LENGTH
         clienthelloEncryptthenmacLengthFeature = extractClienthelloEncryptthenmacLength(packet_json)
         packet_features.extend(clienthelloEncryptthenmacLengthFeature)
+
         # 8: ClientHello - EXTENDED MASTER SECRET
         clienthelloExtendedmastersecretLengthFeature = extractClienthelloExtendedmastersecretLength(packet_json)
         packet_features.extend(clienthelloExtendedmastersecretLengthFeature)
+
         # 9: ClientHello - SIGNATURE HASH ALGORITHM
         clienthelloSignaturehashFeature = extractClienthelloSignaturehashAndEncode(packet_json, enumSignatureHashClient)
         packet_features.extend(clienthelloSignaturehashFeature)
+
         # 10: ServerHello - LENGTH
         serverhelloLengthFeature = extractServerhelloLength(packet_json)
         packet_features.extend(serverhelloLengthFeature)
+
         # 11: ServerHello - EXTENDED MASTER SECRET
-        # ServerHello Extended Master Secret cannot be found in the packet
+        # Feature cannot be found in the packet
+
         # 12: ServerHello - RENEGOTIATION INFO LENGTH
         serverhelloRenegoLengthFeature = extractServerhelloRenegoLength(packet_json)
         packet_features.extend(serverhelloRenegoLengthFeature)
+
         # 13,14,15,16: Certificate - NUM_CERT, AVERAGE, MIN, MAX CERTIFICATE LENGTH
         certificateLengthInfoFeature = extractCertificateLengthInfo(packet_json)
         packet_features.extend(certificateLengthInfoFeature)
+
         # 17: Certificate - SIGNATURE ALGORITHM
         certificateFeature = extractCertificateAndEncode(packet_json, enumSignatureHashCert)
         packet_features.extend(certificateFeature)
@@ -381,98 +315,26 @@ def extract_tslssl_features(pcapfile, enums, limit):
         # 18: ServerHelloDone - LENGTH
         serverhellodoneLengthFeature = extractServerhellodoneLength(packet_json)
         packet_features.extend(serverhellodoneLengthFeature)
-        try:
-            handshake = find_handshake(packet_json.ssl, target_type=14)
-            if handshake:
-                packet_features.append(int(handshake.length))
-            else:
-                packet_features.append(0)
-        except AttributeError:
-            packet_features.append(0)
 
-        # 19: ClientKeyExchange - LENGTH
-        try:
-            handshake = find_handshake(packet_json.ssl, target_type=16)
-            if handshake:
-                packet_features.append(int(handshake.length))
-            else:
-                packet_features.append(0)
-        except AttributeError:
-            packet_features.append(0)
+        # 19: ClientKeyExchange - PUBKEY LENGTH
+        clientkeyexchangePubkeyLengthFeature = extractClientkeyexchangePubkeyLength(packet_json)
+        packet_features.extend(clientkeyexchangePubkeyLengthFeature)
 
-        # 20: ClientKeyExchange - PUBKEY LENGTH
-        try:
-            handshake = find_handshake(packet_json.ssl, target_type=16)
-            if handshake:
-                try:
-                    if 'EC Diffie-Hellman Client Params' in handshake._all_fields:
-                        pub_key_dict = handshake._all_fields['EC Diffie-Hellman Client Params']
-                        packet_features.append(int(pub_key_dict['ssl.handshake.client_point_len']))
-                    elif 'RSA Encrypted PreMaster Secret' in handshake._all_fields:
-                        pub_key_dict = handshake._all_fields['RSA Encrypted PreMaster Secret']
-                        packet_features.append(int(pub_key_dict['ssl.handshake.epms_len']))
-                    elif 'Diffie-Hellman Client Params' in handshake._all_fields:
-                        pub_key_dict = handshake._all_fields['Diffie-Hellman Client Params']
-                        packet_features.append(int(pub_key_dict['ssl.handshake.yc_len']))
-                    # Unseen Client Key Exchange algorithm                
-                    else:
-                        # Last resort: use the length of handshake as substitute
-                        packet_features.append(int(handshake._all_fields['ssl.handshake.length']))
-                        logging.warning('Unknown client key exchange algo in ClientKeyExchange for file {}'.format(pcapfile))
-                # RSA in SSLv3 does not seem to publish the len, resulting in KeyError
-                except KeyError:
-                    packet_features.append(int(handshake._all_fields['ssl.handshake.length']))
-                
-            else:
-                packet_features.append(0)
-        except AttributeError:
-            packet_features.append(0)
-
-        # 21: EncryptedHandshakeMessage - LENGTH
-        try:
-            handshake = find_handshake(packet_json.ssl, target_type=99)
-            if handshake:
-                packet_features.append(int(handshake.length))
-            else:
-                packet_features.append(0)
-        except AttributeError:
-            packet_features.append(0)
-
+        # 20: EncryptedHandshakeMessage - LENGTH
+        encryptedhandshakemsgLengthFeature = extractEncryptedhandshakemsgLength(packet_json)
+        packet_features.extend(encryptedhandshakemsgLengthFeature)
 
         #  CHANGE CIPHER PROTOCOL
         ##################################################################
-        #  22: ChangeCipherSpec - LENGTH
-        try:
-            changecipher = find_changecipher(packet_json.ssl)
-            if changecipher:
-                packet_features.append(int(changecipher.length))
-            else:
-                packet_features.append(0)
-        except AttributeError:
-            packet_features.append(0)
-
+        # 21: ChangeCipherSpec - LENGTH
+        changecipherspecLengthFeature = extractChangeCipherSpecLength(packet_json)
+        packet_features.extend(changecipherspecLengthFeature)
 
         #  APPLICATION DATA PROTOCOL
         ##################################################################
-        #  23: ApplicationDataProtocol - LENGTH
-        
-        # Attempt 1: use find_appdata to identify pure Application DAta
-        try:
-            appdata = find_appdata(packet_json.ssl)
-        except AttributeError:
-            appdata = None
-        # Attempt 2: use find_appdata2 to identify Application Data[TCP segment of a reassembled PDU]
-        try: 
-            appdata2 = find_appdata2(packet_json.ssl.value)
-        except AttributeError:
-            appdata2 = None
-        
-        if appdata:
-            packet_features.append(int(appdata.length))
-        elif appdata2:
-            packet_features.append(int(appdata2['ssl.record.length']))
-        else:
-            packet_features.append(0)
+        # 22: ApplicationDataProtocol - LENGTH
+        appdataLengthFeature = extractAppDataLength(packet_json)
+        packet_features.extend(appdataLengthFeature)
         
         # Convert to float for standardization
         packet_features = [float(i) for i in packet_features]
@@ -681,8 +543,8 @@ def extractCertificate(packet):
                 if type(temp) != list:
                     temp = [temp]
                 contains_algoidentifier_element = [v for i_temp in temp for k,v in i_temp.items() if 'algorithmIdentifier_element' in k]
-                contains_algo_id = [v for k,v in contains_algoidentifier_element[0] if 'algorithm.id' in k]
-                feature = [str(cert) for cert in contains_algo_id[0]]
+                contains_algo_id = [v for k,v in contains_algoidentifier_element[0].items() if 'algorithm.id' in k]
+                feature = [str(cert) for cert in contains_algo_id]
 
     except (AttributeError, KeyError, IndexError):
         pass
@@ -698,7 +560,130 @@ def extractServerhellodoneLength(packet):
         pass
     return feature
 
+def extractClientkeyexchangePubkeyLength(packet):
+    feature = [0]
+    try:
+        handshake = find_handshake(packet.ssl, target_type=16)
+        if handshake:
+            if 'EC Diffie-Hellman Client Params' in handshake._all_fields:
+                feature = handshake._all_fields['EC Diffie-Hellman Client Params']['ssl.handshake.client_point_len']
+            elif 'RSA Encrypted PreMaster Secret' in handshake._all_fields:
+                feature = handshake._all_fields['RSA Encrypted PreMaster Secret']['ssl.handshake.epms_len']
+            elif 'Diffie-Hellman Client Params' in handshake._all_fields:
+                feature = handshake._all_fields['Diffie-Hellman Client Params']['ssl.handshake.yc_len']
+            elif 'ssl.handshake.length' in handshake._all_fields:
+                feature = handshake._all_fields['ssl.handshake.length']
 
+            if feature != [0]: # check if feature was modified
+                feature = [int(feature)]
+    except (AttributeError, KeyError):
+        pass
+    return feature
+
+def extractEncryptedhandshakemsgLength(packet):
+    feature = [0]
+    try:
+        handshake = find_handshake(packet.ssl, target_type=99)
+        if handshake:
+            feature = [int(handshake.length)]
+    except AttributeError:
+        pass
+    return feature
+
+def extractChangeCipherSpecLength(packet):
+    feature = [0]
+    try:
+        changecipher = find_changecipher(packet.ssl)
+        if changecipher:
+            feature = [int(changecipher.length)]
+    except AttributeError:
+        pass
+    return feature
+
+def extractAppDataLength(packet):
+    feature = [0]
+    try:
+        if hasattr(packet.ssl, 'value'):
+            appdata = find_appdata(packet.ssl.value)
+        else:
+            appdata = find_appdata(packet.ssl)
+
+        if appdata:
+            if type(appdata) == JsonLayer:
+                feature = [int(appdata.length)]
+            elif type(appdata) == dict:
+                feature = [int(appdata['ssl.record.length'])]
+    except (AttributeError, KeyError):
+        pass
+    return feature
+
+def find_handshake(obj, target_type):
+    if type(obj) == list:
+        final = None
+        for a_obj in obj:
+            temp = find_handshake(a_obj, target_type)
+            if temp:
+                final = temp
+        return final
+
+    elif type(obj) == JsonLayer:
+        if obj.layer_name=='ssl' and hasattr(obj, 'record'):
+            return find_handshake(obj.record, target_type)
+        # elif obj.layer_name=='ssl' and hasattr(obj, 'handshake'):
+        #     return find_handshake(obj.handshake, target_type)
+        elif obj.layer_name=='record' and hasattr(obj, 'handshake') and target_type!=99:
+            return find_handshake(obj.handshake, target_type)
+        # If correct handshake is identified
+        elif obj.layer_name=='handshake' and int(obj.type)==target_type:
+            return obj
+        # Return record containing Encrypted Handshake Message (only handshake msg without a type)
+        elif obj.layer_name=='record' and hasattr(obj, 'handshake') and not(type(obj.handshake)==JsonLayer) and target_type==99:
+            return obj
+
+    elif type(obj) == dict:
+        if 'ssl.record' in obj:
+            return find_handshake(obj['ssl.record'], target_type)
+        elif 'ssl.handshake' in obj:
+            return find_handshake(obj['ssl.handshake'], target_type)
+        elif 'ssl.handshake.type' in obj and int(obj['ssl.handshake.type'])==target_type:
+            return obj
+
+def find_changecipher(obj):
+    if type(obj) == list:
+        final = None
+        for a_obj in obj:
+            temp = find_changecipher(a_obj)
+            if temp:
+                final = temp
+        return final
+
+    elif type(obj)==JsonLayer:
+        if obj.layer_name=='ssl' and hasattr(obj, 'record'):
+            return find_changecipher(obj.record)
+        elif obj.layer_name=='record' and hasattr(obj, 'change_cipher_spec'):
+            return obj
+
+# For identifying pure Application Data and Application Data [TCP segment of a reassembled PDU]
+def find_appdata(obj):
+    if type(obj) == list:
+        final = None
+        for a_obj in obj:
+            temp = find_appdata(a_obj)
+            if temp:
+                final = temp
+        return final
+
+    elif type(obj)==JsonLayer:
+        if obj.layer_name=='ssl' and hasattr(obj, 'record'):
+            return find_appdata(obj.record)
+        elif obj.layer_name=='record' and hasattr(obj, 'app_data'):
+            return obj
+
+    elif type(obj) == dict:
+        if 'ssl.record' in obj:
+            return find_appdata(obj['ssl.record'])
+        elif 'ssl.app_data' in obj:
+            return obj
 
 def encodeEnumIntoManyHotVec(listOfEnum, refEnum):
     unknown_dim = [0]
@@ -713,289 +698,8 @@ def encodeEnumIntoManyHotVec(listOfEnum, refEnum):
                 logging.warning('Unseen enum {}'.format(enum))
     return encoded_enums
 
-
 if __name__ == '__main__':
     enums = {'ciphersuites': [], 'compressionmethods': [], 'supportedgroups': [], 'sighashalgorithms_client': [],
              'sighashalgorithms_cert': []}
-    sample = 'sample-pcap/www.stripes.com_2018-12-21_16-20-12.pcap'
 
-    # TEST CASES
-    # packets = [packet for packet in pyshark.FileCapture(sample)]
-    # packet1 = packets[0]
-    # packet4 = packets[3]
-    # packet5 = packets[4]
-    # packet8 = packets[7]
-    # packet11 = packets[10]
-    # packet25 = packets[24]
-    #
-    # # Test function extractComeLeaveFromPacket()
-    # output = extractComeLeaveFromPacket(packet1)
-    # expected = [0]
-    # assert output == expected
-    # output = extractComeLeaveFromPacket(packet25)
-    # expected = [1]
-    # assert output == expected
-    #
-    # # Test function extractProtocolFromPacket()
-    # output = extractProtocolFromPacket(packet1)
-    # expected = [1,0,0,0,0,0]
-    # assert output == expected
-    # output = extractProtocolFromPacket(packet4)
-    # expected = [0,0,0,1,0,0]
-    # assert output == expected
-    # output = extractProtocolFromPacket(packet8)
-    # expected = [0,0,0,0,0,1]
-    # assert output == expected
-    #
-    # # Test function extractLengthFromPacket()
-    # output = extractLengthFromPacket(packet1)
-    # expected = [66]
-    # assert output == expected
-    # output = extractLengthFromPacket(packet5)
-    # expected = [1514]
-    # assert output == expected
-    #
-    # # Test function extractIntervalFromPacket()
-    # output = extractIntervalFromPacket(packet1)
-    # expected = [0.0]
-    # assert math.isclose(output[0], expected[0])
-    # output = extractIntervalFromPacket(packet4)
-    # expected = [20.716]
-    # assert math.isclose(output[0], expected[0])
-    #
-    # # Test function extractFlagFromPacket()
-    # output = extractFlagFromPacket(packet1)
-    # expected = [0,0,0,0,0,0,0,1,0]
-    # assert output == expected
-    # output = extractFlagFromPacket(packet11)
-    # expected = [0,0,0,0,1,1,0,0,0]
-    # assert output == expected
-    #
-    # # Test function extractWindowSizeFromPacket(packet1)
-    # output = extractWindowSizeFromPacket(packet1)
-    # expected = [64240]
-    # assert output == expected
-    # output = extractWindowSizeFromPacket(packet4)
-    # expected = [66048]
-    # assert output == expected
-    #
-    # # Test function extract_tcp_features()
-    # output = extract_tcp_features(sample, limit=100)
-    # expected_len = 100
-    # assert len(output) == expected_len
-    # expected_dim = 19
-    # assert len(output[0]) == expected_dim
-
-    sample1 = 'sample-pcap/www.stripes.com_2018-12-21_16-20-12.pcap'
-    sample2 = 'sample-pcap/australianmuseum.net.au_2018-12-21_16-15-59.pcap'
-    sample3 = 'sample-pcap/ari.nus.edu.sg_2018-12-24_14-30-02.pcap'
-    sample4 = 'sample-pcap/www.zeroaggressionproject.org_2018-12-21_16-19-03.pcap'
-    sample5 = 'sample-pcap/alis.alberta.ca_2019-01-22_19-26-05.pcap'
-    sample6 = 'sample-pcap/dataverse.harvard.edu_2018-12-24_17-16-00.pcap'
-    sample7 = 'sample-pcap/whc.unesco.org_2018-12-24_17-09-08.pcap'
-    sample8 = 'sample-pcap/www.cancerresearchuk.org_2018-12-24_17-15-46.pcap'
-    sample9 = 'sample-pcap/www.orkin.com_2018-12-24_17-10-27.pcap'
-    sample10 = 'sample-pcap/www.tmr.qld.gov.au_2018-12-24_17-20-56.pcap'
-
-    sample1_packets = [packet for packet in pyshark.FileCapture(sample1, use_json=True)]
-    sample2_packets = [packet for packet in pyshark.FileCapture(sample2, use_json=True)]
-    sample3_packets = [packet for packet in pyshark.FileCapture(sample3, use_json=True)]
-    sample4_packets = [packet for packet in pyshark.FileCapture(sample4, use_json=True)]
-    sample5_packets = [packet for packet in pyshark.FileCapture(sample5, use_json=True)]
-    sample6_packets = [packet for packet in pyshark.FileCapture(sample6, use_json=True)]
-    sample7_packets = [packet for packet in pyshark.FileCapture(sample7, use_json=True)]
-    sample8_packets = [packet for packet in pyshark.FileCapture(sample8, use_json=True)]
-    sample9_packets = [packet for packet in pyshark.FileCapture(sample9, use_json=True)]
-    sample10_packets = [packet for packet in pyshark.FileCapture(sample10, use_json=True)]
-
-    sample1_clienthello = sample1_packets[3]
-    sample1_serverhello_cert_serverhellodone = sample1_packets[7]
-    sample1_clientkeyexchange_encryptedhandshakemsg_changecipherspec = sample1_packets[8]
-    sample1_changecipherspec_encryptedhandshakemsg = sample1_packets[9]
-    sample1_appdata_pure = sample1_packets[10]
-    sample1_appdata_segment = sample1_packets[24]
-    sample1_normal = sample1_packets[15]
-
-    sample2_clienthello = sample2_packets[3]
-    sample2_serverhello = sample2_packets[5]
-    sample2_cert_serverhellodone = sample2_packets[8]
-    sample2_clientkeyexchange_changecipherspec_encryptedhandshakemsg = sample2_packets[10]
-    sample2_changecipherspec_encryptedhandshakemsg = sample2_packets[11]
-    sample2_appdata_pure = sample2_packets[12]
-    sample2_appdata_segment = sample2_packets[16]
-
-    sample3_clienthello = sample3_packets[2]
-    sample3_serverhello_cert_serverhellodone = sample3_packets[5]
-    sample3_clientkeyexchange_changecipherspec_encryptedhandshakemsg = sample3_packets[7]
-    sample3_changecipherspec_encryptedhandshakemsg = sample3_packets[8]
-    sample3_appdata_pure = sample3_packets[9]
-    sample3_appdata_segment = sample3_packets[26]
-
-    sample4_clienthello = sample4_packets[3]
-    sample4_serverhello = sample4_packets[5]
-    sample4_cert = sample4_packets[8]
-    sample4_serverhellodone = sample4_packets[9]
-    sample4_clientkeyexchange_changecipherspec_encryptedhandshakemsg = sample4_packets[11]
-    sample4_changecipherspec_encryptedhandshakemsg = sample4_packets[12]
-    sample4_appdata_pure = sample4_packets[13]
-    sample4_appdata_segment = sample4_packets[27]
-    sample4_appdata_double = sample4_packets[15]
-
-    sample5_cert = sample5_packets[16] # double ssl layer
-    sample6_cert = sample6_packets[8] # double ssl layer
-    sample7_cert = sample7_packets[8] # double ssl layer
-    sample10_cert = sample10_packets[10]
-
-    # Test function extractClienthelloLength()
-    output = extractClienthelloLength(sample1_clienthello)
-    expected = [227]
-    assert output == expected
-    output = extractClienthelloLength(sample2_clienthello)
-    expected = [235]
-    assert output == expected
-    output = extractClienthelloLength(sample3_clienthello)
-    expected = [226]
-    assert output == expected
-    output = extractClienthelloLength(sample4_clienthello)
-    expected = [241]
-    assert output == expected
-
-    # Test function extractClienthelloCiphersuiteAndEncode()
-    enums = [49196, 49200, 49195, 10000]
-    output = extractClienthelloCiphersuiteAndEncode(sample1_clienthello, enums)
-    expected = [1,1,1,0,1]
-    assert output == expected
-    output = extractClienthelloCiphersuiteAndEncode(sample1_normal, enums)
-    expected = [0,0,0,0,0]
-    assert output == expected
-    output = extractClienthelloCiphersuiteAndEncode(sample2_clienthello, enums)
-    expected = [1,1,1,0,1]
-    assert output == expected
-    output = extractClienthelloCiphersuiteAndEncode(sample3_clienthello, enums)
-    expected = [1,1,1,0,1]
-    assert output == expected
-    output = extractClienthelloCiphersuiteAndEncode(sample4_clienthello, enums)
-    expected = [1,1,1,0,1]
-    assert output == expected
-
-    # Test function extractClienthelloCiphersuiteLength
-    output = extractClienthelloCiphersuiteLength(sample1_clienthello)
-    expected = [92]
-    assert output == expected
-    output = extractClienthelloCiphersuiteLength(sample1_normal)
-    expected = [0]
-    assert output == expected
-    # output = extractClienthelloCiphersuiteLength(sample2_clienthello)
-    # expected = []
-    # assert output == expected
-    # output = extractClienthelloCiphersuiteLength(sample3_clienthello)
-    # expected = []
-    # assert output == expected
-    # output = extractClienthelloCiphersuiteLength(sample4_clienthello)
-    # expected = []
-    # assert output == expected
-
-    # Test function extractClienthelloCompressionmethodAndEncode
-    enums = [0]
-    output = extractClienthelloCompressionmethodAndEncode(sample1_clienthello, enums)
-    expected = [1,0]
-    assert output == expected
-    output = extractClienthelloCompressionmethodAndEncode(sample1_normal, enums)
-    expected = [0,0]
-    assert output == expected
-    # Test function extractClienthelloSupportedgroupLength
-    output = extractClienthelloSupportedgroupLength(sample1_clienthello)
-    expected = [10]
-    assert output == expected
-    output = extractClienthelloSupportedgroupLength(sample1_normal)
-    expected = [0]
-    assert output == expected
-    # Test function extractClienthelloSupportedgroupAndEncode
-    enums = [29, 23]
-    output = extractClienthelloSupportedgroupAndEncode(sample1_clienthello, enums)
-    expected = [1,1,1]
-    assert output == expected
-    output = extractClienthelloSupportedgroupAndEncode(sample1_normal, enums)
-    expected = [0,0,0]
-    assert output == expected
-    # Test function extractClienthelloEncryptthenmacLength
-    output = extractClienthelloEncryptthenmacLength(sample1_clienthello)
-    expected = [0]
-    assert output == expected
-    output = extractClienthelloEncryptthenmacLength(sample1_normal)
-    expected = [0]
-    assert output == expected
-    # Test function extractClienthelloExtendedmastersecretLength
-    output = extractClienthelloExtendedmastersecretLength(sample1_clienthello)
-    expected = [0]
-    assert output == expected
-    output = extractClienthelloExtendedmastersecretLength(sample1_normal)
-    expected = [0]
-    assert output == expected
-    # Test function extractClienthelloSignaturehashAndEncode
-    enums = [1537, 769]
-    output = extractClienthelloSignaturehashAndEncode(sample1_clienthello, enums)
-    expected = [1,1,1]
-    assert output == expected
-    output = extractClienthelloSignaturehashAndEncode(sample1_normal, enums)
-    expected = [0,0,0]
-    assert output == expected
-    # Test function extractServerhelloLength
-    output = extractServerhelloLength(sample1_serverhello_cert_serverhellodone)
-    expected = [81]
-    assert output == expected
-    output = extractServerhelloLength(sample1_normal)
-    expected = [0]
-    assert output == expected
-    # Test function extractServerhelloRenegoLength
-    output = extractServerhelloRenegoLength(sample1_serverhello_cert_serverhellodone)
-    expected = [1]
-    assert output == expected
-    output = extractServerhelloRenegoLength(sample1_normal)
-    expected = [0]
-    assert output == expected
-    # Test function extractCertificateInfo
-    output = extractCertificateLengthInfo(sample1_serverhello_cert_serverhellodone)
-    expected = [2, 1275.0, 1374, 1176]
-    assert all([math.isclose(output[i], expected[i]) for i in range(len(expected))])
-    output = extractCertificateLengthInfo(sample1_normal)
-    expected = [0,0,0,0]
-    assert all([math.isclose(output[i], expected[i]) for i in range(len(expected))])
-    # Test function extractCertificateAndEncode
-    enums = ['1.2.840.113549.1.1.11', '1.2.840.113549.1.1.13', '1.2.840.113549.1.1.5']
-    output = extractCertificateAndEncode(sample1_serverhello_cert_serverhellodone, enums)
-    expected = [1,0,0,0]
-    assert output == expected
-    output = extractCertificateAndEncode(sample1_normal, enums)
-    expected = [0,0,0,0]
-    assert output == expected
-    # Test function extractServerhellodoneLength
-    output = extractServerhellodoneLength(sample1_serverhello_cert_serverhellodone)
-    expected = [0]
-    assert output == expected
-    output = extractServerhellodoneLength(sample1_normal)
-    expected = [0]
-
-    # pkt = sample1_serverhello_cert_serverhellodone
-    # print(pkt)
-    # pkt = sample2_cert_serverhellodone
-    # print(pkt)
-    # pkt = sample3_serverhello_cert_serverhellodone
-    # print(pkt)
-    # pkt = sample4_cert
-    # print(pkt)
-    # pkt = sample5_cert
-    # print(pkt)
-    # pkt = sample6_cert
-    # print(pkt)
-    # pkt = sample7_cert
-    # print(pkt)
-    # pkt = sample10_cert
-    # print(pkt)
-
-    print('TEST PASSED!')
-    # Test whether all enums are generated
-
-    # Test whether all features are extracted
-
-    # Test whether directory is searched correctly with features extracted 
+    pass
