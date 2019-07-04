@@ -19,7 +19,49 @@ TCP,-,Flag,Enum,SYN
 TCP,-,Flag,Enum,FIN
 TCP,-,Windows Size,Integer,-
 TLS,ClientHello,Length,Integer,-
-TLS,ClientHello,Cipher suites,Enum,?
+TLS,ClientHello,Cipher suites KEA NULL norm freq,Integer,-
+TLS,ClientHello,Cipher suites KEA RSA norm freq,Integer,-
+TLS,ClientHello,Cipher suites KEA DH norm freq,Integer,-
+TLS,ClientHello,Cipher suites KEA DHE norm freq,Integer,-
+TLS,ClientHello,Cipher suites KEA KRB5 norm freq,Integer,-
+TLS,ClientHello,Cipher suites KEA PSK norm freq,Integer,-
+TLS,ClientHello,Cipher suites KEA ECDH norm freq,Integer,-
+TLS,ClientHello,Cipher suites KEA ECDHE norm freq,Integer,-
+TLS,ClientHello,Cipher suites KEA SRP_SHA norm freq,Integer,-
+TLS,ClientHello,Cipher suites KEA PSK_DHE norm freq,Integer,-
+TLS,ClientHello,Cipher suites AUTH NULL norm freq,Integer,-
+TLS,ClientHello,Cipher suites AUTH RSA norm freq,Integer,-
+TLS,ClientHello,Cipher suites AUTH DSS norm freq,Integer,-
+TLS,ClientHello,Cipher suites AUTH KRB5 norm freq,Integer,-
+TLS,ClientHello,Cipher suites AUTH PSK norm freq,Integer,-
+TLS,ClientHello,Cipher suites AUTH ECDSA norm freq,Integer,-
+TLS,ClientHello,Cipher suites AUTH SRP_SHA norm freq,Integer,-
+TLS,ClientHello,Cipher suites AUTH PSK_DHE norm freq,Integer,-
+TLS,ClientHello,Cipher suites ENC NULL norm freq,Integer,-
+TLS,ClientHello,Cipher suites ENC RC4_40 norm freq,Integer,-
+TLS,ClientHello,Cipher suites ENC RC4_128 norm freq,Integer,-
+TLS,ClientHello,Cipher suites ENC RC2_40 norm freq,Integer,-
+TLS,ClientHello,Cipher suites ENC IDEA norm freq,Integer,-
+TLS,ClientHello,Cipher suites ENC DES40 norm freq,Integer,-
+TLS,ClientHello,Cipher suites ENC DES norm freq,Integer,-
+TLS,ClientHello,Cipher suites ENC 3DES_EDE norm freq,Integer,-
+TLS,ClientHello,Cipher suites ENC AES_128 norm freq,Integer,-
+TLS,ClientHello,Cipher suites ENC AES_256 norm freq,Integer,-
+TLS,ClientHello,Cipher suites ENC CAMELLIA_128 norm freq,Integer,-
+TLS,ClientHello,Cipher suites ENC CAMELIA_256 norm freq,Integer,-
+TLS,ClientHello,Cipher suites ENC SEED norm freq,Integer,-
+TLS,ClientHello,Cipher suites ENC ARIA_128 norm freq,Integer,-
+TLS,ClientHello,Cipher suites ENC CHACHA20 norm freq,Integer,-
+TLS,ClientHello,Cipher suites MODE NULL norm freq,Integer,-
+TLS,ClientHello,Cipher suites MODE CBC norm freq,Integer,-
+TLS,ClientHello,Cipher suites MODE GCM norm freq,Integer,-
+TLS,ClientHello,Cipher suites MODE CCM norm freq,Integer,-
+TLS,ClientHello,Cipher suites MODE POLY1305 norm freq,Integer,-
+TLS,ClientHello,Cipher suites HASH NULL norm freq,Integer,-
+TLS,ClientHello,Cipher suites HASH MD5 norm freq,Integer,-
+TLS,ClientHello,Cipher suites HASH SHA norm freq,Integer,-
+TLS,ClientHello,Cipher suites HASH SHA256 norm freq,Integer,-
+TLS,ClientHello,Cipher suites HASH SHA384 norm freq,Integer,-
 TLS,ClientHello,Cipher suites length,Integer,-
 TLS,ClientHello,Compression method,Enum,?
 TLS,ClientHello,Supported group length,Integer,-

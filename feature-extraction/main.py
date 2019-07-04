@@ -70,10 +70,12 @@ if args.refenum:
     with open(args.refenum, 'r') as f:
         enums = yaml.load(f)
 else:
+    print('Iterating through PCAP files and processing enums...')
     enums = {}
-    # Iterate through sub-directories inside the root directory for alternate traffic
-    for dirname in os.listdir(args.pcapdir):
-        enums_in_a_file = utils.searchEnums(os.path.join(args.pcapdir, dirname), limit=1000)
+    # Iterate through sub-directories inside the root directory for alternate traffic. Dont over commit to 1 sub-directory
+    pcapdirs = [os.path.join(args.pcapdir, o) for o in os.listdir(args.pcapdir) if os.path.isdir(os.path.join(args.pcapdir, o))]
+    for dirname in pcapdirs:
+        enums_in_a_file = utils.searchEnums(dirname, limit=1000)
         for k,v in enums_in_a_file.items():
             if k not in enums:
                 enums[k] = []
@@ -92,9 +94,7 @@ with open(features_info_filename,'r') as in_file, open(new_features_info_filenam
         enum_list = None
         split_line = line.split(',')
         if 'ClientHello' == split_line[1]:
-            if 'Cipher suites' == split_line[2]:
-                enum_list = enums['ciphersuites']
-            elif 'Compression method' == split_line[2]:
+            if 'Compression method' == split_line[2]:
                 enum_list = enums['compressionmethods']
             elif 'Supported groups' == split_line[2]:
                 enum_list = enums['supportedgroups']
