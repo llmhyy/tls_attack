@@ -172,12 +172,12 @@ assert output == expected
 output = extractClienthelloCiphersuiteLength(sample2_clienthello)
 expected = [92]
 assert output == expected
-# output = extractClienthelloCiphersuiteLength(sample3_clienthello)
-# expected = []
-# assert output == expected
-# output = extractClienthelloCiphersuiteLength(sample4_clienthello)
-# expected = []
-# assert output == expected
+output = extractClienthelloCiphersuiteLength(sample3_clienthello)
+expected = [92]
+assert output == expected
+output = extractClienthelloCiphersuiteLength(sample4_clienthello)
+expected = [92]
+assert output == expected
 
 # Test function extractClienthelloCompressionmethodAndEncode
 enums = [0]
@@ -187,9 +187,16 @@ assert output == expected
 output = extractClienthelloCompressionmethodAndEncode(sample1_normal, enums)
 expected = [0, 0]
 assert output == expected
-output = extractClienthelloCompressionmethodAndEncode(sample1_clienthello, enums)
+output = extractClienthelloCompressionmethodAndEncode(sample2_clienthello, enums)
 expected = [1,0]
 assert output == expected
+output = extractClienthelloCompressionmethodAndEncode(sample3_clienthello, enums)
+expected = [1,0]
+assert output == expected
+output = extractClienthelloCompressionmethodAndEncode(sample4_clienthello, enums)
+expected = [1,0]
+assert output == expected
+
 
 # Test function extractClienthelloSupportedgroupLength
 output = extractClienthelloSupportedgroupLength(sample1_clienthello)
@@ -199,6 +206,12 @@ output = extractClienthelloSupportedgroupLength(sample1_normal)
 expected = [0]
 assert output == expected
 output = extractClienthelloSupportedgroupLength(sample2_clienthello)
+expected = [10]
+assert output == expected
+output = extractClienthelloSupportedgroupLength(sample3_clienthello)
+expected = [10]
+assert output == expected
+output = extractClienthelloSupportedgroupLength(sample4_clienthello)
 expected = [10]
 assert output == expected
 
@@ -212,6 +225,14 @@ expected = [0, 0, 0]
 assert output == expected
 output = extractClienthelloSupportedgroupAndEncode(sample2_clienthello, enums)
 expected = [1,1,1]
+assert output == expected
+output = extractClienthelloSupportedgroupAndEncode(sample3_clienthello, enums)
+expected = [1,1,1]
+assert output == expected
+output = extractClienthelloSupportedgroupAndEncode(sample4_clienthello, enums)
+expected = [1,1,1]
+assert output == expected
+
 
 # Test function extractClienthelloEncryptthenmacLength
 output = extractClienthelloEncryptthenmacLength(sample1_clienthello)
@@ -221,6 +242,12 @@ output = extractClienthelloEncryptthenmacLength(sample1_normal)
 expected = [0]
 assert output == expected
 output = extractEncryptedhandshakemsgLength(sample2_clienthello)
+expected = [0]
+assert output == expected
+output = extractEncryptedhandshakemsgLength(sample3_clienthello)
+expected = [0]
+assert output == expected
+output = extractEncryptedhandshakemsgLength(sample4_clienthello)
 expected = [0]
 assert output == expected
 
@@ -234,6 +261,12 @@ assert output == expected
 output = extractClienthelloExtendedmastersecretLength(sample2_clienthello)
 expected = [0]
 assert output == expected
+output = extractClienthelloExtendedmastersecretLength(sample3_clienthello)
+expected = [0]
+assert output == expected
+output = extractClienthelloExtendedmastersecretLength(sample4_clienthello)
+expected = [0]
+assert output == expected
 
 # Test function extractClienthelloSignaturehashAndEncode
 enums = [1537, 769]
@@ -245,6 +278,13 @@ expected = [0, 0, 0]
 assert output == expected
 output = extractClienthelloSignaturehashAndEncode(sample2_clienthello, enums)
 expected = [1,1,1]
+assert output == expected
+output = extractClienthelloSignaturehashAndEncode(sample3_clienthello, enums)
+expected = [1,1,1]
+assert output == expected
+output = extractClienthelloSignaturehashAndEncode(sample4_clienthello, enums)
+expected = [1,1,1]
+assert output == expected
 
 # Test function extractServerhelloLength
 output = extractServerhelloLength(sample1_serverhello_cert_serverhellodone)
@@ -253,8 +293,14 @@ assert output == expected
 output = extractServerhelloLength(sample1_normal)
 expected = [0]
 assert output == expected
-output = extractServerhellodoneLength(sample2_cert_serverhellodone)
-expected = [0]
+output = extractServerhelloLength(sample2_serverhello)
+expected = [57]
+assert output == expected
+output = extractServerhelloLength(sample3_serverhello_cert_serverhellodone)
+expected = [81]
+assert output == expected
+output = extractServerhelloLength(sample4_serverhello)
+expected = [61]
 assert output == expected
 
 # Test function extractServerhelloRenegoLength
@@ -265,6 +311,12 @@ output = extractServerhelloRenegoLength(sample1_normal)
 expected = [0]
 assert output == expected
 output = extractServerhelloRenegoLength(sample2_serverhello)
+expected = [1]
+assert output == expected
+output = extractServerhelloRenegoLength(sample3_serverhello_cert_serverhellodone)
+expected = [1]
+assert output == expected
+output = extractServerhelloRenegoLength(sample4_serverhello)
 expected = [1]
 assert output == expected
 
@@ -278,6 +330,12 @@ assert all([math.isclose(output[i], expected[i]) for i in range(len(expected))])
 output = extractCertificateLengthInfo(sample2_cert_serverhellodone)
 expected = [4,1242.0,1548,1101]
 assert all([math.isclose(output[i], expected[i]) for i in range(len(expected))])
+output = extractCertificateLengthInfo(sample3_serverhello_cert_serverhellodone)
+expected = [2, 1508.0, 1840, 1176]
+assert all([math.isclose(output[i], expected[i]) for i in range(len(expected))])
+output = extractCertificateLengthInfo(sample4_cert)
+expected = [4, 1356.25, 1548, 1082]
+assert all([math.isclose(output[i], expected[i]) for i in range(len(expected))])
 
 # Test function extractCertificateAndEncode
 enums = ['1.2.840.113549.1.1.11', '1.2.840.113549.1.1.13', '1.2.840.113549.1.1.5']
@@ -290,6 +348,12 @@ assert output == expected
 output = extractCertificateAndEncode(sample2_cert_serverhellodone, enums)
 expected = [1,0,0,0]
 assert output == expected
+output = extractCertificateAndEncode(sample3_serverhello_cert_serverhellodone, enums)
+expected = [1,0,0,0]
+assert output == expected
+output = extractCertificateAndEncode(sample4_cert, enums)
+expected = [1,0,1,1]
+assert output == expected
 
 # Test function extractServerhellodoneLength
 output = extractServerhellodoneLength(sample1_serverhello_cert_serverhellodone)
@@ -300,6 +364,13 @@ expected = [0]
 output = extractServerhellodoneLength(sample2_cert_serverhellodone)
 expected = [0]
 assert output == expected
+output = extractServerhellodoneLength(sample3_serverhello_cert_serverhellodone)
+expected = [0]
+assert output == expected
+output = extractServerhellodoneLength(sample4_serverhellodone)
+expected = [0]
+assert output == expected
+
 
 # Test function extractClientkeyexchangePubkeyLength
 output = extractClientkeyexchangePubkeyLength(sample1_clientkeyexchange_encryptedhandshakemsg_changecipherspec)
@@ -309,6 +380,12 @@ output = extractClientkeyexchangePubkeyLength(sample1_normal)
 expected = [0]
 assert output == expected
 output = extractClientkeyexchangePubkeyLength(sample2_clientkeyexchange_changecipherspec_encryptedhandshakemsg)
+expected = [65]
+assert output == expected
+output = extractClientkeyexchangePubkeyLength(sample3_clientkeyexchange_changecipherspec_encryptedhandshakemsg)
+expected = [65]
+assert output == expected
+output = extractClientkeyexchangePubkeyLength(sample4_clientkeyexchange_changecipherspec_encryptedhandshakemsg)
 expected = [65]
 assert output == expected
 
@@ -322,7 +399,12 @@ assert output == expected
 output = extractEncryptedhandshakemsgLength(sample2_clientkeyexchange_changecipherspec_encryptedhandshakemsg)
 expected = [40]
 assert output == expected
-
+output = extractEncryptedhandshakemsgLength(sample3_clientkeyexchange_changecipherspec_encryptedhandshakemsg)
+expected = [96]
+assert output == expected
+output = extractEncryptedhandshakemsgLength(sample4_clientkeyexchange_changecipherspec_encryptedhandshakemsg)
+expected = [40]
+assert output == expected
 
 # Test function extractChangeCipherSpecLength
 output = extractChangeCipherSpecLength(sample1_changecipherspec_encryptedhandshakemsg)
@@ -332,6 +414,12 @@ output = extractChangeCipherSpecLength(sample1_normal)
 expected = [0]
 assert output == expected
 output = extractChangeCipherSpecLength(sample2_clientkeyexchange_changecipherspec_encryptedhandshakemsg)
+expected = [1]
+assert output == expected
+output = extractChangeCipherSpecLength(sample3_clientkeyexchange_changecipherspec_encryptedhandshakemsg)
+expected = [1]
+assert output == expected
+output = extractChangeCipherSpecLength(sample4_clientkeyexchange_changecipherspec_encryptedhandshakemsg)
 expected = [1]
 assert output == expected
 
@@ -350,6 +438,21 @@ expected = [228]
 assert output == expected
 output = extractAppDataLength(sample2_appdata_segment)
 expected = [2921]
+assert output == expected
+output = extractAppDataLength(sample3_appdata_pure)
+expected = [304]
+assert output == expected
+output = extractAppDataLength(sample3_appdata_segment)
+expected = [16464]
+assert output == expected
+output = extractAppDataLength(sample4_appdata_pure)
+expected = [265]
+assert output == expected
+output = extractAppDataLength(sample4_appdata_segment)
+expected = [16408]
+assert output == expected
+output = extractAppDataLength(sample4_appdata_double)
+expected = [31]
 assert output == expected
 
 # pkt = sample1_serverhello_cert_serverhellodone

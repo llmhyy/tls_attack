@@ -543,7 +543,7 @@ def extractCertificate(packet):
                 if type(temp) != list:
                     temp = [temp]
                 contains_algoidentifier_element = [v for i_temp in temp for k,v in i_temp.items() if 'algorithmIdentifier_element' in k]
-                contains_algo_id = [v for k,v in contains_algoidentifier_element[0].items() if 'algorithm.id' in k]
+                contains_algo_id = [v for i in contains_algoidentifier_element for k,v in i.items() if 'algorithm.id' in k]
                 feature = [str(cert) for cert in contains_algo_id]
 
     except (AttributeError, KeyError, IndexError):
@@ -600,6 +600,7 @@ def extractChangeCipherSpecLength(packet):
         pass
     return feature
 
+# If there are more than 1 app data record layer in the same packet, it will extract the latest app data record layer
 def extractAppDataLength(packet):
     feature = [0]
     try:
