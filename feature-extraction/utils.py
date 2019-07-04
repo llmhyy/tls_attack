@@ -1,16 +1,113 @@
 import os
-import math
 import time
 import pyshark
-import traceback
 from pyshark.packet.layer import JsonLayer
 import logging
-import numpy as np
 import ipaddress
 
 class ZeroPacketError(Exception):
     def __init__(self, message):
         super().__init__(message)
+
+def searchEnums(rootdir, limit):
+    """
+    Given a root directory containing all the pcap files, it will search for all possible enums
+    and return a list of all enums
+
+    Set a hard limit on the number of files iterated through to save time
+    """
+    ciphersuites = []
+    compressionmethods = []
+    supportedgroups = []
+    sighashalgorithms_client = []
+    sighashalgorithms_cert = []
+
+    success = 0
+    failed = 0
+    logging.info("Traversing through directory to find all enums...")
+    for root, dirs, files in os.walk(rootdir):
+        for f in files:
+            if f.endswith(".pcap"):
+                try:
+                    logging.info("Processing {}".format(f))
+                    # Might need to close FileCapture somehow to prevent the another loop running
+                    packets_json = pyshark.FileCapture(os.path.join(root, f), use_json=True)
+
+                    starttime_traffic = time.time()
+                    found_clienthello = False # Variable for ending the packet loop if ClientHello is found
+                    found_certificate = False # Variable for ending the packet loop if Certificate is found
+
+                    for packet_json in packets_json:
+                        starttime_packet = time.time()
+                        # Cipher Suites
+                        traffic_ciphersuites = extractClienthelloCiphersuite(packet_json)
+                        ciphersuites.extend(traffic_ciphersuites)
+                        # Compression Methods
+                        traffic_compressionmethods = extractClienthelloCompressionmethod(packet_json)
+                        compressionmethods.extend(traffic_compressionmethods)
+                        # Supported Groups
+                        traffic_supportedgroups = extractClienthelloSupportedgroup(packet_json)
+                        supportedgroups.extend(traffic_supportedgroups)
+                        # Clienthello - Signature Hash Algorithm
+                        traffic_sighashalgorithms_client = extractClienthelloSignaturehash(packet_json)
+                        sighashalgorithms_client.extend(traffic_sighashalgorithms_client)
+
+                        if traffic_ciphersuites or traffic_compressionmethods or \
+                            traffic_supportedgroups or traffic_sighashalgorithms_client:
+                            found_clienthello = True
+
+                        # Certificate - Signature Hash Algorithm
+                        traffic_sighashalgorithms_cert = extractCertificate(packet_json)
+                        sighashalgorithms_cert.extend(traffic_sighashalgorithms_cert)
+
+                        if traffic_sighashalgorithms_cert:
+                            found_certificate = True
+
+                        logging.debug("Time spent on packet: {}s".format(time.time()-starttime_packet))
+
+                        # Break the loop once both ClientHello and Certificate are found
+                        if found_clienthello and found_certificate:
+                            break
+
+                    logging.debug("Time spent on traffic: {}s".format(time.time()-starttime_traffic))
+
+                    # If ClientHello cannot be found in the traffic
+                    if not found_clienthello:
+                        logging.warning("No ClientHello found for file {}".format(os.path.join(root,f)))
+                    if not found_certificate:
+                        logging.warning("No Certificate found for file {}".format(os.path.join(root,f)))
+
+                    ciphersuites = list(set(ciphersuites))
+                    compressionmethods = list(set(compressionmethods))
+                    supportedgroups = list(set(supportedgroups))
+                    sighashalgorithms_client = list(set(sighashalgorithms_client))
+                    sighashalgorithms_cert = list(set(sighashalgorithms_cert))
+
+                    success += 1
+
+                    if success>=limit:
+                        break
+
+                # Skip this pcap file
+                except (KeyError, AttributeError, TypeError):
+                    logging.exception('Serious error in file {}. Traffic is skipped'.format(f))
+                    failed+=1
+                    continue
+
+        if success>=limit:
+            break
+
+    logging.info("Done processing enum")
+    print("Processing enums: {} success, {} failure".format(success, failed))
+
+    enum = {}
+    enum['ciphersuites'] = ciphersuites
+    enum['compressionmethods'] = compressionmethods
+    enum['supportedgroups'] = supportedgroups
+    enum['sighashalgorithms_client'] = sighashalgorithms_client
+    enum['sighashalgorithms_cert'] = sighashalgorithms_cert
+    # return (ciphersuites, compressionmethods, supportedgroups, sighashalgorithms_client, sighashalgorithms_cert)
+    return enum
 
 def extract_tcp_features(pcapfile, limit):
     traffic_features = []
@@ -102,150 +199,6 @@ def extractWindowSizeFromPacket(packet):
     except AttributeError:
         feature = [0]
     return feature
-
-def searchEnums(rootdir, limit):
-    """
-    Given a root directory containing all the pcap files, it will search for all possible enums
-    and return a list of all enums
-
-    Set a hard limit on the number of files iterated through to save time
-    """
-    ciphersuites = []
-    compressionmethods = []
-    supportedgroups = []
-    sighashalgorithms_client = []
-    sighashalgorithms_cert = []
-
-    success = 0
-    failed = 0
-    logging.info("Traversing through directory to find all enums...")
-    for root, dirs, files in os.walk(rootdir):
-        for f in files:
-            if f.endswith(".pcap"):
-                try:
-                    logging.info("Processing {}".format(f))
-                    # Might need to close FileCapture somehow to prevent the another loop running
-                    packets_json = pyshark.FileCapture(os.path.join(root, f), use_json=True)
-
-                    starttime = time.time()
-                    totaltime = 0.0
-                    found_clienthello = False # Variable for ending the packet loop if ClientHello is found
-                    found_certificate = False # Variable for ending the packet loop if Certificate is found
-
-                    for packet_json in packets_json:
-                        starttime3 = time.time()
-
-                        ########## For finding ClientHello ##########
-                        try:
-                            handshake = find_handshake(packet_json.ssl, target_type=1)
-                            if handshake:
-                                # Cipher Suites
-                                traffic_ciphersuites = [int(j) for j in handshake.ciphersuites.ciphersuite]
-                                ciphersuites.extend(traffic_ciphersuites)
-
-                                # Compression Methods
-                                traffic_compressionmethods = handshake._all_fields['ssl.handshake.comp_methods']['ssl.handshake.comp_method']
-                                if type(traffic_compressionmethods)==list:
-                                    traffic_compressionmethods = [int(j) for j in traffic_compressionmethods]
-                                else:
-                                    traffic_compressionmethods = [int(traffic_compressionmethods)]
-                                compressionmethods.extend(traffic_compressionmethods)
-
-                                # Supported Groups
-                                for k,v in handshake._all_fields.items():
-                                    if 'supported_groups' in k:
-                                        traffic_supportedgroups = v['ssl.handshake.extensions_supported_groups']['ssl.handshake.extensions_supported_group']
-                                        traffic_supportedgroups = [int(j,16) for j in traffic_supportedgroups]
-                                        supportedgroups.extend(traffic_supportedgroups)
-
-                                # Signature Hash Algorithm
-                                for k,v in handshake._all_fields.items():
-                                    if 'signature_algorithms' in k:
-                                        traffic_sighashalgorithms_client = v['ssl.handshake.sig_hash_algs']['ssl.handshake.sig_hash_alg']
-                                        traffic_sighashalgorithms_client = [int(j,16) for j in traffic_sighashalgorithms_client]
-                                        sighashalgorithms_client.extend(traffic_sighashalgorithms_client)
-
-                                found_clienthello = True
-
-                        except AttributeError:
-                            pass
-
-                        ########## For finding Certificate ##########
-                        try:
-                            handshake = find_handshake(packet_json.ssl, target_type = 11)
-                        except:
-                            handshake = None
-                        try:
-                            handshake2 = find_handshake2(packet_json.ssl.value, target_type = 11)
-                        except:
-                            handshake2 = None
-
-                        traffic_sighashalgorithms_cert = []
-                        if handshake:
-                            certificates = handshake.certificates.certificate_tree
-                            traffic_sighashalgorithms_cert = [str(certificate.algorithmIdentifier_element.id) for certificate in certificates]
-                            found_certificate = True
-
-                        elif handshake2:
-                            certificates = handshake2['ssl.handshake.certificates']['ssl.handshake.certificate_tree']
-                            for certificate in certificates:
-                                for k,v in certificate.items():
-                                    if 'algorithmIdentifier_element' in k:
-                                        for kk,vv in v.items():
-                                            if 'algorithm.id' in kk:
-                                                traffic_sighashalgorithms_cert.append(str(vv))
-                            found_certificate = True
-
-                        sighashalgorithms_cert.extend(traffic_sighashalgorithms_cert)
-
-
-                        logging.debug("Time spent on packet: {}s".format(time.time()-starttime3))
-                        totaltime = totaltime + (time.time()-starttime3)
-                        # Break the loop once both ClientHello and Certificate are found
-                        if found_clienthello and found_certificate:
-                            break
-
-                    logging.debug("Time spent on traffic: {}s".format(time.time()-starttime))
-                    logging.debug("Total time accumulated on traffic: {}s".format(totaltime))
-
-                    # If ClientHello cannot be found in the traffic
-                    if not found_clienthello:
-                        logging.warning("No ClientHello found for file {}".format(os.path.join(root,f)))
-                    if not found_certificate:
-                        logging.warning("No Certificate found for file {}".format(os.path.join(root,f)))
-
-                    ciphersuites = list(set(ciphersuites))
-                    compressionmethods = list(set(compressionmethods))
-                    supportedgroups = list(set(supportedgroups))
-                    sighashalgorithms_client = list(set(sighashalgorithms_client))
-                    sighashalgorithms_cert = list(set(sighashalgorithms_cert))
-
-                    success += 1
-
-                    if success>=limit:
-                        break
-
-                # Skip this pcap file
-                except (KeyError, AttributeError, TypeError):
-                    logging.exception('Serious error in file {}. Traffic is skipped'.format(f))
-                    failed+=1
-                    continue
-
-        if success>=limit:
-            break
-
-    logging.info("Done processing enum")
-    print("Processing enums: {} success, {} failure".format(success, failed))
-
-    enum = {}
-    enum['ciphersuites'] = ciphersuites
-    enum['compressionmethods'] = compressionmethods
-    enum['supportedgroups'] = supportedgroups
-    enum['sighashalgorithms_client'] = sighashalgorithms_client
-    enum['sighashalgorithms_cert'] = sighashalgorithms_cert
-    # return (ciphersuites, compressionmethods, supportedgroups, sighashalgorithms_client, sighashalgorithms_cert)
-    return enum
-
 
 def extract_tslssl_features(pcapfile, enums, limit):
     enumCipherSuites = enums['ciphersuites']
@@ -714,4 +667,7 @@ if __name__ == '__main__':
     enums = {'ciphersuites': [], 'compressionmethods': [], 'supportedgroups': [], 'sighashalgorithms_client': [],
              'sighashalgorithms_cert': []}
 
-    pass
+    rootdir = 'sample-pcap/'
+    enums = searchEnums(rootdir, limit=100)
+    for k,v in enums.items():
+        print(k, v)
