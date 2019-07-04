@@ -21,19 +21,30 @@ def extract_tcp_features(pcapfile, limit):
 
         packet_features = []
 
+        # 1: COME/LEAVE
         comeLeaveFeature = extractComeLeaveFromPacket(packet)
-        protocolFeature = extractProtocolFromPacket(packet)
-        lengthFeature = extractLengthFromPacket(packet)
-        intervalFeature = extractIntervalFromPacket(packet)
-        flagFeature = extractFlagFromPacket(packet)
-        windowSizeFeature = extractWindowSizeFromPacket(packet)
-
         packet_features.extend(comeLeaveFeature)
+
+        # 2: PROTOCOL
+        protocolFeature = extractProtocolFromPacket(packet)
         packet_features.extend(protocolFeature)
+
+        # 3: PACKET LENGTH
+        lengthFeature = extractLengthFromPacket(packet)
         packet_features.extend(lengthFeature)
+
+        # 4: INTERVAL
+        intervalFeature = extractIntervalFromPacket(packet)
         packet_features.extend(intervalFeature)
+
+        # 5: FLAG
+        flagFeature = extractFlagFromPacket(packet)
         packet_features.extend(flagFeature)
+
+        # 6: WINDOW SIZE
+        windowSizeFeature = extractWindowSizeFromPacket(packet)
         packet_features.extend(windowSizeFeature)
+
         traffic_features.append(packet_features)
 
     if len(traffic_features) == 0:
