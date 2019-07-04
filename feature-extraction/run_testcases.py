@@ -1,7 +1,6 @@
 # TEST CASES for functions in utils.py
 
 import math
-import pyshark
 from utils import *
 
 sample = 'sample-pcap/www.stripes.com_2018-12-21_16-20-12.pcap'
@@ -81,6 +80,7 @@ sample7 = 'sample-pcap/whc.unesco.org_2018-12-24_17-09-08.pcap'
 sample8 = 'sample-pcap/www.cancerresearchuk.org_2018-12-24_17-15-46.pcap'
 sample9 = 'sample-pcap/www.orkin.com_2018-12-24_17-10-27.pcap'
 sample10 = 'sample-pcap/www.tmr.qld.gov.au_2018-12-24_17-20-56.pcap'
+sample_dos = 'sample-pcap/actorsaccess.com_2019-02-26_00-09-45_0.pcap'
 
 sample1_packets = [packet for packet in pyshark.FileCapture(sample1, use_json=True)]
 sample2_packets = [packet for packet in pyshark.FileCapture(sample2, use_json=True)]
@@ -92,6 +92,7 @@ sample7_packets = [packet for packet in pyshark.FileCapture(sample7, use_json=Tr
 sample8_packets = [packet for packet in pyshark.FileCapture(sample8, use_json=True)]
 sample9_packets = [packet for packet in pyshark.FileCapture(sample9, use_json=True)]
 sample10_packets = [packet for packet in pyshark.FileCapture(sample10, use_json=True)]
+sampledos_packets = [packet for packet in pyshark.FileCapture(sample_dos, use_json=True)]
 
 sample1_clienthello = sample1_packets[3]
 sample1_serverhello_cert_serverhellodone = sample1_packets[7]
@@ -130,6 +131,8 @@ sample6_cert = sample6_packets[8]  # double ssl layer
 sample7_cert = sample7_packets[8]  # double ssl layer
 sample10_cert = sample10_packets[10]
 
+sampledos_clienthello = sampledos_packets[3]
+
 # Test function extractClienthelloLength()
 output = extractClienthelloLength(sample1_clienthello)
 expected = [227]
@@ -145,22 +148,24 @@ expected = [241]
 assert output == expected
 
 # Test function extractClienthelloCiphersuiteAndEncode()
-enums = [49196, 49200, 49195, 10000]
-output = extractClienthelloCiphersuiteAndEncode(sample1_clienthello, enums)
-expected = [1, 1, 1, 0, 1]
+# output = extractClienthelloCiphersuite(sample1_clienthello)
+# expected = [1, 1, 1, 0, 1]
+# assert output == expected_dim
+output = extractClienthelloCiphersuite(sample1_normal)
+expected = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 assert output == expected
-output = extractClienthelloCiphersuiteAndEncode(sample1_normal, enums)
-expected = [0, 0, 0, 0, 0]
-assert output == expected
-output = extractClienthelloCiphersuiteAndEncode(sample2_clienthello, enums)
-expected = [1, 1, 1, 0, 1]
-assert output == expected
-output = extractClienthelloCiphersuiteAndEncode(sample3_clienthello, enums)
-expected = [1, 1, 1, 0, 1]
-assert output == expected
-output = extractClienthelloCiphersuiteAndEncode(sample4_clienthello, enums)
-expected = [1, 1, 1, 0, 1]
-assert output == expected
+# output = extractClienthelloCiphersuite(sample2_clienthello)
+# expected = [1, 1, 1, 0, 1]
+# assert output == expected
+# output = extractClienthelloCiphersuite(sample3_clienthello)
+# expected = [1, 1, 1, 0, 1]
+# assert output == expected
+# output = extractClienthelloCiphersuite(sample4_clienthello)
+# expected = [1, 1, 1, 0, 1]
+# assert output == expected
+output = extractClienthelloCiphersuite(sampledos_clienthello)
+expected = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0]
+assert all([math.isclose(output[i], expected[i]) for i in range(len(expected))])
 
 # Test function extractClienthelloCiphersuiteLength
 output = extractClienthelloCiphersuiteLength(sample1_clienthello)

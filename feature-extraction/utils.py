@@ -5,6 +5,8 @@ from pyshark.packet.layer import JsonLayer
 import logging
 import ipaddress
 
+import ciphersuite_parser
+
 class ZeroPacketError(Exception):
     def __init__(self, message):
         super().__init__(message)
@@ -16,7 +18,6 @@ def searchEnums(rootdir, limit):
 
     Set a hard limit on the number of files iterated through to save time
     """
-    ciphersuites = []
     compressionmethods = []
     supportedgroups = []
     sighashalgorithms_client = []
@@ -39,9 +40,6 @@ def searchEnums(rootdir, limit):
 
                     for packet_json in packets_json:
                         starttime_packet = time.time()
-                        # Cipher Suites
-                        traffic_ciphersuites = extractClienthelloCiphersuite(packet_json)
-                        ciphersuites.extend(traffic_ciphersuites)
                         # Compression Methods
                         traffic_compressionmethods = extractClienthelloCompressionmethod(packet_json)
                         compressionmethods.extend(traffic_compressionmethods)
@@ -52,8 +50,7 @@ def searchEnums(rootdir, limit):
                         traffic_sighashalgorithms_client = extractClienthelloSignaturehash(packet_json)
                         sighashalgorithms_client.extend(traffic_sighashalgorithms_client)
 
-                        if traffic_ciphersuites or traffic_compressionmethods or \
-                            traffic_supportedgroups or traffic_sighashalgorithms_client:
+                        if traffic_compressionmethods or traffic_supportedgroups or traffic_sighashalgorithms_client:
                             found_clienthello = True
 
                         # Certificate - Signature Hash Algorithm
@@ -77,7 +74,6 @@ def searchEnums(rootdir, limit):
                     if not found_certificate:
                         logging.warning("No Certificate found for file {}".format(os.path.join(root,f)))
 
-                    ciphersuites = list(set(ciphersuites))
                     compressionmethods = list(set(compressionmethods))
                     supportedgroups = list(set(supportedgroups))
                     sighashalgorithms_client = list(set(sighashalgorithms_client))
@@ -98,10 +94,9 @@ def searchEnums(rootdir, limit):
             break
 
     logging.info("Done processing enum")
-    print("Processing enums: {} success, {} failure".format(success, failed))
+    print("Processed enums in directory {}: {} success, {} failure".format(rootdir,success, failed))
 
     enum = {}
-    enum['ciphersuites'] = ciphersuites
     enum['compressionmethods'] = compressionmethods
     enum['supportedgroups'] = supportedgroups
     enum['sighashalgorithms_client'] = sighashalgorithms_client
@@ -201,7 +196,6 @@ def extractWindowSizeFromPacket(packet):
     return feature
 
 def extract_tslssl_features(pcapfile, enums, limit):
-    enumCipherSuites = enums['ciphersuites']
     enumCompressionMethods = enums['compressionmethods']
     enumSupportedGroups = enums['supportedgroups']
     enumSignatureHashClient = enums['sighashalgorithms_client']
@@ -225,7 +219,7 @@ def extract_tslssl_features(pcapfile, enums, limit):
         packet_features.extend(clienthelloLengthFeature)
 
         # 2: ClientHello - CIPHER SUITE
-        clienthelloCiphersuiteFeature = extractClienthelloCiphersuiteAndEncode(packet_json, enumCipherSuites)
+        clienthelloCiphersuiteFeature = extractClienthelloCiphersuite(packet_json)
         packet_features.extend(clienthelloCiphersuiteFeature)
 
         # 3: ClientHello - CIPHER SUITE LENGTH
@@ -319,19 +313,14 @@ def extractClienthelloLength(packet):
         pass
     return feature
 
-def extractClienthelloCiphersuiteAndEncode(packet, enum):
-    ciphersuites = extractClienthelloCiphersuite(packet)
-    encoded_ciphersuites = encodeEnumIntoManyHotVec(ciphersuites, enum)
-    if encoded_ciphersuites[-1] == 1:
-        logging.warning('Cipher suites contain unseen enums. Refer to above')
-    return encoded_ciphersuites
-
 def extractClienthelloCiphersuite(packet):
-    feature = []
+    feature_len = sum(map(len, [getattr(ciphersuite_parser, component) for component in ciphersuite_parser.components]))
+    feature = [0] * feature_len
     try:
         handshake = find_handshake(packet.ssl, target_type=1)
         if handshake:
-            feature = [int(ciphersuite) for ciphersuite in handshake.ciphersuites.ciphersuite]
+            dec_ciphersuites = [int(ciphersuite) for ciphersuite in handshake.ciphersuites.ciphersuite]
+            feature = ciphersuite_parser.getVecAndAggregateAndNormalize(dec_ciphersuites)
     except AttributeError:
         pass
     return feature
