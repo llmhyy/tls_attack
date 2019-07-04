@@ -32,7 +32,7 @@ logging.basicConfig(filename=os.path.join(args.savedir,'output.log'), level=logg
 def search_and_extract(pcap_dir, features_dir, pcapname_dir, enums):
     success = 0
     failed = 0
-    traffic_limit = 200
+    traffic_limit = 1000
     with open(features_dir, 'w') as features_file, open(pcapname_dir, 'w') as pcapname_file:
         for root, dirs, files in os.walk(pcap_dir):
             for f in files:

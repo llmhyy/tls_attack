@@ -321,7 +321,7 @@ def extractClienthelloCiphersuite(packet):
         if handshake:
             dec_ciphersuites = [int(ciphersuite) for ciphersuite in handshake.ciphersuites.ciphersuite]
             feature = ciphersuite_parser.getVecAndAggregateAndNormalize(dec_ciphersuites)
-    except AttributeError:
+    except (AttributeError,ZeroDivisionError):
         pass
     return feature
 
