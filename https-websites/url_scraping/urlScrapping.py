@@ -265,3 +265,6 @@ class FinderScannerWorker(threading.Thread):
 
             except MaxAttemptExceededError:
                 time.sleep(60)
+
+            except Exception:
+                print('Fatal error but continuing to next query...')
