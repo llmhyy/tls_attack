@@ -374,6 +374,23 @@ output = extractServerhellodoneLength(sample4_serverhellodone)
 expected = [0]
 assert output == expected
 
+# Test function extractClientkeyexchangeLength
+output = extractClientkeyexchangeLength(sample1_clientkeyexchange_encryptedhandshakemsg_changecipherspec)
+expected = [66]
+assert output == expected
+output = extractClientkeyexchangeLength(sample1_normal)
+expected = [0]
+assert output == expected
+output = extractClientkeyexchangeLength(sample2_clientkeyexchange_changecipherspec_encryptedhandshakemsg)
+expected = [66]
+assert output == expected
+output = extractClientkeyexchangeLength(sample3_clientkeyexchange_changecipherspec_encryptedhandshakemsg)
+expected = [66]
+assert output == expected
+output = extractClientkeyexchangeLength(sample4_clientkeyexchange_changecipherspec_encryptedhandshakemsg)
+expected = [66]
+assert output == expected
+
 # Test function extractClientkeyexchangePubkeyLength
 output = extractClientkeyexchangePubkeyLength(sample1_clientkeyexchange_encryptedhandshakemsg_changecipherspec)
 expected = [65]

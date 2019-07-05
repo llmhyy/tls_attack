@@ -274,23 +274,27 @@ def extract_tslssl_features(pcapfile, enums, limit):
         serverhellodoneLengthFeature = extractServerhellodoneLength(packet_json)
         packet_features.extend(serverhellodoneLengthFeature)
 
-        # 19: ClientKeyExchange - PUBKEY LENGTH
+        # 19: ClientKeyExchange - LENGTH
+        clientkeyexchangeLengthFeature = extractClientkeyexchangeLength(packet_json)
+        packet_features.extend(clientkeyexchangeLengthFeature)
+
+        # 20: ClientKeyExchange - PUBKEY LENGTH
         clientkeyexchangePubkeyLengthFeature = extractClientkeyexchangePubkeyLength(packet_json)
         packet_features.extend(clientkeyexchangePubkeyLengthFeature)
 
-        # 20: EncryptedHandshakeMessage - LENGTH
+        # 21: EncryptedHandshakeMessage - LENGTH
         encryptedhandshakemsgLengthFeature = extractEncryptedhandshakemsgLength(packet_json)
         packet_features.extend(encryptedhandshakemsgLengthFeature)
 
         #  CHANGE CIPHER PROTOCOL
         ##################################################################
-        # 21: ChangeCipherSpec - LENGTH
+        # 22: ChangeCipherSpec - LENGTH
         changecipherspecLengthFeature = extractChangeCipherSpecLength(packet_json)
         packet_features.extend(changecipherspecLengthFeature)
 
         #  APPLICATION DATA PROTOCOL
         ##################################################################
-        # 22: ApplicationDataProtocol - LENGTH
+        # 23: ApplicationDataProtocol - LENGTH
         appdataLengthFeature = extractAppDataLength(packet_json)
         packet_features.extend(appdataLengthFeature)
         
@@ -507,6 +511,16 @@ def extractServerhellodoneLength(packet):
     feature = [0]
     try:
         handshake = find_handshake(packet.ssl, target_type=14)
+        if handshake:
+            feature = [int(handshake.length)]
+    except AttributeError:
+        pass
+    return feature
+
+def extractClientkeyexchangeLength(packet):
+    feature = [0]
+    try:
+        handshake = find_handshake(packet.ssl, target_type=16)
         if handshake:
             feature = [int(handshake.length)]
     except AttributeError:
