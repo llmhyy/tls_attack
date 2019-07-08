@@ -59,9 +59,13 @@ def normalize(option, min_max_feature=None):
         batch_data = np.divide(batch_data, l2_norm, out=np.zeros_like(batch_data), where=l2_norm!=0.0)
         return batch_data
     def min_max_norm(batch_data, min_max_feature):
-        num = batch_data-min_max_feature[0]
-        den = min_max_feature[1]-min_max_feature[0]
-        batch_data = np.divide(num, den, out=np.zeros_like(num), where=den!=0.0)    
+        min_feature, max_feature = min_max_feature[0], min_max_feature[1]
+        num = batch_data-min_feature
+        den = max_feature-min_feature
+        batch_data = np.divide(num, den, out=np.zeros_like(num), where=den!=0.0)
+        batch_data[batch_data<0] = 0  # if < min, set to 0
+        batch_data[batch_data>1] = 1  # if > max, set to 1
+        assert (batch_data <= 1).all() and (batch_data >= 0).all()
         return batch_data
     if option == 1:
         return l2_norm
