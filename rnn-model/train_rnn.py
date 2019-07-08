@@ -1,33 +1,22 @@
-import os
-import sys
-import json
-import math
-import mmap
-import fnmatch
 import argparse
+import fnmatch
+import json
+import os
 import tracemalloc
-import numpy as np
-from sys import getsizeof
 from datetime import datetime
-from random import shuffle
+
 import keras
-from keras.preprocessing.sequence import pad_sequences
+import math
+import matplotlib.pyplot as plt
+import numpy as np
+from keras.layers import Activation
+from keras.layers import LSTM
 from keras.models import Sequential
 from keras.models import load_model
-from keras.layers import Dense, Dropout, Activation
-from keras.layers import LSTM
-import keras.backend as K
-from keras.utils import Sequence
-from sklearn.model_selection import train_test_split
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.preprocessing import normalize
-import matplotlib.pyplot as plt
 
 import utils_datagen as utilsDatagen
-import utils_plot as utilsPlot
-import utils_diagnostic as utilsDiagnostic
 import utils_metric as utilsMetric
-
+import utils_plot as utilsPlot
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-e', '--epoch', help='Input epoch for training', default=100, type=int)
@@ -39,10 +28,10 @@ args = parser.parse_args()
 
 # Define filenames from args.rootdir
 FEATURE_FILENAME = 'features_tls_*.csv'
-MINMAX_FILENAME = 'features_minmax_*.csv'
+MINMAX_FILENAME = 'features_minmax_ref.csv'
 rootdir_filenames = os.listdir(args.rootdir)
 feature_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, FEATURE_FILENAME)[0])
-minmax_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, MINMAX_FILENAME)[0])
+minmax_dir = os.path.join(args.rootdir, '..', '..', MINMAX_FILENAME)
 
 # Config info
 DATETIME_NOW = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
@@ -50,7 +39,9 @@ BATCH_SIZE = 64
 SEQUENCE_LEN = 100
 EPOCH = args.epoch
 SAVE_EVERY_EPOCH = 5
+# SAVE_EVERY_EPOCH = 1
 SPLIT_RATIO = 0.05
+# SPLIT_RATIO = 0.5
 SEED = 2019
 
 # Start diagnostic analysis
@@ -82,7 +73,7 @@ TEST_SIZE = len(test_idx)
 sample_traffic = json.loads('['+mmap_data[byte_offset[0][0]:byte_offset[0][1]+1].decode('ascii').strip().rstrip(',')+']')
 INPUT_DIM = len(sample_traffic[0])
 
-# Initialize the normalization function 
+# Initialize the normalization function
 norm_fn = utilsDatagen.normalize(2, min_max_feature)
 
 # Initialize the train and test generators for model training
@@ -106,6 +97,7 @@ model.summary()
 
 class TrainHistory(keras.callbacks.Callback):
     def __init__(self, generator):
+        super().__init__()
         self.generator = generator
 
     def on_train_begin(self, logs={}):

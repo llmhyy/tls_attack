@@ -15,6 +15,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-p', '--pcapdir', help='Input the directory path containing the pcap files for extraction', required=True)
 parser.add_argument('-s', '--savedir', help='Input the directory path to save the extracted feature files', required=True)  # e.g foo/bar/extracted-features/normal/
 parser.add_argument('-r', '--refenum', help='Input the file path to the yaml file for enum reference', default=None)
+parser.add_argument('-m', '--minmax', help='Turn on switch to generate file containing min-max values during feature generation', action='store_true')
 args = parser.parse_args()
 if not os.path.exists(args.savedir):
     os.mkdir(args.savedir) 
@@ -75,7 +76,7 @@ else:
     # Iterate through sub-directories inside the root directory for alternate traffic. Dont over commit to 1 sub-directory
     pcapdirs = [os.path.join(args.pcapdir, o) for o in os.listdir(args.pcapdir) if os.path.isdir(os.path.join(args.pcapdir, o))]
     for dirname in pcapdirs:
-        enums_in_a_file = utils.searchEnums(dirname, limit=1000)
+        enums_in_a_file = utils.searchEnums(dirname, limit=5000)
         for k,v in enums_in_a_file.items():
             if k not in enums:
                 enums[k] = []
@@ -118,10 +119,11 @@ pcapname_dir = os.path.join(args.savedir, 'pcapname_{}.csv'.format(datetime_now.
 search_and_extract(args.pcapdir, features_dir, pcapname_dir, enums)
 
 # Generate file for storing min-max of extracted features file
-print('Determining min-max for each dimension from extracted features...')
-minmax_dir = os.path.join(args.savedir, 'features_minmax_{}.csv'.format(datetime_now.strftime('%Y-%m-%d_%H-%M-%S')))
-mmap_data, byte_offset = utilsDatagen.get_mmapdata_and_byteoffset(features_dir)
-min_max_feature = utilsDatagen.get_min_max(mmap_data, byte_offset)
-min_max_feature_list = (min_max_feature[0].tolist(), min_max_feature[1].tolist())
-with open(minmax_dir, 'w') as f:
-    json.dump(min_max_feature_list, f)
+if args.minmax:
+    print('Determining min-max for each dimension from extracted features...')
+    minmax_dir = os.path.join(args.savedir, 'features_minmax_{}.csv'.format(datetime_now.strftime('%Y-%m-%d_%H-%M-%S')))
+    mmap_data, byte_offset = utilsDatagen.get_mmapdata_and_byteoffset(features_dir)
+    min_max_feature = utilsDatagen.get_min_max(mmap_data, byte_offset)
+    min_max_feature_list = (min_max_feature[0].tolist(), min_max_feature[1].tolist())
+    with open(minmax_dir, 'w') as f:
+        json.dump(min_max_feature_list, f)

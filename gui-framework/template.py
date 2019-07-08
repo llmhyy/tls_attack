@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import fnmatch
+import json
 # Form implementation generated from reading ui file 'template.ui'
 #
 # Created by: PyQt5 UI code generator 5.11.2
@@ -7,25 +9,19 @@
 # WARNING! All changes made in this file will be lost!
 import os
 import re
-import json
-import time
-import numpy as np
-import shlex
-import fnmatch
-import pyshark
-import traceback
 import subprocess
+import sys
+import time
+import traceback
+from functools import partial
+
+import numpy as np
+from PyQt5 import QtCore, QtWidgets
 from keras.models import load_model
-from PyQt5 import QtCore, QtGui, QtWidgets
-import matplotlib.pyplot as plt
-# from matplotlib.backends.qt_compat import QtCore, QtWidgets
 from matplotlib.backends.backend_qt5agg import (FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
 from matplotlib.figure import Figure
 from ruamel.yaml import YAML
-from functools import partial
-from collections import OrderedDict
 
-import sys
 sys.path.append(os.path.join('..','rnn-model'))
 import utils_datagen as utilsDatagen
 import utils_metric as utilsMetric
@@ -138,7 +134,6 @@ class AccCanvas(FigureCanvas):
         self.line, = self.acc_ax.plot(acc, [i+1 for i in range(len(acc))])
         for i,pkt_acc in enumerate(acc):
             self.acc_ax.plot(pkt_acc, i+1, 'ro', picker=2, markersize=3)
-            # self.acc_ax.text((pkt_acc-0.05), i+1, i+1, fontsize=7, horizontalalignment='center', verticalalignment='center')
         self.acc_ax.invert_yaxis()
         self.acc_ax.set_title('Mean Acc: {}'.format(mean_acc))
         self.acc_ax.set_xlabel('Acc')
@@ -156,7 +151,6 @@ class AccCanvas(FigureCanvas):
         self.annot.xy = (x[idx['ind'][0]], y[idx['ind'][0]])
         text = '{}'.format(y[idx['ind'][0]])
         self.annot.set_text(text)
-        # self.annot.get_bbox_patch().set_alpha(0.4)
 
     def hover(self, event):
         vis = self.annot.get_visible()
@@ -301,31 +295,19 @@ class Ui_MainWindow(object):
         self.accGraphWidget = PlotWidget()
         self.accGraphWidget.add_canvas(self.accGraph)
         self.accGraph.setParent(self.accGraphWidget)
-        # self.scroll2 = QtWidgets.QScrollArea()
-        # self.scroll2.setWidget(self.accGraphWidget)
-        # self.scroll2.setWidgetResizable(True)
 
-        # self.hbox3 = QtWidgets.QHBoxLayout()
-        # self.hbox3.addWidget(self.tableWidget, 6.5)
-        # self.hbox3.addWidget(self.accGraphWidget, 3.5)
         self.hsplitter1 = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         self.hsplitter1.addWidget(self.tableWidget)
         self.hsplitter1.addWidget(self.accGraphWidget)
         self.hsplitter1.setStretchFactor(0, 7)
         self.hsplitter1.setStretchFactor(1, 3)
 
-        # self.vbox4 = QtWidgets.QVBoxLayout()
-        # self.vbox4.addLayout(self.hbox3, 6)
-        # self.vbox4.addWidget(self.dimGraphWidget, 4)
         self.vsplitter1 = QtWidgets.QSplitter(QtCore.Qt.Vertical)
         self.vsplitter1.addWidget(self.hsplitter1)
         self.vsplitter1.addWidget(self.dimGraphWidget)
         self.vsplitter1.setStretchFactor(0, 4.5)
         self.vsplitter1.setStretchFactor(1, 5.5)
 
-        # self.hbox2 = QtWidgets.QHBoxLayout()
-        # self.hbox2.addLayout(self.vbox3, 1.75)
-        # self.hbox2.addLayout(self.vbox4, 8.25)
         self.hsplitter2 = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         self.hbox2_widget = QtWidgets.QWidget()
         self.hbox2_widget.setLayout(self.vbox3)
@@ -336,7 +318,6 @@ class Ui_MainWindow(object):
         
         self.vbox2 = QtWidgets.QVBoxLayout()
         self.vbox2.addLayout(self.hbox1, 1)
-        # self.vbox2.addLayout(self.hbox2, 9)
         self.vbox2.addWidget(self.hsplitter2, 9)
         self.background.setLayout(self.vbox2)
 
@@ -358,7 +339,7 @@ class Ui_MainWindow(object):
             model_dir = os.path.join(self.model_dirs, config.model[self.model_name])
             self.model = load_model(model_dir)
         except FileNotFoundError:
-            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Model {} not found in directory path {}. Check config.py'.format(self.model_name, model_dirpath))
+            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Model {} not found in directory path {}. Check config.py'.format(self.model_name))
             return
         except KeyError:
             QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Model {} is not listed in the configuration file. Check config.py'.format(self.model_name))
@@ -415,11 +396,6 @@ class Ui_MainWindow(object):
             dataset_idx = train_idx
         elif self.split_name == 'val':
             dataset_idx = test_idx
-        # print(0 in dataset_idx)
-        # print(1 in dataset_idx)
-        # print(2 in dataset_idx)
-        # print(3 in dataset_idx)
-        # print(4 in dataset_idx)
 
         # Load the pcap filenames from train/test indexes
         self.pcapname_dir = os.path.join(self.feature_dir, fnmatch.filter(filenames, PCAPNAME_FILENAME)[0])
@@ -431,28 +407,12 @@ class Ui_MainWindow(object):
         # Load the dimension names
         self.featureinfo_dir = os.path.join(self.feature_dir, fnmatch.filter(filenames, FEATUREINFO_FILENAME)[0])
         self.dim_names = []
-        # self.dim_names = OrderedDict()
         with open(self.featureinfo_dir, 'r') as f:
             features_info = f.readlines()[1:] # Ignore header
             for row in features_info:
                 split_row = row.split(',')
                 network_layer, tls_protocol, dim_name, feature_type, feature_enum_value = split_row[0].strip(), split_row[1].strip(), split_row[2].strip(), split_row[3].strip(), split_row[4].strip()
 
-                ###############################################################
-                # if tls_protocol != '-':
-                #     feature_group = tls_protocol + ' ' + dim_name
-                # else:
-                #     feature_group = dim_name
-
-                # if feature_group not in self.dim_names:
-                #     if feature_type=='Enum':
-                #         self.dim_names[feature_group] = [feature_enum_value]
-
-                #     else:
-                #         self.dim_names[feature_group] = feature_group
-                # else:
-                #     self.dim_names[feature_group].append(feature_enum_value)
-                ###############################################################
                 if 'Enum' in feature_type:
                     dim_name = dim_name+'-'+feature_enum_value
                 if 'TLS' in network_layer:
@@ -533,12 +493,9 @@ class Ui_MainWindow(object):
             sorted_zipped_name_acc = sorted(zipped_name_acc)
             pointer = 0
             for pf in sorted_pcap_dir_files:
-                # print('Searching for {}'.format(pf))
                 fail_count = 0
                 for i in range(pointer, len(sorted_zipped_name_acc)):
                     name,acc = sorted_zipped_name_acc[i]
-                    # print('Trying {} {}'.format(name,acc))
-                    # print(self.filter_fn(acc))
                     if name in pf:
                         if self.filter_fn(acc):
                             # print('THIS IS THE ACC {}'.format(acc))
@@ -565,9 +522,6 @@ class Ui_MainWindow(object):
 
     def onClickTraffic(self, item):
         # Load pcap table
-        # self.selected_trafficname = item.text()
-        # self.selected_trafficidx = self.pcap_filename2idx[self.selected_trafficname]
-        # self.selected_pcapfile = self.findPcapFile()
         self.selected_pcapfile = item.text()
         if self.selected_pcapfile == 0:
             return
@@ -588,13 +542,14 @@ class Ui_MainWindow(object):
         
         # Preprocess the features
         SEQUENCE_LEN = 100
-        MINMAX_FILENAME = 'features_minmax_*.csv'
+        MINMAX_FILENAME = 'features_minmax_ref.csv'
         try:
-            with open(os.path.join(self.feature_dir, fnmatch.filter(os.listdir(self.feature_dir), MINMAX_FILENAME)[0]), 'r') as f:
+            with open(os.path.join(self.feature_dir,'..',MINMAX_FILENAME)) as f:
                 min_max_feature_list = json.load(f)
             min_max_feature = (np.array(min_max_feature_list[0]), np.array(min_max_feature_list[1]))
         except FileNotFoundError:
             print('Error: min-max feature file cannot be found in the extracted-features directory of the selected database')
+            return
         norm_fn = utilsDatagen.normalize(2, min_max_feature)
         selected_seq_len = [len(traffic_features[0])]
         selected_input, selected_target = utilsDatagen.preprocess_data(traffic_features, pad_len=SEQUENCE_LEN, norm_fn=norm_fn)

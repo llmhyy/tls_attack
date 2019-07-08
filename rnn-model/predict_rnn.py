@@ -63,12 +63,12 @@ elif args.mode == 2:
 FEATURE_FILENAME = 'features_tls_*.csv'
 FEATUREINFO_FILENAME = 'features_info_*.csv'
 PCAPNAME_FILENAME = 'pcapname_*.csv'
-MINMAX_FILENAME = 'features_minmax_*.csv'
+MINMAX_FILENAME = 'features_minmax_ref.csv'
 rootdir_filenames = os.listdir(args.rootdir)
 feature_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, FEATURE_FILENAME)[0])
 featureinfo_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, FEATUREINFO_FILENAME)[0])
 pcapname_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, PCAPNAME_FILENAME)[0])
-minmax_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, MINMAX_FILENAME)[0])
+minmax_dir = os.path.join(args.rootdir, '..', '..', MINMAX_FILENAME)
 
 BATCH_SIZE = 64
 SEQUENCE_LEN = 100
@@ -128,6 +128,7 @@ def evaluate_model_on_generator(model, data_generator, featureinfo_dir, pcapname
             if 'TLS' in network_layer:
                 dim_name = '('+tls_protocol+')'+dim_name
             dim_names.append(dim_name)
+
     # Extract the pcap filename for traffic identification
     with open(pcapname_dir) as f:
         pcap_filename = [row.strip() for row in f.readlines()]
