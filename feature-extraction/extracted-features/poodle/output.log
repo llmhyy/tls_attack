@@ -6811,3 +6811,669 @@ utils.ZeroPacketError: Pcap file contains no packet
 2019-06-22 17:12:09,340-INFO-Extracting features from 66.186.0.122_1.pcap
 2019-06-22 17:12:12,158-WARNING-Unseen cipher suite (5) in file ../../dataset/poodle/66.186.0.122_1.pcap 
 2019-06-22 17:12:12,159-WARNING-Unseen cipher suite (4) in file ../../dataset/poodle/66.186.0.122_1.pcap 
+2019-07-05 11:31:01,973-INFO-Extracting features from 198.145.41.77_1.pcap
+2019-07-05 11:31:03,548-INFO-Extracting features from 70.169.135.35_1.pcap
+2019-07-05 11:31:05,259-INFO-Extracting features from 69.49.175.250_1.pcap
+2019-07-05 11:31:07,005-INFO-Extracting features from 54.186.97.253_1.pcap
+2019-07-05 11:31:08,692-INFO-Extracting features from 152.3.7.25_1.pcap
+2019-07-05 11:31:10,296-INFO-Extracting features from 194.187.222.141_1.pcap
+2019-07-05 11:31:11,899-INFO-Extracting features from 128.135.102.20_1.pcap
+2019-07-05 11:31:13,645-INFO-Extracting features from 74.208.86.51_1.pcap
+2019-07-05 11:31:15,293-INFO-Extracting features from 66.186.0.122_1.pcap
+2019-07-05 11:31:16,978-INFO-Extracting features from 169.62.152.146_1.pcap
+2019-07-05 11:31:18,695-INFO-Extracting features from 176.9.123.84_1.pcap
+2019-07-05 11:31:20,407-INFO-Extracting features from 80.190.96.25_1.pcap
+2019-07-05 11:31:22,122-INFO-Extracting features from 194.44.37.73_1.pcap
+2019-07-05 11:31:23,806-INFO-Extracting features from 66.85.245.252_1.pcap
+2019-07-05 11:31:25,544-INFO-Extracting features from 130.61.27.6_1.pcap
+2019-07-05 11:31:27,181-INFO-Extracting features from 81.91.4.5_1.pcap
+2019-07-05 11:31:29,017-INFO-Extracting features from 199.254.236.77_1.pcap
+2019-07-05 11:31:30,651-INFO-Extracting features from 204.187.39.28_1.pcap
+2019-07-05 11:31:32,279-INFO-Extracting features from 8.39.234.183_1.pcap
+2019-07-05 11:31:33,937-INFO-Extracting features from 193.2.8.28_1.pcap
+2019-07-05 11:31:35,699-INFO-Extracting features from 118.69.201.249_1.pcap
+2019-07-05 11:31:37,343-INFO-Extracting features from 23.253.129.100_1.pcap
+2019-07-05 11:31:39,174-INFO-Extracting features from 64.47.143.20_1.pcap
+2019-07-05 11:31:40,832-INFO-Extracting features from 217.64.228.121_1.pcap
+2019-07-05 11:31:42,415-INFO-Extracting features from 173.203.64.55_1.pcap
+2019-07-05 11:31:44,125-INFO-Extracting features from 209.94.100.190_1.pcap
+2019-07-05 11:31:45,747-INFO-Extracting features from 91.205.173.107_1.pcap
+2019-07-05 11:31:47,423-INFO-Extracting features from 13.229.210.215_1.pcap
+2019-07-05 11:31:49,249-INFO-Extracting features from 23.253.142.39_1.pcap
+2019-07-05 11:31:50,957-INFO-Extracting features from 195.20.13.122_1.pcap
+2019-07-05 11:31:52,679-INFO-Extracting features from 13.91.106.72_1.pcap
+2019-07-05 11:31:54,413-INFO-Extracting features from 204.196.215.50_1.pcap
+2019-07-05 11:31:56,133-INFO-Extracting features from 168.61.163.235_1.pcap
+2019-07-05 11:31:57,781-INFO-Extracting features from 134.59.130.141_1.pcap
+2019-07-05 11:31:59,405-INFO-Extracting features from 113.43.200.203_1.pcap
+2019-07-05 11:32:01,120-INFO-Extracting features from 54.154.198.204_1.pcap
+2019-07-05 11:32:02,720-INFO-Extracting features from 176.74.179.79_1.pcap
+2019-07-05 11:32:04,355-INFO-Extracting features from 104.208.154.20_1.pcap
+2019-07-05 11:32:06,014-INFO-Extracting features from 12.193.124.16_1.pcap
+2019-07-05 11:32:07,745-INFO-Extracting features from 52.201.101.46_1.pcap
+2019-07-05 11:32:09,734-INFO-Extracting features from 107.170.228.183_1.pcap
+2019-07-05 11:32:11,417-INFO-Extracting features from 207.18.59.111_1.pcap
+2019-07-05 11:32:13,133-INFO-Extracting features from 45.79.147.109_1.pcap
+2019-07-05 11:32:14,805-INFO-Extracting features from 212.77.1.32_1.pcap
+2019-07-05 11:32:14,951-ERROR-Serious error in file 212.77.1.32_1.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 44, in search_and_extract
+    tcp_features = utils.extract_tcp_features(os.path.join(root, f), limit=traffic_limit)
+  File "/home/yilong/Desktop/tls_attack/feature-extraction/utils.py", line 143, in extract_tcp_features
+    raise ZeroPacketError('Pcap file contains no packet')
+utils.ZeroPacketError: Pcap file contains no packet
+2019-07-05 11:32:14,951-INFO-Extracting features from 203.112.144.124_1.pcap
+2019-07-05 11:32:16,595-INFO-Extracting features from 72.52.83.162_1.pcap
+2019-07-05 11:32:18,473-INFO-Extracting features from 199.231.184.176_1.pcap
+2019-07-05 11:32:20,145-INFO-Extracting features from 95.211.218.51_1.pcap
+2019-07-05 11:32:21,893-INFO-Extracting features from 156.26.181.138_1.pcap
+2019-07-05 11:32:23,676-INFO-Extracting features from 217.174.249.221_1.pcap
+2019-07-05 11:32:24,387-WARNING-Found SSL packet with unknown SSL type 36451
+2019-07-05 11:32:24,475-WARNING-Found SSL packet with unknown SSL type 52983
+2019-07-05 11:32:25,201-INFO-Extracting features from 162.144.196.34_1.pcap
+2019-07-05 11:32:27,006-INFO-Extracting features from 173.161.59.89_1.pcap
+2019-07-05 11:32:28,765-INFO-Extracting features from 193.2.64.39_1.pcap
+2019-07-05 11:32:30,461-INFO-Extracting features from 52.240.138.207_1.pcap
+2019-07-05 11:32:32,106-INFO-Extracting features from 208.68.240.115_1.pcap
+2019-07-05 11:32:33,820-INFO-Extracting features from 109.228.12.223_1.pcap
+2019-07-05 11:32:35,453-INFO-Extracting features from 89.108.127.108_1.pcap
+2019-07-05 11:32:37,125-INFO-Extracting features from 104.168.145.139_1.pcap
+2019-07-05 11:32:38,839-INFO-Extracting features from 13.70.154.248_1.pcap
+2019-07-05 11:32:40,580-INFO-Extracting features from 146.20.41.5_1.pcap
+2019-07-05 11:32:42,328-INFO-Extracting features from 62.138.21.249_1.pcap
+2019-07-05 11:32:43,986-INFO-Extracting features from 171.64.67.140_1.pcap
+2019-07-05 11:32:45,753-INFO-Extracting features from 198.61.149.202_1.pcap
+2019-07-05 11:32:47,577-INFO-Extracting features from 193.243.140.72_1.pcap
+2019-07-05 11:32:49,162-INFO-Extracting features from 204.90.88.43_1.pcap
+2019-07-05 11:32:50,855-INFO-Extracting features from 70.63.145.69_1.pcap
+2019-07-05 11:32:52,659-INFO-Extracting features from 66.135.61.31_1.pcap
+2019-07-05 11:32:54,324-INFO-Extracting features from 209.15.32.222_1.pcap
+2019-07-05 11:32:55,987-INFO-Extracting features from 40.78.21.172_1.pcap
+2019-07-05 11:32:57,669-INFO-Extracting features from 87.233.237.50_1.pcap
+2019-07-05 11:32:59,351-INFO-Extracting features from 117.121.251.9_1.pcap
+2019-07-05 11:33:01,100-INFO-Extracting features from pkts.pcap
+2019-07-05 11:33:01,564-WARNING-Found SSL packet with unknown SSL type 7593
+2019-07-05 11:33:01,621-WARNING-Found SSL packet with unknown SSL type 22813
+2019-07-05 11:33:01,892-WARNING-Found SSL packet with unknown SSL type 59362
+2019-07-05 11:33:02,723-INFO-Extracting features from 67.157.158.152_1.pcap
+2019-07-05 11:33:04,406-INFO-Extracting features from 54.66.196.106_1.pcap
+2019-07-05 11:33:06,192-INFO-Extracting features from 98.129.142.90_1.pcap
+2019-07-05 11:33:07,929-INFO-Extracting features from 203.43.113.201_1.pcap
+2019-07-05 11:33:09,600-INFO-Extracting features from 107.180.85.170_1.pcap
+2019-07-05 11:33:11,343-INFO-Extracting features from 52.7.137.160_1.pcap
+2019-07-05 11:33:13,004-INFO-Extracting features from 139.165.41.142_1.pcap
+2019-07-05 11:33:14,768-INFO-Extracting features from 111.67.23.126_1.pcap
+2019-07-05 11:33:16,729-INFO-Extracting features from 66.228.48.232_1.pcap
+2019-07-05 11:33:18,574-INFO-Extracting features from 200.12.166.9_1.pcap
+2019-07-05 11:33:19,696-INFO-Extracting features from 207.250.234.19_1.pcap
+2019-07-05 11:33:21,328-INFO-Extracting features from 18.9.61.71_1.pcap
+2019-07-05 11:33:23,107-INFO-Extracting features from 206.167.252.143_1.pcap
+2019-07-05 11:33:24,765-INFO-Extracting features from 52.189.223.63_1.pcap
+2019-07-05 11:33:26,456-INFO-Extracting features from 164.100.228.168_1.pcap
+2019-07-05 11:33:28,187-INFO-Extracting features from 159.100.129.206_1.pcap
+2019-07-05 11:33:29,918-INFO-Extracting features from 134.84.159.221_1.pcap
+2019-07-05 11:33:31,626-INFO-Extracting features from 146.148.44.2_1.pcap
+2019-07-05 11:33:33,372-INFO-Extracting features from 64.50.172.224_1.pcap
+2019-07-05 11:33:35,044-INFO-Extracting features from 103.23.150.134_1.pcap
+2019-07-05 11:33:36,719-INFO-Extracting features from 132.247.70.44_1.pcap
+2019-07-05 11:33:38,461-INFO-Extracting features from 200.196.238.238_1.pcap
+2019-07-05 11:33:40,161-INFO-Extracting features from 205.189.35.107_1.pcap
+2019-07-05 11:33:41,841-INFO-Extracting features from 54.169.88.244_1.pcap
+2019-07-05 11:33:43,481-INFO-Extracting features from 209.135.208.83_1.pcap
+2019-07-05 11:33:45,316-INFO-Extracting features from 128.101.122.105_1.pcap
+2019-07-05 11:33:47,051-INFO-Extracting features from 117.121.251.26_1.pcap
+2019-07-05 11:33:48,827-INFO-Extracting features from 70.42.148.171_1.pcap
+2019-07-05 11:33:50,536-INFO-Extracting features from 158.85.202.194_1.pcap
+2019-07-05 11:33:52,392-INFO-Extracting features from 52.3.239.161_1.pcap
+2019-07-05 11:33:54,231-INFO-Extracting features from 64.139.80.45_1.pcap
+2019-07-05 11:33:56,061-INFO-Extracting features from 146.148.72.238_1.pcap
+2019-07-05 11:33:57,829-INFO-Extracting features from 172.96.163.69_1.pcap
+2019-07-05 11:33:59,523-INFO-Extracting features from 209.58.180.29_1.pcap
+2019-07-05 11:34:01,210-INFO-Extracting features from 162.13.11.118_1.pcap
+2019-07-05 11:34:02,822-INFO-Extracting features from 54.190.199.206_1.pcap
+2019-07-05 11:34:04,572-INFO-Extracting features from 164.100.59.48_1.pcap
+2019-07-05 11:34:06,249-INFO-Extracting features from 54.85.31.202_1.pcap
+2019-07-05 11:34:07,934-INFO-Extracting features from 23.100.73.177_1.pcap
+2019-07-05 11:34:08,403-WARNING-Found SSL packet with unknown SSL type 6499
+2019-07-05 11:34:08,872-WARNING-Found SSL packet with unknown SSL type 2262
+2019-07-05 11:34:08,909-WARNING-Found SSL packet with unknown SSL type 59525
+2019-07-05 11:34:09,601-INFO-Extracting features from 153.127.194.159_1.pcap
+2019-07-05 11:34:11,408-INFO-Extracting features from 121.254.129.109_1.pcap
+2019-07-05 11:34:13,103-INFO-Extracting features from 193.1.210.185_1.pcap
+2019-07-05 11:34:14,803-INFO-Extracting features from 23.96.91.11_1.pcap
+2019-07-05 11:34:16,543-INFO-Extracting features from 35.154.242.141_1.pcap
+2019-07-05 11:34:18,248-INFO-Extracting features from 198.58.125.35_1.pcap
+2019-07-05 11:34:19,917-INFO-Extracting features from 162.209.102.186_1.pcap
+2019-07-05 11:34:21,628-INFO-Extracting features from 69.43.145.244_1.pcap
+2019-07-05 11:34:23,436-INFO-Extracting features from 199.175.138.214_1.pcap
+2019-07-05 11:34:24,098-WARNING-Found SSL packet with unknown SSL type 15395
+2019-07-05 11:34:24,181-WARNING-Found SSL packet with unknown SSL type 19864
+2019-07-05 11:34:25,056-INFO-Extracting features from 41.208.10.34_1.pcap
+2019-07-05 11:34:26,751-INFO-Extracting features from 92.240.234.183_1.pcap
+2019-07-05 11:34:28,428-INFO-Extracting features from 128.125.253.4_1.pcap
+2019-07-05 11:34:30,321-INFO-Extracting features from 80.79.27.140_1.pcap
+2019-07-05 11:34:31,986-INFO-Extracting features from 203.161.8.201_1.pcap
+2019-07-05 11:34:32,999-WARNING-Found SSL packet with unknown SSL type 59880
+2019-07-05 11:34:33,547-INFO-Extracting features from 104.42.102.193_1.pcap
+2019-07-05 11:34:35,258-INFO-Extracting features from 95.138.155.246_1.pcap
+2019-07-05 11:34:36,871-INFO-Extracting features from 193.197.168.188_1.pcap
+2019-07-05 11:34:38,598-INFO-Extracting features from 192.246.229.142_1.pcap
+2019-07-05 11:34:40,300-INFO-Extracting features from 149.210.148.127_1.pcap
+2019-07-05 11:34:41,977-INFO-Extracting features from 128.206.9.90_1.pcap
+2019-07-05 11:34:43,819-INFO-Extracting features from 212.40.9.107_1.pcap
+2019-07-05 11:34:45,492-INFO-Extracting features from 64.211.221.176_1.pcap
+2019-07-05 11:34:47,203-INFO-Extracting features from 209.235.219.217_1.pcap
+2019-07-05 11:34:47,596-WARNING-Found SSL packet with unknown SSL type 52530
+2019-07-05 11:34:47,641-WARNING-Found SSL packet with unknown SSL type 48522
+2019-07-05 11:34:47,663-WARNING-Found SSL packet with unknown SSL type 35235
+2019-07-05 11:34:48,965-INFO-Extracting features from 200.89.78.66_1.pcap
+2019-07-05 11:34:50,676-INFO-Extracting features from 173.192.158.3_1.pcap
+2019-07-05 11:34:52,439-INFO-Extracting features from 144.76.119.200_1.pcap
+2019-07-05 11:34:54,051-INFO-Extracting features from 157.7.248.238_1.pcap
+2019-07-05 11:34:55,796-INFO-Extracting features from 174.143.201.22_1.pcap
+2019-07-05 11:34:57,534-INFO-Extracting features from 137.82.55.33_1.pcap
+2019-07-05 11:34:59,168-INFO-Extracting features from 128.192.20.101_1.pcap
+2019-07-05 11:35:00,940-INFO-Extracting features from 216.247.238.202_1.pcap
+2019-07-05 11:35:02,663-INFO-Extracting features from 52.7.50.117_1.pcap
+2019-07-05 11:35:04,388-INFO-Extracting features from 213.136.76.235_1.pcap
+2019-07-05 11:35:06,071-INFO-Extracting features from 52.169.24.109_1.pcap
+2019-07-05 11:35:07,727-INFO-Extracting features from 121.254.129.102_1.pcap
+2019-07-05 11:35:09,528-INFO-Extracting features from 97.107.131.154_1.pcap
+2019-07-05 11:35:11,237-INFO-Extracting features from 14.139.45.145_1.pcap
+2019-07-05 11:35:11,378-ERROR-Serious error in file 14.139.45.145_1.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 44, in search_and_extract
+    tcp_features = utils.extract_tcp_features(os.path.join(root, f), limit=traffic_limit)
+  File "/home/yilong/Desktop/tls_attack/feature-extraction/utils.py", line 143, in extract_tcp_features
+    raise ZeroPacketError('Pcap file contains no packet')
+utils.ZeroPacketError: Pcap file contains no packet
+2019-07-05 11:35:11,379-INFO-Extracting features from 67.134.21.111_1.pcap
+2019-07-05 11:35:13,190-INFO-Extracting features from 70.32.81.95_1.pcap
+2019-07-05 11:35:15,175-INFO-Extracting features from 71.19.240.199_1.pcap
+2019-07-05 11:35:17,011-INFO-Extracting features from 216.117.129.6_1.pcap
+2019-07-05 11:35:17,618-WARNING-Found SSL packet with unknown SSL type 45394
+2019-07-05 11:35:18,821-INFO-Extracting features from 156.14.253.57_1.pcap
+2019-07-05 11:35:20,708-INFO-Extracting features from 173.254.190.160_1.pcap
+2019-07-05 11:35:22,661-INFO-Extracting features from 213.171.221.134_1.pcap
+2019-07-05 11:35:24,495-INFO-Extracting features from 62.75.178.38_1.pcap
+2019-07-05 11:35:25,672-INFO-Extracting features from 149.210.175.126_1.pcap
+2019-07-05 11:35:27,533-INFO-Extracting features from 115.29.168.58_1.pcap
+2019-07-05 11:35:29,361-INFO-Extracting features from 185.21.41.55_1.pcap
+2019-07-05 11:35:31,231-INFO-Extracting features from 192.211.26.24_1.pcap
+2019-07-05 11:35:33,048-INFO-Extracting features from 147.91.249.18_1.pcap
+2019-07-05 11:35:34,886-INFO-Extracting features from 13.82.62.36_1.pcap
+2019-07-05 11:35:36,635-INFO-Extracting features from 128.135.159.99_1.pcap
+2019-07-05 11:35:38,458-INFO-Extracting features from 38.88.16.157_1.pcap
+2019-07-05 11:35:40,184-INFO-Extracting features from 200.74.192.130_1.pcap
+2019-07-05 11:35:41,892-INFO-Extracting features from 171.64.197.141_1.pcap
+2019-07-05 11:35:43,689-INFO-Extracting features from 18.184.3.221_1.pcap
+2019-07-05 11:35:45,381-INFO-Extracting features from 23.253.236.238_1.pcap
+2019-07-05 11:35:47,029-INFO-Extracting features from 52.9.178.70_1.pcap
+2019-07-05 11:35:48,648-INFO-Extracting features from 23.96.54.214_1.pcap
+2019-07-05 11:35:50,318-INFO-Extracting features from 160.109.110.130_1.pcap
+2019-07-05 11:35:52,007-INFO-Extracting features from 202.176.197.180_1.pcap
+2019-07-05 11:35:53,713-INFO-Extracting features from 108.168.144.156_1.pcap
+2019-07-05 11:35:55,457-INFO-Extracting features from 65.61.141.121_1.pcap
+2019-07-05 11:35:57,118-INFO-Extracting features from 94.23.217.150_1.pcap
+2019-07-05 11:35:58,770-INFO-Extracting features from 18.93.1.74_1.pcap
+2019-07-05 11:36:00,530-INFO-Extracting features from 216.31.236.85_1.pcap
+2019-07-05 11:36:02,195-INFO-Extracting features from 191.98.163.177_1.pcap
+2019-07-05 11:36:03,862-INFO-Extracting features from 121.254.129.116_1.pcap
+2019-07-05 11:36:05,621-INFO-Extracting features from 207.166.222.119_1.pcap
+2019-07-05 11:36:07,336-INFO-Extracting features from 157.180.240.253_1.pcap
+2019-07-05 11:36:09,012-INFO-Extracting features from 50.23.33.245_1.pcap
+2019-07-05 11:36:10,707-INFO-Extracting features from 69.41.173.82_1.pcap
+2019-07-05 11:36:12,394-INFO-Extracting features from 194.100.86.27_1.pcap
+2019-07-05 11:36:14,051-INFO-Extracting features from 207.5.165.41_1.pcap
+2019-07-05 11:36:15,670-INFO-Extracting features from 207.5.165.226_1.pcap
+2019-07-05 11:36:17,418-INFO-Extracting features from 192.64.81.45_1.pcap
+2019-07-05 11:36:19,082-INFO-Extracting features from 165.123.34.208_1.pcap
+2019-07-05 11:36:21,000-INFO-Extracting features from 185.140.47.198_1.pcap
+2019-07-05 11:36:22,784-INFO-Extracting features from 80.190.96.26_1.pcap
+2019-07-05 11:36:24,816-INFO-Extracting features from 72.52.94.234_1.pcap
+2019-07-05 11:36:26,603-INFO-Extracting features from 208.92.132.120_1.pcap
+2019-07-05 11:36:27,306-WARNING-Found SSL packet with unknown SSL type 29363
+2019-07-05 12:50:25,202-INFO-Extracting features from 198.145.41.77_1.pcap
+2019-07-05 12:50:26,743-INFO-Extracting features from 70.169.135.35_1.pcap
+2019-07-05 12:50:28,359-INFO-Extracting features from 69.49.175.250_1.pcap
+2019-07-05 12:50:29,971-INFO-Extracting features from 54.186.97.253_1.pcap
+2019-07-05 12:50:31,568-INFO-Extracting features from 152.3.7.25_1.pcap
+2019-07-05 12:50:33,161-INFO-Extracting features from 194.187.222.141_1.pcap
+2019-07-05 12:50:34,740-INFO-Extracting features from 128.135.102.20_1.pcap
+2019-07-05 12:50:36,437-INFO-Extracting features from 74.208.86.51_1.pcap
+2019-07-05 12:50:38,035-INFO-Extracting features from 66.186.0.122_1.pcap
+2019-07-05 12:50:39,583-INFO-Extracting features from 169.62.152.146_1.pcap
+2019-07-05 12:50:41,220-INFO-Extracting features from 176.9.123.84_1.pcap
+2019-07-05 12:50:42,839-INFO-Extracting features from 80.190.96.25_1.pcap
+2019-07-05 12:50:44,519-INFO-Extracting features from 194.44.37.73_1.pcap
+2019-07-05 12:50:46,124-INFO-Extracting features from 66.85.245.252_1.pcap
+2019-07-05 12:50:47,749-INFO-Extracting features from 130.61.27.6_1.pcap
+2019-07-05 12:50:49,378-INFO-Extracting features from 81.91.4.5_1.pcap
+2019-07-05 12:50:50,984-INFO-Extracting features from 199.254.236.77_1.pcap
+2019-07-05 12:50:52,535-INFO-Extracting features from 204.187.39.28_1.pcap
+2019-07-05 12:50:54,142-INFO-Extracting features from 8.39.234.183_1.pcap
+2019-07-05 12:50:55,761-INFO-Extracting features from 193.2.8.28_1.pcap
+2019-07-05 12:50:57,378-INFO-Extracting features from 118.69.201.249_1.pcap
+2019-07-05 12:50:59,092-INFO-Extracting features from 23.253.129.100_1.pcap
+2019-07-05 12:51:00,698-INFO-Extracting features from 64.47.143.20_1.pcap
+2019-07-05 12:51:02,359-INFO-Extracting features from 217.64.228.121_1.pcap
+2019-07-05 12:51:03,922-INFO-Extracting features from 173.203.64.55_1.pcap
+2019-07-05 12:51:05,525-INFO-Extracting features from 209.94.100.190_1.pcap
+2019-07-05 12:51:07,078-INFO-Extracting features from 91.205.173.107_1.pcap
+2019-07-05 12:51:08,689-INFO-Extracting features from 13.229.210.215_1.pcap
+2019-07-05 12:51:10,368-INFO-Extracting features from 23.253.142.39_1.pcap
+2019-07-05 12:51:11,987-INFO-Extracting features from 195.20.13.122_1.pcap
+2019-07-05 12:51:13,638-INFO-Extracting features from 13.91.106.72_1.pcap
+2019-07-05 12:51:15,370-INFO-Extracting features from 204.196.215.50_1.pcap
+2019-07-05 12:51:17,013-INFO-Extracting features from 168.61.163.235_1.pcap
+2019-07-05 12:51:18,622-INFO-Extracting features from 134.59.130.141_1.pcap
+2019-07-05 12:51:20,261-INFO-Extracting features from 113.43.200.203_1.pcap
+2019-07-05 12:51:21,935-INFO-Extracting features from 54.154.198.204_1.pcap
+2019-07-05 12:51:23,513-INFO-Extracting features from 176.74.179.79_1.pcap
+2019-07-05 12:51:25,124-INFO-Extracting features from 104.208.154.20_1.pcap
+2019-07-05 12:51:26,730-INFO-Extracting features from 12.193.124.16_1.pcap
+2019-07-05 12:51:28,329-INFO-Extracting features from 52.201.101.46_1.pcap
+2019-07-05 12:51:29,999-INFO-Extracting features from 107.170.228.183_1.pcap
+2019-07-05 12:51:31,591-INFO-Extracting features from 207.18.59.111_1.pcap
+2019-07-05 12:51:33,230-INFO-Extracting features from 45.79.147.109_1.pcap
+2019-07-05 12:51:34,844-INFO-Extracting features from 212.77.1.32_1.pcap
+2019-07-05 12:51:34,978-ERROR-Serious error in file 212.77.1.32_1.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 44, in search_and_extract
+    tcp_features = utils.extract_tcp_features(os.path.join(root, f), limit=traffic_limit)
+  File "/home/yilong/Desktop/tls_attack/feature-extraction/utils.py", line 143, in extract_tcp_features
+    raise ZeroPacketError('Pcap file contains no packet')
+utils.ZeroPacketError: Pcap file contains no packet
+2019-07-05 12:51:34,978-INFO-Extracting features from 203.112.144.124_1.pcap
+2019-07-05 12:51:36,573-INFO-Extracting features from 72.52.83.162_1.pcap
+2019-07-05 12:51:38,264-INFO-Extracting features from 199.231.184.176_1.pcap
+2019-07-05 12:51:39,859-INFO-Extracting features from 95.211.218.51_1.pcap
+2019-07-05 12:51:41,459-INFO-Extracting features from 156.26.181.138_1.pcap
+2019-07-05 12:51:43,082-INFO-Extracting features from 217.174.249.221_1.pcap
+2019-07-05 12:51:43,729-WARNING-Found SSL packet with unknown SSL type 36451
+2019-07-05 12:51:43,815-WARNING-Found SSL packet with unknown SSL type 52983
+2019-07-05 12:51:44,523-INFO-Extracting features from 162.144.196.34_1.pcap
+2019-07-05 12:51:46,162-INFO-Extracting features from 173.161.59.89_1.pcap
+2019-07-05 12:51:47,755-INFO-Extracting features from 193.2.64.39_1.pcap
+2019-07-05 12:51:49,363-INFO-Extracting features from 52.240.138.207_1.pcap
+2019-07-05 12:51:51,028-INFO-Extracting features from 208.68.240.115_1.pcap
+2019-07-05 12:51:52,719-INFO-Extracting features from 109.228.12.223_1.pcap
+2019-07-05 12:51:54,314-INFO-Extracting features from 89.108.127.108_1.pcap
+2019-07-05 12:51:55,952-INFO-Extracting features from 104.168.145.139_1.pcap
+2019-07-05 12:51:57,603-INFO-Extracting features from 13.70.154.248_1.pcap
+2019-07-05 12:51:59,196-INFO-Extracting features from 146.20.41.5_1.pcap
+2019-07-05 12:52:00,879-INFO-Extracting features from 62.138.21.249_1.pcap
+2019-07-05 12:52:02,526-INFO-Extracting features from 171.64.67.140_1.pcap
+2019-07-05 12:52:04,204-INFO-Extracting features from 198.61.149.202_1.pcap
+2019-07-05 12:52:05,874-INFO-Extracting features from 193.243.140.72_1.pcap
+2019-07-05 12:52:07,429-INFO-Extracting features from 204.90.88.43_1.pcap
+2019-07-05 12:52:09,059-INFO-Extracting features from 70.63.145.69_1.pcap
+2019-07-05 12:52:10,655-INFO-Extracting features from 66.135.61.31_1.pcap
+2019-07-05 12:52:12,271-INFO-Extracting features from 209.15.32.222_1.pcap
+2019-07-05 12:52:13,863-INFO-Extracting features from 40.78.21.172_1.pcap
+2019-07-05 12:52:15,502-INFO-Extracting features from 87.233.237.50_1.pcap
+2019-07-05 12:52:17,156-INFO-Extracting features from 117.121.251.9_1.pcap
+2019-07-05 12:52:18,783-INFO-Extracting features from pkts.pcap
+2019-07-05 12:52:19,226-WARNING-Found SSL packet with unknown SSL type 7593
+2019-07-05 12:52:19,286-WARNING-Found SSL packet with unknown SSL type 22813
+2019-07-05 12:52:19,550-WARNING-Found SSL packet with unknown SSL type 59362
+2019-07-05 12:52:20,368-INFO-Extracting features from 67.157.158.152_1.pcap
+2019-07-05 12:52:21,965-INFO-Extracting features from 54.66.196.106_1.pcap
+2019-07-05 12:52:23,635-INFO-Extracting features from 98.129.142.90_1.pcap
+2019-07-05 12:52:25,238-INFO-Extracting features from 203.43.113.201_1.pcap
+2019-07-05 12:52:26,847-INFO-Extracting features from 107.180.85.170_1.pcap
+2019-07-05 12:52:28,442-INFO-Extracting features from 52.7.137.160_1.pcap
+2019-07-05 12:52:29,994-INFO-Extracting features from 139.165.41.142_1.pcap
+2019-07-05 12:52:31,614-INFO-Extracting features from 111.67.23.126_1.pcap
+2019-07-05 12:52:33,337-INFO-Extracting features from 66.228.48.232_1.pcap
+2019-07-05 12:52:35,016-INFO-Extracting features from 200.12.166.9_1.pcap
+2019-07-05 12:52:36,088-INFO-Extracting features from 207.250.234.19_1.pcap
+2019-07-05 12:52:37,692-INFO-Extracting features from 18.9.61.71_1.pcap
+2019-07-05 12:52:39,432-INFO-Extracting features from 206.167.252.143_1.pcap
+2019-07-05 12:52:41,044-INFO-Extracting features from 52.189.223.63_1.pcap
+2019-07-05 12:52:42,666-INFO-Extracting features from 164.100.228.168_1.pcap
+2019-07-05 12:52:44,241-INFO-Extracting features from 159.100.129.206_1.pcap
+2019-07-05 12:52:45,874-INFO-Extracting features from 134.84.159.221_1.pcap
+2019-07-05 12:52:47,486-INFO-Extracting features from 146.148.44.2_1.pcap
+2019-07-05 12:52:49,115-INFO-Extracting features from 64.50.172.224_1.pcap
+2019-07-05 12:52:50,739-INFO-Extracting features from 103.23.150.134_1.pcap
+2019-07-05 12:52:52,350-INFO-Extracting features from 132.247.70.44_1.pcap
+2019-07-05 12:52:54,078-INFO-Extracting features from 200.196.238.238_1.pcap
+2019-07-05 12:52:55,698-INFO-Extracting features from 205.189.35.107_1.pcap
+2019-07-05 12:52:57,315-INFO-Extracting features from 54.169.88.244_1.pcap
+2019-07-05 12:52:58,908-INFO-Extracting features from 209.135.208.83_1.pcap
+2019-07-05 12:53:00,545-INFO-Extracting features from 128.101.122.105_1.pcap
+2019-07-05 12:53:02,238-INFO-Extracting features from 117.121.251.26_1.pcap
+2019-07-05 12:53:03,853-INFO-Extracting features from 70.42.148.171_1.pcap
+2019-07-05 12:53:05,461-INFO-Extracting features from 158.85.202.194_1.pcap
+2019-07-05 12:53:07,126-INFO-Extracting features from 52.3.239.161_1.pcap
+2019-07-05 12:53:08,812-INFO-Extracting features from 64.139.80.45_1.pcap
+2019-07-05 12:53:10,429-INFO-Extracting features from 146.148.72.238_1.pcap
+2019-07-05 12:53:12,103-INFO-Extracting features from 172.96.163.69_1.pcap
+2019-07-05 12:53:13,709-INFO-Extracting features from 209.58.180.29_1.pcap
+2019-07-05 12:53:15,333-INFO-Extracting features from 162.13.11.118_1.pcap
+2019-07-05 12:53:16,947-INFO-Extracting features from 54.190.199.206_1.pcap
+2019-07-05 12:53:18,639-INFO-Extracting features from 164.100.59.48_1.pcap
+2019-07-05 12:53:20,279-INFO-Extracting features from 54.85.31.202_1.pcap
+2019-07-05 12:53:21,895-INFO-Extracting features from 23.100.73.177_1.pcap
+2019-07-05 12:53:22,320-WARNING-Found SSL packet with unknown SSL type 6499
+2019-07-05 12:53:22,782-WARNING-Found SSL packet with unknown SSL type 2262
+2019-07-05 12:53:22,819-WARNING-Found SSL packet with unknown SSL type 59525
+2019-07-05 12:53:23,490-INFO-Extracting features from 153.127.194.159_1.pcap
+2019-07-05 12:53:25,132-INFO-Extracting features from 121.254.129.109_1.pcap
+2019-07-05 12:53:26,854-INFO-Extracting features from 193.1.210.185_1.pcap
+2019-07-05 12:53:28,511-INFO-Extracting features from 23.96.91.11_1.pcap
+2019-07-05 12:53:30,174-INFO-Extracting features from 35.154.242.141_1.pcap
+2019-07-05 12:53:31,829-INFO-Extracting features from 198.58.125.35_1.pcap
+2019-07-05 12:53:33,468-INFO-Extracting features from 162.209.102.186_1.pcap
+2019-07-05 12:53:35,083-INFO-Extracting features from 69.43.145.244_1.pcap
+2019-07-05 12:53:36,811-INFO-Extracting features from 199.175.138.214_1.pcap
+2019-07-05 12:53:37,431-WARNING-Found SSL packet with unknown SSL type 15395
+2019-07-05 12:53:37,515-WARNING-Found SSL packet with unknown SSL type 19864
+2019-07-05 12:53:38,372-INFO-Extracting features from 41.208.10.34_1.pcap
+2019-07-05 12:53:39,925-INFO-Extracting features from 92.240.234.183_1.pcap
+2019-07-05 12:53:41,529-INFO-Extracting features from 128.125.253.4_1.pcap
+2019-07-05 12:53:43,270-INFO-Extracting features from 80.79.27.140_1.pcap
+2019-07-05 12:53:44,830-INFO-Extracting features from 203.161.8.201_1.pcap
+2019-07-05 12:53:45,795-WARNING-Found SSL packet with unknown SSL type 59880
+2019-07-05 12:53:46,327-INFO-Extracting features from 104.42.102.193_1.pcap
+2019-07-05 12:53:47,970-INFO-Extracting features from 95.138.155.246_1.pcap
+2019-07-05 12:53:49,503-INFO-Extracting features from 193.197.168.188_1.pcap
+2019-07-05 12:53:51,202-INFO-Extracting features from 192.246.229.142_1.pcap
+2019-07-05 12:53:52,812-INFO-Extracting features from 149.210.148.127_1.pcap
+2019-07-05 12:53:54,480-INFO-Extracting features from 128.206.9.90_1.pcap
+2019-07-05 12:53:56,280-INFO-Extracting features from 212.40.9.107_1.pcap
+2019-07-05 12:53:57,892-INFO-Extracting features from 64.211.221.176_1.pcap
+2019-07-05 12:53:59,576-INFO-Extracting features from 209.235.219.217_1.pcap
+2019-07-05 12:53:59,948-WARNING-Found SSL packet with unknown SSL type 52530
+2019-07-05 12:53:59,993-WARNING-Found SSL packet with unknown SSL type 48522
+2019-07-05 12:54:00,014-WARNING-Found SSL packet with unknown SSL type 35235
+2019-07-05 12:54:01,210-INFO-Extracting features from 200.89.78.66_1.pcap
+2019-07-05 12:54:02,832-INFO-Extracting features from 173.192.158.3_1.pcap
+2019-07-05 12:54:04,499-INFO-Extracting features from 144.76.119.200_1.pcap
+2019-07-05 12:54:06,053-INFO-Extracting features from 157.7.248.238_1.pcap
+2019-07-05 12:54:07,721-INFO-Extracting features from 174.143.201.22_1.pcap
+2019-07-05 12:54:09,340-INFO-Extracting features from 137.82.55.33_1.pcap
+2019-07-05 12:54:11,026-INFO-Extracting features from 128.192.20.101_1.pcap
+2019-07-05 12:54:12,693-INFO-Extracting features from 216.247.238.202_1.pcap
+2019-07-05 12:54:14,345-INFO-Extracting features from 52.7.50.117_1.pcap
+2019-07-05 12:54:16,020-INFO-Extracting features from 213.136.76.235_1.pcap
+2019-07-05 12:54:17,653-INFO-Extracting features from 52.169.24.109_1.pcap
+2019-07-05 12:54:19,259-INFO-Extracting features from 121.254.129.102_1.pcap
+2019-07-05 12:54:20,917-INFO-Extracting features from 97.107.131.154_1.pcap
+2019-07-05 12:54:22,571-INFO-Extracting features from 14.139.45.145_1.pcap
+2019-07-05 12:54:22,704-ERROR-Serious error in file 14.139.45.145_1.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 44, in search_and_extract
+    tcp_features = utils.extract_tcp_features(os.path.join(root, f), limit=traffic_limit)
+  File "/home/yilong/Desktop/tls_attack/feature-extraction/utils.py", line 143, in extract_tcp_features
+    raise ZeroPacketError('Pcap file contains no packet')
+utils.ZeroPacketError: Pcap file contains no packet
+2019-07-05 12:54:22,704-INFO-Extracting features from 67.134.21.111_1.pcap
+2019-07-05 12:54:24,328-INFO-Extracting features from 70.32.81.95_1.pcap
+2019-07-05 12:54:26,052-INFO-Extracting features from 71.19.240.199_1.pcap
+2019-07-05 12:54:27,719-INFO-Extracting features from 216.117.129.6_1.pcap
+2019-07-05 12:54:28,278-WARNING-Found SSL packet with unknown SSL type 45394
+2019-07-05 12:54:29,333-INFO-Extracting features from 156.14.253.57_1.pcap
+2019-07-05 12:54:30,925-INFO-Extracting features from 173.254.190.160_1.pcap
+2019-07-05 12:54:32,587-INFO-Extracting features from 213.171.221.134_1.pcap
+2019-07-05 12:54:34,232-INFO-Extracting features from 62.75.178.38_1.pcap
+2019-07-05 12:54:35,365-INFO-Extracting features from 149.210.175.126_1.pcap
+2019-07-05 12:54:37,119-INFO-Extracting features from 115.29.168.58_1.pcap
+2019-07-05 12:54:38,817-INFO-Extracting features from 185.21.41.55_1.pcap
+2019-07-05 12:54:40,425-INFO-Extracting features from 192.211.26.24_1.pcap
+2019-07-05 12:54:42,012-INFO-Extracting features from 147.91.249.18_1.pcap
+2019-07-05 12:54:43,624-INFO-Extracting features from 13.82.62.36_1.pcap
+2019-07-05 12:54:45,229-INFO-Extracting features from 128.135.159.99_1.pcap
+2019-07-05 12:54:46,942-INFO-Extracting features from 38.88.16.157_1.pcap
+2019-07-05 12:54:48,617-INFO-Extracting features from 200.74.192.130_1.pcap
+2019-07-05 12:54:50,287-INFO-Extracting features from 171.64.197.141_1.pcap
+2019-07-05 12:54:51,951-INFO-Extracting features from 18.184.3.221_1.pcap
+2019-07-05 12:54:53,569-INFO-Extracting features from 23.253.236.238_1.pcap
+2019-07-05 12:54:55,190-INFO-Extracting features from 52.9.178.70_1.pcap
+2019-07-05 12:54:56,826-INFO-Extracting features from 23.96.54.214_1.pcap
+2019-07-05 12:54:58,492-INFO-Extracting features from 160.109.110.130_1.pcap
+2019-07-05 12:55:00,086-INFO-Extracting features from 202.176.197.180_1.pcap
+2019-07-05 12:55:01,706-INFO-Extracting features from 108.168.144.156_1.pcap
+2019-07-05 12:55:03,386-INFO-Extracting features from 65.61.141.121_1.pcap
+2019-07-05 12:55:05,003-INFO-Extracting features from 94.23.217.150_1.pcap
+2019-07-05 12:55:06,575-INFO-Extracting features from 18.93.1.74_1.pcap
+2019-07-05 12:55:08,194-INFO-Extracting features from 216.31.236.85_1.pcap
+2019-07-05 12:55:09,813-INFO-Extracting features from 191.98.163.177_1.pcap
+2019-07-05 12:55:11,393-INFO-Extracting features from 121.254.129.116_1.pcap
+2019-07-05 12:55:13,052-INFO-Extracting features from 207.166.222.119_1.pcap
+2019-07-05 12:55:14,628-INFO-Extracting features from 157.180.240.253_1.pcap
+2019-07-05 12:55:16,239-INFO-Extracting features from 50.23.33.245_1.pcap
+2019-07-05 12:55:17,842-INFO-Extracting features from 69.41.173.82_1.pcap
+2019-07-05 12:55:19,534-INFO-Extracting features from 194.100.86.27_1.pcap
+2019-07-05 12:55:21,175-INFO-Extracting features from 207.5.165.41_1.pcap
+2019-07-05 12:55:22,757-INFO-Extracting features from 207.5.165.226_1.pcap
+2019-07-05 12:55:24,362-INFO-Extracting features from 192.64.81.45_1.pcap
+2019-07-05 12:55:26,000-INFO-Extracting features from 165.123.34.208_1.pcap
+2019-07-05 12:55:27,671-INFO-Extracting features from 185.140.47.198_1.pcap
+2019-07-05 12:55:29,263-INFO-Extracting features from 80.190.96.26_1.pcap
+2019-07-05 12:55:31,050-INFO-Extracting features from 72.52.94.234_1.pcap
+2019-07-05 12:55:32,704-INFO-Extracting features from 208.92.132.120_1.pcap
+2019-07-05 12:55:33,380-WARNING-Found SSL packet with unknown SSL type 29363
+2019-07-05 13:31:15,322-INFO-Extracting features from 198.145.41.77_1.pcap
+2019-07-05 13:31:17,316-INFO-Extracting features from 70.169.135.35_1.pcap
+2019-07-05 13:31:19,402-INFO-Extracting features from 69.49.175.250_1.pcap
+2019-07-05 13:31:21,430-INFO-Extracting features from 54.186.97.253_1.pcap
+2019-07-05 13:31:23,616-INFO-Extracting features from 152.3.7.25_1.pcap
+2019-07-05 13:31:25,963-INFO-Extracting features from 194.187.222.141_1.pcap
+2019-07-05 13:31:27,994-INFO-Extracting features from 128.135.102.20_1.pcap
+2019-07-05 13:31:29,956-INFO-Extracting features from 74.208.86.51_1.pcap
+2019-07-05 13:31:31,809-INFO-Extracting features from 66.186.0.122_1.pcap
+2019-07-05 13:31:33,673-INFO-Extracting features from 169.62.152.146_1.pcap
+2019-07-05 13:31:35,500-INFO-Extracting features from 176.9.123.84_1.pcap
+2019-07-05 13:31:37,375-INFO-Extracting features from 80.190.96.25_1.pcap
+2019-07-05 13:31:39,213-INFO-Extracting features from 194.44.37.73_1.pcap
+2019-07-05 13:31:40,951-INFO-Extracting features from 66.85.245.252_1.pcap
+2019-07-05 13:31:42,780-INFO-Extracting features from 130.61.27.6_1.pcap
+2019-07-05 13:31:44,646-INFO-Extracting features from 81.91.4.5_1.pcap
+2019-07-05 13:31:46,497-INFO-Extracting features from 199.254.236.77_1.pcap
+2019-07-05 13:31:48,254-INFO-Extracting features from 204.187.39.28_1.pcap
+2019-07-05 13:31:50,158-INFO-Extracting features from 8.39.234.183_1.pcap
+2019-07-05 13:31:52,030-INFO-Extracting features from 193.2.8.28_1.pcap
+2019-07-05 13:31:53,897-INFO-Extracting features from 118.69.201.249_1.pcap
+2019-07-05 13:31:55,697-INFO-Extracting features from 23.253.129.100_1.pcap
+2019-07-05 13:31:57,512-INFO-Extracting features from 64.47.143.20_1.pcap
+2019-07-05 13:31:59,272-INFO-Extracting features from 217.64.228.121_1.pcap
+2019-07-05 13:32:01,042-INFO-Extracting features from 173.203.64.55_1.pcap
+2019-07-05 13:32:02,864-INFO-Extracting features from 209.94.100.190_1.pcap
+2019-07-05 13:32:04,664-INFO-Extracting features from 91.205.173.107_1.pcap
+2019-07-05 13:32:06,484-INFO-Extracting features from 13.229.210.215_1.pcap
+2019-07-05 13:32:08,372-INFO-Extracting features from 23.253.142.39_1.pcap
+2019-07-05 13:32:10,260-INFO-Extracting features from 195.20.13.122_1.pcap
+2019-07-05 13:32:12,119-INFO-Extracting features from 13.91.106.72_1.pcap
+2019-07-05 13:32:14,099-INFO-Extracting features from 204.196.215.50_1.pcap
+2019-07-05 13:32:15,999-INFO-Extracting features from 168.61.163.235_1.pcap
+2019-07-05 13:32:17,821-INFO-Extracting features from 134.59.130.141_1.pcap
+2019-07-05 13:32:19,576-INFO-Extracting features from 113.43.200.203_1.pcap
+2019-07-05 13:32:21,416-INFO-Extracting features from 54.154.198.204_1.pcap
+2019-07-05 13:32:23,191-INFO-Extracting features from 176.74.179.79_1.pcap
+2019-07-05 13:32:25,050-INFO-Extracting features from 104.208.154.20_1.pcap
+2019-07-05 13:32:26,902-INFO-Extracting features from 12.193.124.16_1.pcap
+2019-07-05 13:32:28,768-INFO-Extracting features from 52.201.101.46_1.pcap
+2019-07-05 13:32:30,633-INFO-Extracting features from 107.170.228.183_1.pcap
+2019-07-05 13:32:32,549-INFO-Extracting features from 207.18.59.111_1.pcap
+2019-07-05 13:32:34,457-INFO-Extracting features from 45.79.147.109_1.pcap
+2019-07-05 13:32:36,273-INFO-Extracting features from 212.77.1.32_1.pcap
+2019-07-05 13:32:36,420-ERROR-Serious error in file 212.77.1.32_1.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 44, in search_and_extract
+    tcp_features = utils.extract_tcp_features(os.path.join(root, f), limit=traffic_limit)
+  File "/home/yilong/Desktop/tls_attack/feature-extraction/utils.py", line 143, in extract_tcp_features
+    raise ZeroPacketError('Pcap file contains no packet')
+utils.ZeroPacketError: Pcap file contains no packet
+2019-07-05 13:32:36,420-INFO-Extracting features from 203.112.144.124_1.pcap
+2019-07-05 13:32:38,208-INFO-Extracting features from 72.52.83.162_1.pcap
+2019-07-05 13:32:40,170-INFO-Extracting features from 199.231.184.176_1.pcap
+2019-07-05 13:32:41,987-INFO-Extracting features from 95.211.218.51_1.pcap
+2019-07-05 13:32:43,723-INFO-Extracting features from 156.26.181.138_1.pcap
+2019-07-05 13:32:45,569-INFO-Extracting features from 217.174.249.221_1.pcap
+2019-07-05 13:32:46,347-WARNING-Found SSL packet with unknown SSL type 36451
+2019-07-05 13:32:46,435-WARNING-Found SSL packet with unknown SSL type 52983
+2019-07-05 13:32:47,190-INFO-Extracting features from 162.144.196.34_1.pcap
+2019-07-05 13:32:49,086-INFO-Extracting features from 173.161.59.89_1.pcap
+2019-07-05 13:32:50,928-INFO-Extracting features from 193.2.64.39_1.pcap
+2019-07-05 13:32:52,799-INFO-Extracting features from 52.240.138.207_1.pcap
+2019-07-05 13:32:54,637-INFO-Extracting features from 208.68.240.115_1.pcap
+2019-07-05 13:32:56,576-INFO-Extracting features from 109.228.12.223_1.pcap
+2019-07-05 13:32:58,355-INFO-Extracting features from 89.108.127.108_1.pcap
+2019-07-05 13:33:00,297-INFO-Extracting features from 104.168.145.139_1.pcap
+2019-07-05 13:33:02,148-INFO-Extracting features from 13.70.154.248_1.pcap
+2019-07-05 13:33:03,940-INFO-Extracting features from 146.20.41.5_1.pcap
+2019-07-05 13:33:05,792-INFO-Extracting features from 62.138.21.249_1.pcap
+2019-07-05 13:33:07,598-INFO-Extracting features from 171.64.67.140_1.pcap
+2019-07-05 13:33:09,595-INFO-Extracting features from 198.61.149.202_1.pcap
+2019-07-05 13:33:11,511-INFO-Extracting features from 193.243.140.72_1.pcap
+2019-07-05 13:33:13,253-INFO-Extracting features from 204.90.88.43_1.pcap
+2019-07-05 13:33:15,062-INFO-Extracting features from 70.63.145.69_1.pcap
+2019-07-05 13:33:16,905-INFO-Extracting features from 66.135.61.31_1.pcap
+2019-07-05 13:33:18,773-INFO-Extracting features from 209.15.32.222_1.pcap
+2019-07-05 13:33:20,757-INFO-Extracting features from 40.78.21.172_1.pcap
+2019-07-05 13:33:22,743-INFO-Extracting features from 87.233.237.50_1.pcap
+2019-07-05 13:33:24,693-INFO-Extracting features from 117.121.251.9_1.pcap
+2019-07-05 13:33:26,568-INFO-Extracting features from pkts.pcap
+2019-07-05 13:33:27,085-WARNING-Found SSL packet with unknown SSL type 7593
+2019-07-05 13:33:27,147-WARNING-Found SSL packet with unknown SSL type 22813
+2019-07-05 13:33:27,449-WARNING-Found SSL packet with unknown SSL type 59362
+2019-07-05 13:33:28,393-INFO-Extracting features from 67.157.158.152_1.pcap
+2019-07-05 13:33:30,288-INFO-Extracting features from 54.66.196.106_1.pcap
+2019-07-05 13:33:32,114-INFO-Extracting features from 98.129.142.90_1.pcap
+2019-07-05 13:33:33,900-INFO-Extracting features from 203.43.113.201_1.pcap
+2019-07-05 13:33:35,677-INFO-Extracting features from 107.180.85.170_1.pcap
+2019-07-05 13:33:37,511-INFO-Extracting features from 52.7.137.160_1.pcap
+2019-07-05 13:33:39,297-INFO-Extracting features from 139.165.41.142_1.pcap
+2019-07-05 13:33:41,169-INFO-Extracting features from 111.67.23.126_1.pcap
+2019-07-05 13:33:43,130-INFO-Extracting features from 66.228.48.232_1.pcap
+2019-07-05 13:33:45,008-INFO-Extracting features from 200.12.166.9_1.pcap
+2019-07-05 13:33:46,240-INFO-Extracting features from 207.250.234.19_1.pcap
+2019-07-05 13:33:48,058-INFO-Extracting features from 18.9.61.71_1.pcap
+2019-07-05 13:33:50,040-INFO-Extracting features from 206.167.252.143_1.pcap
+2019-07-05 13:33:51,888-INFO-Extracting features from 52.189.223.63_1.pcap
+2019-07-05 13:33:53,690-INFO-Extracting features from 164.100.228.168_1.pcap
+2019-07-05 13:33:55,509-INFO-Extracting features from 159.100.129.206_1.pcap
+2019-07-05 13:33:57,427-INFO-Extracting features from 134.84.159.221_1.pcap
+2019-07-05 13:33:59,242-INFO-Extracting features from 146.148.44.2_1.pcap
+2019-07-05 13:34:01,133-INFO-Extracting features from 64.50.172.224_1.pcap
+2019-07-05 13:34:02,968-INFO-Extracting features from 103.23.150.134_1.pcap
+2019-07-05 13:34:04,734-INFO-Extracting features from 132.247.70.44_1.pcap
+2019-07-05 13:34:06,696-INFO-Extracting features from 200.196.238.238_1.pcap
+2019-07-05 13:34:08,514-INFO-Extracting features from 205.189.35.107_1.pcap
+2019-07-05 13:34:10,331-INFO-Extracting features from 54.169.88.244_1.pcap
+2019-07-05 13:34:12,168-INFO-Extracting features from 209.135.208.83_1.pcap
+2019-07-05 13:34:14,030-INFO-Extracting features from 128.101.122.105_1.pcap
+2019-07-05 13:34:16,085-INFO-Extracting features from 117.121.251.26_1.pcap
+2019-07-05 13:34:18,008-INFO-Extracting features from 70.42.148.171_1.pcap
+2019-07-05 13:34:19,991-INFO-Extracting features from 158.85.202.194_1.pcap
+2019-07-05 13:34:22,097-INFO-Extracting features from 52.3.239.161_1.pcap
+2019-07-05 13:34:24,154-INFO-Extracting features from 64.139.80.45_1.pcap
+2019-07-05 13:34:26,067-INFO-Extracting features from 146.148.72.238_1.pcap
+2019-07-05 13:34:28,135-INFO-Extracting features from 172.96.163.69_1.pcap
+2019-07-05 13:34:29,965-INFO-Extracting features from 209.58.180.29_1.pcap
+2019-07-05 13:34:31,911-INFO-Extracting features from 162.13.11.118_1.pcap
+2019-07-05 13:34:33,675-INFO-Extracting features from 54.190.199.206_1.pcap
+2019-07-05 13:34:35,620-INFO-Extracting features from 164.100.59.48_1.pcap
+2019-07-05 13:34:37,444-INFO-Extracting features from 54.85.31.202_1.pcap
+2019-07-05 13:34:39,176-INFO-Extracting features from 23.100.73.177_1.pcap
+2019-07-05 13:34:39,645-WARNING-Found SSL packet with unknown SSL type 6499
+2019-07-05 13:34:40,217-WARNING-Found SSL packet with unknown SSL type 2262
+2019-07-05 13:34:40,256-WARNING-Found SSL packet with unknown SSL type 59525
+2019-07-05 13:34:41,034-INFO-Extracting features from 153.127.194.159_1.pcap
+2019-07-05 13:34:42,897-INFO-Extracting features from 121.254.129.109_1.pcap
+2019-07-05 13:34:44,915-INFO-Extracting features from 193.1.210.185_1.pcap
+2019-07-05 13:34:46,709-INFO-Extracting features from 23.96.91.11_1.pcap
+2019-07-05 13:34:48,606-INFO-Extracting features from 35.154.242.141_1.pcap
+2019-07-05 13:34:50,488-INFO-Extracting features from 198.58.125.35_1.pcap
+2019-07-05 13:34:52,378-INFO-Extracting features from 162.209.102.186_1.pcap
+2019-07-05 13:34:54,274-INFO-Extracting features from 69.43.145.244_1.pcap
+2019-07-05 13:34:56,254-INFO-Extracting features from 199.175.138.214_1.pcap
+2019-07-05 13:34:56,980-WARNING-Found SSL packet with unknown SSL type 15395
+2019-07-05 13:34:57,075-WARNING-Found SSL packet with unknown SSL type 19864
+2019-07-05 13:34:58,058-INFO-Extracting features from 41.208.10.34_1.pcap
+2019-07-05 13:34:59,777-INFO-Extracting features from 92.240.234.183_1.pcap
+2019-07-05 13:35:01,548-INFO-Extracting features from 128.125.253.4_1.pcap
+2019-07-05 13:35:03,556-INFO-Extracting features from 80.79.27.140_1.pcap
+2019-07-05 13:35:05,541-INFO-Extracting features from 203.161.8.201_1.pcap
+2019-07-05 13:35:06,699-WARNING-Found SSL packet with unknown SSL type 59880
+2019-07-05 13:35:07,308-INFO-Extracting features from 104.42.102.193_1.pcap
+2019-07-05 13:35:09,257-INFO-Extracting features from 95.138.155.246_1.pcap
+2019-07-05 13:35:10,958-INFO-Extracting features from 193.197.168.188_1.pcap
+2019-07-05 13:35:12,839-INFO-Extracting features from 192.246.229.142_1.pcap
+2019-07-05 13:35:14,711-INFO-Extracting features from 149.210.148.127_1.pcap
+2019-07-05 13:35:16,522-INFO-Extracting features from 128.206.9.90_1.pcap
+2019-07-05 13:35:18,348-INFO-Extracting features from 212.40.9.107_1.pcap
+2019-07-05 13:35:20,122-INFO-Extracting features from 64.211.221.176_1.pcap
+2019-07-05 13:35:22,136-INFO-Extracting features from 209.235.219.217_1.pcap
+2019-07-05 13:35:22,588-WARNING-Found SSL packet with unknown SSL type 52530
+2019-07-05 13:35:22,638-WARNING-Found SSL packet with unknown SSL type 48522
+2019-07-05 13:35:22,662-WARNING-Found SSL packet with unknown SSL type 35235
+2019-07-05 13:35:24,105-INFO-Extracting features from 200.89.78.66_1.pcap
+2019-07-05 13:35:25,964-INFO-Extracting features from 173.192.158.3_1.pcap
+2019-07-05 13:35:27,919-INFO-Extracting features from 144.76.119.200_1.pcap
+2019-07-05 13:35:29,662-INFO-Extracting features from 157.7.248.238_1.pcap
+2019-07-05 13:35:31,535-INFO-Extracting features from 174.143.201.22_1.pcap
+2019-07-05 13:35:33,395-INFO-Extracting features from 137.82.55.33_1.pcap
+2019-07-05 13:35:35,191-INFO-Extracting features from 128.192.20.101_1.pcap
+2019-07-05 13:35:37,128-INFO-Extracting features from 216.247.238.202_1.pcap
+2019-07-05 13:35:39,093-INFO-Extracting features from 52.7.50.117_1.pcap
+2019-07-05 13:35:40,910-INFO-Extracting features from 213.136.76.235_1.pcap
+2019-07-05 13:35:42,760-INFO-Extracting features from 52.169.24.109_1.pcap
+2019-07-05 13:35:44,589-INFO-Extracting features from 121.254.129.102_1.pcap
+2019-07-05 13:35:46,424-INFO-Extracting features from 97.107.131.154_1.pcap
+2019-07-05 13:35:48,292-INFO-Extracting features from 14.139.45.145_1.pcap
+2019-07-05 13:35:48,438-ERROR-Serious error in file 14.139.45.145_1.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 44, in search_and_extract
+    tcp_features = utils.extract_tcp_features(os.path.join(root, f), limit=traffic_limit)
+  File "/home/yilong/Desktop/tls_attack/feature-extraction/utils.py", line 143, in extract_tcp_features
+    raise ZeroPacketError('Pcap file contains no packet')
+utils.ZeroPacketError: Pcap file contains no packet
+2019-07-05 13:35:48,438-INFO-Extracting features from 67.134.21.111_1.pcap
+2019-07-05 13:35:50,280-INFO-Extracting features from 70.32.81.95_1.pcap
+2019-07-05 13:35:52,264-INFO-Extracting features from 71.19.240.199_1.pcap
+2019-07-05 13:35:54,008-INFO-Extracting features from 216.117.129.6_1.pcap
+2019-07-05 13:35:54,619-WARNING-Found SSL packet with unknown SSL type 45394
+2019-07-05 13:35:55,789-INFO-Extracting features from 156.14.253.57_1.pcap
+2019-07-05 13:35:57,614-INFO-Extracting features from 173.254.190.160_1.pcap
+2019-07-05 13:35:59,587-INFO-Extracting features from 213.171.221.134_1.pcap
+2019-07-05 13:36:01,462-INFO-Extracting features from 62.75.178.38_1.pcap
+2019-07-05 13:36:02,669-INFO-Extracting features from 149.210.175.126_1.pcap
+2019-07-05 13:36:04,623-INFO-Extracting features from 115.29.168.58_1.pcap
+2019-07-05 13:36:06,528-INFO-Extracting features from 185.21.41.55_1.pcap
+2019-07-05 13:36:08,303-INFO-Extracting features from 192.211.26.24_1.pcap
+2019-07-05 13:36:10,204-INFO-Extracting features from 147.91.249.18_1.pcap
+2019-07-05 13:36:12,068-INFO-Extracting features from 13.82.62.36_1.pcap
+2019-07-05 13:36:13,915-INFO-Extracting features from 128.135.159.99_1.pcap
+2019-07-05 13:36:15,817-INFO-Extracting features from 38.88.16.157_1.pcap
+2019-07-05 13:36:17,689-INFO-Extracting features from 200.74.192.130_1.pcap
+2019-07-05 13:36:19,559-INFO-Extracting features from 171.64.197.141_1.pcap
+2019-07-05 13:36:21,448-INFO-Extracting features from 18.184.3.221_1.pcap
+2019-07-05 13:36:23,215-INFO-Extracting features from 23.253.236.238_1.pcap
+2019-07-05 13:36:25,007-INFO-Extracting features from 52.9.178.70_1.pcap
+2019-07-05 13:36:26,787-INFO-Extracting features from 23.96.54.214_1.pcap
+2019-07-05 13:36:28,647-INFO-Extracting features from 160.109.110.130_1.pcap
+2019-07-05 13:36:30,465-INFO-Extracting features from 202.176.197.180_1.pcap
+2019-07-05 13:36:32,227-INFO-Extracting features from 108.168.144.156_1.pcap
+2019-07-05 13:36:34,110-INFO-Extracting features from 65.61.141.121_1.pcap
+2019-07-05 13:36:36,000-INFO-Extracting features from 94.23.217.150_1.pcap
+2019-07-05 13:36:37,947-INFO-Extracting features from 18.93.1.74_1.pcap
+2019-07-05 13:36:39,814-INFO-Extracting features from 216.31.236.85_1.pcap
+2019-07-05 13:36:41,622-INFO-Extracting features from 191.98.163.177_1.pcap
+2019-07-05 13:36:43,411-INFO-Extracting features from 121.254.129.116_1.pcap
+2019-07-05 13:36:45,300-INFO-Extracting features from 207.166.222.119_1.pcap
+2019-07-05 13:36:47,189-INFO-Extracting features from 157.180.240.253_1.pcap
+2019-07-05 13:36:48,988-INFO-Extracting features from 50.23.33.245_1.pcap
+2019-07-05 13:36:50,848-INFO-Extracting features from 69.41.173.82_1.pcap
+2019-07-05 13:36:52,678-INFO-Extracting features from 194.100.86.27_1.pcap
+2019-07-05 13:36:54,603-INFO-Extracting features from 207.5.165.41_1.pcap
+2019-07-05 13:36:56,436-INFO-Extracting features from 207.5.165.226_1.pcap
+2019-07-05 13:36:58,260-INFO-Extracting features from 192.64.81.45_1.pcap
+2019-07-05 13:37:00,100-INFO-Extracting features from 165.123.34.208_1.pcap
+2019-07-05 13:37:01,986-INFO-Extracting features from 185.140.47.198_1.pcap
+2019-07-05 13:37:03,799-INFO-Extracting features from 80.190.96.26_1.pcap
+2019-07-05 13:37:05,733-INFO-Extracting features from 72.52.94.234_1.pcap
+2019-07-05 13:37:07,562-INFO-Extracting features from 208.92.132.120_1.pcap
+2019-07-05 13:37:08,287-WARNING-Found SSL packet with unknown SSL type 29363
