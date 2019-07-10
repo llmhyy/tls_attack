@@ -9,7 +9,7 @@ import matplotlib.patches as mpatches
 
 import utils
 
-ciphersuite_db_filepath = 'tlsdb/tlsdb.json'
+ciphersuite_db_filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'tlsdb','tlsdb.json')
 with open(ciphersuite_db_filepath) as f:
     ciphersuite_db = json.load(f)
 
