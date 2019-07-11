@@ -571,16 +571,20 @@ def extractChangeCipherSpecLength(packet):
 def extractAppDataLength(packet):
     feature = [0]
     try:
+        appdata = []
         if hasattr(packet.ssl, 'value'):
-            appdata = find_appdata(packet.ssl.value)
+            find_appdata(packet.ssl.value, appdata)
         else:
-            appdata = find_appdata(packet.ssl)
+            find_appdata(packet.ssl, appdata)
 
         if appdata:
-            if type(appdata) == JsonLayer:
-                feature = [int(appdata.length)]
-            elif type(appdata) == dict:
-                feature = [int(appdata['ssl.record.length'])]
+            sum_len = 0
+            for a_appdata in appdata:
+                if type(a_appdata) == JsonLayer:
+                    sum_len += int(a_appdata.length)
+                elif type(a_appdata) == dict:
+                    sum_len += int(a_appdata['ssl.record.length'])
+            feature = [sum_len]
     except (AttributeError, KeyError):
         pass
     return feature
@@ -632,26 +636,22 @@ def find_changecipher(obj):
             return obj
 
 # For identifying pure Application Data and Application Data [TCP segment of a reassembled PDU]
-def find_appdata(obj):
+def find_appdata(obj, appdata):
     if type(obj) == list:
-        final = None
         for a_obj in obj:
-            temp = find_appdata(a_obj)
-            if temp:
-                final = temp
-        return final
+            find_appdata(a_obj, appdata)
 
     elif type(obj)==JsonLayer:
         if obj.layer_name=='ssl' and hasattr(obj, 'record'):
-            return find_appdata(obj.record)
+            find_appdata(obj.record, appdata)
         elif obj.layer_name=='record' and hasattr(obj, 'app_data'):
-            return obj
+            appdata.append(obj)
 
     elif type(obj) == dict:
         if 'ssl.record' in obj:
-            return find_appdata(obj['ssl.record'])
+            find_appdata(obj['ssl.record'], appdata)
         elif 'ssl.app_data' in obj:
-            return obj
+            appdata.append(obj)
 
 def encodeEnumIntoManyHotVec(listOfEnum, refEnum):
     unknown_dim = [0]
@@ -670,7 +670,24 @@ if __name__ == '__main__':
     enums = {'ciphersuites': [], 'compressionmethods': [], 'supportedgroups': [], 'sighashalgorithms_client': [],
              'sighashalgorithms_cert': []}
 
-    rootdir = 'sample-pcap/'
-    enums = searchEnums(rootdir, limit=100)
-    for k,v in enums.items():
-        print(k, v)
+    rootdir = 'sample-pcap/tls'
+    # enums = searchEnums(rootdir, limit=100)
+    # for k,v in enums.items():
+    #     print(k, v)
+
+    filename = 'www.stripes.com_2018-12-21_16-20-12.pcap'
+    dirpath = os.path.join(rootdir, filename)
+
+    # Traffic features for storing features of packets
+    packets_json = pyshark.FileCapture(dirpath, use_json=True)
+
+    for i, packet_json in enumerate(packets_json):
+        # packet 26: normal tcp packet with ack
+        # packet 27: tcp segment of a reassembled pdu
+        if i == 25 or i == 26:
+            x = packet_json
+            print(x)
+        # packet 37: application data
+        if i == 36:
+            x = packet_json
+            print(x)

@@ -3,7 +3,7 @@
 import math
 from utils import *
 
-sample = 'sample-pcap/www.stripes.com_2018-12-21_16-20-12.pcap'
+sample = 'sample-pcap/tls/www.stripes.com_2018-12-21_16-20-12.pcap'
 packets = [packet for packet in pyshark.FileCapture(sample)]
 packet1 = packets[0]
 packet4 = packets[3]
@@ -70,17 +70,17 @@ assert len(output) == expected_len
 expected_dim = 19
 assert len(output[0]) == expected_dim
 
-sample1 = 'sample-pcap/www.stripes.com_2018-12-21_16-20-12.pcap'
-sample2 = 'sample-pcap/australianmuseum.net.au_2018-12-21_16-15-59.pcap'
-sample3 = 'sample-pcap/ari.nus.edu.sg_2018-12-24_14-30-02.pcap'
-sample4 = 'sample-pcap/www.zeroaggressionproject.org_2018-12-21_16-19-03.pcap'
-sample5 = 'sample-pcap/alis.alberta.ca_2019-01-22_19-26-05.pcap'
-sample6 = 'sample-pcap/dataverse.harvard.edu_2018-12-24_17-16-00.pcap'
-sample7 = 'sample-pcap/whc.unesco.org_2018-12-24_17-09-08.pcap'
-sample8 = 'sample-pcap/www.cancerresearchuk.org_2018-12-24_17-15-46.pcap'
-sample9 = 'sample-pcap/www.orkin.com_2018-12-24_17-10-27.pcap'
-sample10 = 'sample-pcap/www.tmr.qld.gov.au_2018-12-24_17-20-56.pcap'
-sample_dos = 'sample-pcap/actorsaccess.com_2019-02-26_00-09-45_0.pcap'
+sample1 = 'sample-pcap/tls/www.stripes.com_2018-12-21_16-20-12.pcap'
+sample2 = 'sample-pcap/tls/australianmuseum.net.au_2018-12-21_16-15-59.pcap'
+sample3 = 'sample-pcap/tls/ari.nus.edu.sg_2018-12-24_14-30-02.pcap'
+sample4 = 'sample-pcap/tls/www.zeroaggressionproject.org_2018-12-21_16-19-03.pcap'
+sample5 = 'sample-pcap/tls/alis.alberta.ca_2019-01-22_19-26-05.pcap'
+sample6 = 'sample-pcap/tls/dataverse.harvard.edu_2018-12-24_17-16-00.pcap'
+sample7 = 'sample-pcap/tls/whc.unesco.org_2018-12-24_17-09-08.pcap'
+sample8 = 'sample-pcap/tls/www.cancerresearchuk.org_2018-12-24_17-15-46.pcap'
+sample9 = 'sample-pcap/tls/www.orkin.com_2018-12-24_17-10-27.pcap'
+sample10 = 'sample-pcap/tls/www.tmr.qld.gov.au_2018-12-24_17-20-56.pcap'
+sample_dos = 'sample-pcap/tls/actorsaccess.com_2019-02-26_00-09-45_0.pcap'
 
 sample1_packets = [packet for packet in pyshark.FileCapture(sample1, use_json=True)]
 sample2_packets = [packet for packet in pyshark.FileCapture(sample2, use_json=True)]
@@ -471,7 +471,7 @@ output = extractAppDataLength(sample4_appdata_segment)
 expected = [16408]
 assert output == expected
 output = extractAppDataLength(sample4_appdata_double)
-expected = [31]
+expected = [658]
 assert output == expected
 
 # pkt = sample1_serverhello_cert_serverhellodone
