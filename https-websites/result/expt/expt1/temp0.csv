@@ -1,0 +1,7 @@
+"id","fqdn/ip","port","severity","finding","cve","cwe"
+"service","www.nwitimes.com/192.104.182.109","443","INFO","HTTP","",""
+"pre_128cipher","www.nwitimes.com/192.104.182.109","443","INFO","No 128 cipher limit bug","",""
+"heartbleed","www.nwitimes.com/192.104.182.109","443","OK","not vulnerable, no heartbeat extension","CVE-2014-0160","CWE-119"
+"CCS","www.nwitimes.com/192.104.182.109","443","OK","not vulnerable","CVE-2014-0224","CWE-310"
+"ticketbleed","www.nwitimes.com/192.104.182.109","443","OK","not vulnerable","CVE-2016-9244","CWE-200"
+"ROBOT","www.nwitimes.com/192.104.182.109","443","OK","not vulnerable","CVE-2017-17382 CVE-2017-17427 CVE-2017-17428 CVE-2017-13098 CVE-2017-1000385 CVE-2017-13099 CVE-2016-6883 CVE-2012-5081 CVE-2017-6168","CWE-203"

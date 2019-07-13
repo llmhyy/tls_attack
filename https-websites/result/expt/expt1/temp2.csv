@@ -1,0 +1,6 @@
+"id","fqdn/ip","port","severity","finding","cve","cwe"
+"service","games.ca.zone.msn.com/168.61.170.191","443","INFO","HTTP","",""
+"pre_128cipher","games.ca.zone.msn.com/168.61.170.191","443","INFO","No 128 cipher limit bug","",""
+"heartbleed","games.ca.zone.msn.com/168.61.170.191","443","OK","not vulnerable, no heartbeat extension","CVE-2014-0160","CWE-119"
+"CCS","games.ca.zone.msn.com/168.61.170.191","443","OK","not vulnerable","CVE-2014-0224","CWE-310"
+"ticketbleed","games.ca.zone.msn.com/168.61.170.191","443","OK","no session ticket extension","CVE-2016-9244","CWE-200"

@@ -1,0 +1,292 @@
+2019-07-05 05:50:53,378-INFO-Processing url https://www.gametwist.com
+2019-07-05 05:52:34,626-INFO-Processing url https://savoirs.rfi.fr
+2019-07-05 05:52:35,023-INFO-Status code is not 200
+2019-07-05 05:52:35,024-INFO-Processing url https://wiki-fr.guildwars2.com
+2019-07-05 05:56:07,674-INFO-Processing url https://education.francetv.fr
+2019-07-05 05:56:47,446-INFO-Processing url https://lacontrerevolution.wordpress.co
+2019-07-05 05:56:48,023-ERROR-Certificate did not match expected hostname: lacontrerevolution.wordpress.co. Certificate: {'version': 3, 'OCSP': ('http://ocsp.comodoca.com',), 'serialNumber': 'A7810B64B529C1A86900B6ED8C1A0868', 'issuer': ((('countryName', 'GB'),), (('stateOrProvinceName', 'Greater Manchester'),), (('localityName', 'Salford'),), (('organizationName', 'COMODO CA Limited'),), (('commonName', 'COMODO RSA Domain Validation Secure Server CA'),)), 'crlDistributionPoints': ('http://crl.comodoca.com/COMODORSADomainValidationSecureServerCA.crl',), 'subject': ((('organizationalUnitName', 'Domain Control Validated'),), (('organizationalUnitName', 'EssentialSSL Wildcard'),), (('commonName', '*.wordpress.com'),)), 'notBefore': 'Sep  6 00:00:00 2018 GMT', 'subjectAltName': (('DNS', '*.wordpress.com'), ('DNS', 'wordpress.com')), 'caIssuers': ('http://crt.comodoca.com/COMODORSADomainValidationSecureServerCA.crt',), 'notAfter': 'Sep  5 23:59:59 2020 GMT'}
+2019-07-05 05:56:48,024-INFO-Failed to request from https://lacontrerevolution.wordpress.co
+2019-07-05 05:56:48,025-INFO-Processing url https://www.amnesty.fr
+2019-07-05 05:58:01,559-INFO-Processing url https://croire.la-croix.com
+2019-07-05 06:04:37,575-INFO-Processing url https://www.leblogduhacker.fr
+2019-07-05 06:04:42,654-INFO-Failed to request from https://www.leblogduhacker.fr
+2019-07-05 06:04:42,654-INFO-Processing url https://lucperino.com
+2019-07-05 06:06:47,121-INFO-Processing url https://www.commentcamarche.net
+2019-07-05 06:07:25,245-INFO-Processing url https://solidarites-sante.gouv.fr
+2019-07-05 06:09:28,952-INFO-Processing url https://www.liguecancer.ch
+2019-07-05 06:11:30,349-INFO-Processing url https://vaccination-info-service.fr
+2019-07-05 06:13:10,419-INFO-Processing url https://www.latribune.fr
+2019-07-05 06:14:54,684-INFO-Processing url https://www.toureiffel.paris
+2019-07-05 06:16:11,157-INFO-Processing url https://mffp.gouv.qc.ca
+2019-07-05 06:17:53,396-INFO-Processing url https://www.trictrac.net
+2019-07-05 06:20:06,437-INFO-Processing url https://fr.wiki.forgeofempires.com
+2019-07-05 06:21:43,582-INFO-Processing url https://www.legrandsoir.info
+2019-07-05 06:23:23,299-INFO-Processing url https://www.wwf.fr
+2019-07-05 06:24:37,160-INFO-Processing url https://www.actioninnocence.org
+2019-07-05 06:26:26,571-INFO-Processing url https://voyage.gc.ca
+2019-07-05 06:28:13,695-INFO-Processing url https://sebio.be
+2019-07-05 06:29:18,609-INFO-Processing url https://www.capital.fr
+2019-07-05 06:29:56,711-INFO-Processing url https://www.philibertnet.com
+2019-07-05 06:31:10,164-INFO-Processing url https://eglise.catholique.fr
+2019-07-05 06:33:05,487-INFO-Processing url https://ripostelaique.com
+2019-07-05 06:33:56,448-INFO-Processing url https://www.sofoot.com
+2019-07-05 06:34:43,159-INFO-Processing url https://www.lematin.ch
+2019-07-05 06:39:11,243-INFO-Processing url https://www.rugbyrama.fr
+2019-07-05 06:39:51,130-INFO-Processing url https://www.centre-presse.fr
+2019-07-05 06:41:53,936-INFO-Processing url https://www.public.fr
+2019-07-05 06:48:16,876-INFO-Processing url https://oumma.com
+2019-07-05 06:49:10,471-INFO-Processing url https://www.jeparsaucanada.com
+2019-07-05 06:51:29,791-INFO-Processing url https://www.phonandroid.com
+2019-07-05 06:52:43,244-INFO-Processing url https://espritdeliberte.leswoody.net
+2019-07-05 06:54:34,074-INFO-Processing url https://www.directracing.fr
+2019-07-05 06:56:38,079-INFO-Processing url https://www.journaldugeek.com
+2019-07-05 06:58:35,039-INFO-Processing url https://lanouvelletribune.info
+2019-07-05 06:59:57,871-INFO-Processing url https://www.madeinlens.com
+2019-07-05 07:00:48,910-INFO-Processing url https://peuple-vert.fr
+2019-07-05 07:00:54,223-INFO-Failed to request from https://peuple-vert.fr
+2019-07-05 07:00:54,224-INFO-Processing url https://www.tomshardware.fr
+2019-07-05 07:02:49,677-INFO-Processing url https://www.shopeva.com
+2019-07-05 07:03:25,074-INFO-Processing url https://paris1972-versailles2003.com
+2019-07-05 07:06:48,114-INFO-Processing url https://www.rock-n-rollrealty.com
+2019-07-05 07:08:39,582-INFO-Processing url https://www.princeofwales.gov.uk
+2019-07-05 07:09:54,752-INFO-Processing url https://www.tuugo.co.uk
+2019-07-05 07:11:47,170-INFO-Processing url https://www.verdict.co.uk
+2019-07-05 07:14:08,487-INFO-Processing url https://virginia.sportswar.com
+2019-07-05 07:14:08,658-INFO-Status code is not 200
+2019-07-05 07:14:08,658-INFO-Processing url https://www.tallpine.ca
+2019-07-05 07:14:09,529-ERROR-Certificate did not match expected hostname: www.tallpine.ca. Certificate: {'version': 3, 'OCSP': ('http://ocsp.int-x3.letsencrypt.org',), 'serialNumber': '03FECCF4F9F1B31D6DBBEEA30F01FD744423', 'issuer': ((('countryName', 'US'),), (('organizationName', "Let's Encrypt"),), (('commonName', "Let's Encrypt Authority X3"),)), 'subject': ((('commonName', 'jtclark.ca'),),), 'notBefore': 'May  8 12:38:28 2019 GMT', 'subjectAltName': (('DNS', 'jtclark.ca'),), 'caIssuers': ('http://cert.int-x3.letsencrypt.org/',), 'notAfter': 'Aug  6 12:38:28 2019 GMT'}
+2019-07-05 07:14:09,530-INFO-Failed to request from https://www.tallpine.ca
+2019-07-05 07:14:09,531-INFO-Processing url https://www.duchyoflancaster.co.uk
+2019-07-05 07:16:06,497-INFO-Processing url https://starrynightnovels.wordpress.com
+2019-07-05 07:19:28,498-INFO-Processing url https://mylife.org.pk
+2019-07-05 07:21:22,674-INFO-Processing url https://journal.lib.uoguelph.ca
+2019-07-05 07:22:36,563-INFO-Processing url https://www.nakama.network
+2019-07-05 07:24:22,395-INFO-Processing url https://nocable.org
+2019-07-05 07:26:10,814-INFO-Processing url https://library.ndsu.edu
+2019-07-05 07:28:19,296-INFO-Processing url https://vispace.vn
+2019-07-05 07:29:09,459-INFO-Processing url https://svqheumfu.000webhostapp.com
+2019-07-05 07:31:11,250-INFO-Processing url https://rideshareinspectionlocations.com
+2019-07-05 07:32:30,052-INFO-Processing url https://www.rsc.org.uk
+2019-07-05 07:34:12,565-INFO-Processing url https://augustinesalley.wordpress.com
+2019-07-05 07:37:35,938-INFO-Processing url https://www.burgundytoday.com
+2019-07-05 07:37:37,154-ERROR-Certificate did not match expected hostname: www.burgundytoday.com. Certificate: {'version': 3, 'OCSP': ('http://ocsp2.globalsign.com/gsdomainvalsha2g2',), 'serialNumber': '2FA41CD7B36558BE595C38C8', 'issuer': ((('countryName', 'BE'),), (('organizationName', 'GlobalSign nv-sa'),), (('commonName', 'GlobalSign Domain Validation CA - SHA256 - G2'),)), 'crlDistributionPoints': ('http://crl.globalsign.com/gs/gsdomainvalsha2g2.crl',), 'subject': ((('organizationalUnitName', 'Domain Control Validated'),), (('commonName', 'cc.sedoparking.com'),)), 'notBefore': 'Oct 17 07:13:06 2017 GMT', 'subjectAltName': (('DNS', 'cc.sedoparking.com'),), 'caIssuers': ('http://secure.globalsign.com/cacert/gsdomainvalsha2g2r1.crt',), 'notAfter': 'Dec 11 08:45:40 2020 GMT'}
+2019-07-05 07:37:37,155-INFO-Failed to request from https://www.burgundytoday.com
+2019-07-05 07:37:37,156-INFO-Processing url https://www.levanacooks.com
+2019-07-05 07:39:29,898-INFO-Processing url https://www.babymonitortown.com
+2019-07-05 07:41:38,573-INFO-Processing url https://www.joyofkosher.com
+2019-07-05 07:43:58,893-INFO-Processing url https://www.levanamealreplacement.com
+2019-07-05 07:45:57,266-INFO-Processing url https://www.electemily4pa.com
+2019-07-05 07:45:59,084-INFO-Status code is not 200
+2019-07-05 07:45:59,084-INFO-Processing url https://lepidoptera.eu
+2019-07-05 07:47:54,907-INFO-Processing url https://il.linkedin.com
+2019-07-05 07:48:32,357-INFO-Processing url https://scholar.binus.ac.id
+2019-07-05 07:48:37,493-INFO-Failed to request from https://scholar.binus.ac.id
+2019-07-05 07:48:37,493-INFO-Processing url https://www.the-university-of-levana-press.com
+2019-07-05 07:50:30,663-INFO-Processing url https://ideamensch.com
+2019-07-05 07:51:21,286-INFO-Processing url https://levanatea.com
+2019-07-05 07:51:26,569-INFO-Failed to request from https://levanatea.com
+2019-07-05 07:51:26,569-INFO-Processing url https://www.anschechesed.org
+2019-07-05 07:52:28,348-INFO-Processing url https://ph.yhb.org.il
+2019-07-05 07:54:26,863-INFO-Processing url https://www.galedltd.com
+2019-07-05 07:55:17,078-INFO-Processing url https://www.philauu.org
+2019-07-05 07:57:03,770-INFO-Processing url https://lingeriefc.com
+2019-07-05 07:58:20,412-INFO-Processing url https://www.smarthires.com
+2019-07-05 08:01:49,863-INFO-Processing url https://www.yutorah.org
+2019-07-05 08:03:32,464-INFO-Processing url https://www.nocibe.fr
+2019-07-05 08:06:38,533-INFO-Processing url https://codigoespagueti.com
+2019-07-05 08:07:26,024-INFO-Processing url https://booknode.com
+2019-07-05 08:08:44,033-INFO-Processing url https://installatiebedrijfroosendaal.nl
+2019-07-05 08:08:45,178-INFO-Failed to request from https://installatiebedrijfroosendaal.nl
+2019-07-05 08:08:45,179-INFO-Processing url https://secure.ethicspoint.com
+2019-07-05 08:10:23,071-INFO-Processing url https://ccsre.stanford.edu
+2019-07-05 08:12:14,726-INFO-Processing url https://www.verticalpool.com
+2019-07-05 08:14:14,827-INFO-Processing url https://newsbase.com
+2019-07-05 08:16:12,751-INFO-Processing url https://www.zu.ac.ae
+2019-07-05 08:17:03,653-INFO-Processing url https://repositorioaberto.uab.pt
+2019-07-05 08:19:03,369-INFO-Processing url https://www.studentpeaceprize.org
+2019-07-05 08:20:49,854-INFO-Processing url https://sbby.com
+2019-07-05 08:22:54,540-INFO-Processing url https://people.aalto.fi
+2019-07-05 08:25:16,136-INFO-Processing url https://www.jprasurg.com
+2019-07-05 08:26:18,177-INFO-Processing url https://www.radiorock.fi
+2019-07-05 08:28:34,681-INFO-Processing url https://www.barrosbrito.com
+2019-07-05 08:30:32,504-INFO-Processing url https://www.iltalehti.fi
+2019-07-05 08:36:54,735-INFO-Processing url https://noppapottiblog.wordpress.co
+2019-07-05 08:36:55,330-ERROR-Certificate did not match expected hostname: noppapottiblog.wordpress.co. Certificate: {'version': 3, 'OCSP': ('http://ocsp.comodoca.com',), 'serialNumber': 'A7810B64B529C1A86900B6ED8C1A0868', 'issuer': ((('countryName', 'GB'),), (('stateOrProvinceName', 'Greater Manchester'),), (('localityName', 'Salford'),), (('organizationName', 'COMODO CA Limited'),), (('commonName', 'COMODO RSA Domain Validation Secure Server CA'),)), 'crlDistributionPoints': ('http://crl.comodoca.com/COMODORSADomainValidationSecureServerCA.crl',), 'subject': ((('organizationalUnitName', 'Domain Control Validated'),), (('organizationalUnitName', 'EssentialSSL Wildcard'),), (('commonName', '*.wordpress.com'),)), 'notBefore': 'Sep  6 00:00:00 2018 GMT', 'subjectAltName': (('DNS', '*.wordpress.com'), ('DNS', 'wordpress.com')), 'caIssuers': ('http://crt.comodoca.com/COMODORSADomainValidationSecureServerCA.crt',), 'notAfter': 'Sep  5 23:59:59 2020 GMT'}
+2019-07-05 08:36:55,331-INFO-Failed to request from https://noppapottiblog.wordpress.co
+2019-07-05 08:36:55,332-INFO-Processing url https://marketrealist.com
+2019-07-05 08:39:10,611-INFO-Processing url https://www.metrorio.com.br
+2019-07-05 08:41:20,795-INFO-Processing url https://www.hs.fi
+2019-07-05 08:47:49,898-INFO-Processing url https://le10sport.com
+2019-07-05 08:49:42,989-INFO-Processing url https://www.mineralrightsforum.com
+2019-07-05 08:50:56,257-INFO-Processing url https://www.sport.es
+2019-07-05 08:51:33,383-INFO-Processing url https://rmcsport.bfmtv.com
+2019-07-05 08:53:47,025-INFO-Processing url https://ipdraughts.wordpress.com
+2019-07-05 08:57:13,635-INFO-Processing url https://magazine.promomarketing.com
+2019-07-05 08:59:13,432-INFO-Processing url https://oldgrizzledgamers.com
+2019-07-05 09:00:58,311-INFO-Processing url https://hal-sciencespo.archives-ouvertes.fr
+2019-07-05 09:02:55,465-INFO-Processing url https://discchord.com
+2019-07-05 09:04:53,136-INFO-Processing url https://script-ed.org
+2019-07-05 09:06:57,468-INFO-Processing url https://uploadvr.com
+2019-07-05 09:07:52,817-INFO-Processing url https://www.techsling.com
+2019-07-05 09:08:34,960-INFO-Processing url https://www.overheaddoorsanangelo.com
+2019-07-05 09:11:26,979-INFO-Processing url https://roosterteeth.com
+2019-07-05 09:18:54,171-INFO-Processing url https://sheith-is-good.tumblr.com
+2019-07-05 09:24:49,663-INFO-Processing url https://wildpitch-baseball.club
+2019-07-05 09:24:50,016-INFO-Failed to request from https://wildpitch-baseball.club
+2019-07-05 09:24:50,017-INFO-Processing url https://www.thebungalowrestaurant.com
+2019-07-05 09:39:28,279-INFO-Processing url https://www.hotelcasasanagustin.com
+2019-07-05 09:41:06,243-INFO-Processing url https://lwlies.com
+2019-07-05 09:42:06,157-INFO-Processing url https://www.hoganassessments.com
+2019-07-05 09:42:07,297-INFO-Status code is not 200
+2019-07-05 09:42:07,298-INFO-Processing url https://seventh-row.com
+2019-07-05 09:42:08,740-INFO-Status code is not 200
+2019-07-05 09:42:08,740-INFO-Processing url https://thetruepanopticon.bandcamp.com
+2019-07-05 09:44:29,079-INFO-Processing url https://www.lifegate.com
+2019-07-05 09:45:43,820-INFO-Processing url https://blogs.imf.org
+2019-07-05 09:46:49,409-INFO-Processing url https://store.na.square-enix-games.com
+2019-07-05 09:48:03,629-INFO-Processing url https://www.vba.va.gov
+2019-07-05 09:49:45,098-INFO-Processing url https://www.dore.sg
+2019-07-05 09:50:33,995-INFO-Processing url https://represent.com
+2019-07-05 09:55:32,757-INFO-Processing url https://simpleskincarescience.com
+2019-07-05 09:57:16,132-INFO-Processing url https://scars.co
+2019-07-05 09:57:17,190-ERROR-Certificate did not match expected hostname: scars.co. Certificate: {'version': 3, 'OCSP': ('http://status.thawte.com',), 'serialNumber': '017129E41208E5BA4A34454A044BF9B2', 'issuer': ((('countryName', 'US'),), (('organizationName', 'DigiCert Inc'),), (('organizationalUnitName', 'www.digicert.com'),), (('commonName', 'Thawte TLS RSA CA G1'),)), 'crlDistributionPoints': ('http://cdp.thawte.com/ThawteTLSRSACAG1.crl',), 'subject': ((('countryName', 'DE'),), (('stateOrProvinceName', 'Bayern'),), (('localityName', 'München'),), (('organizationName', 'Team Internet AG'),), (('commonName', '*.parkingcrew.net'),)), 'notBefore': 'Jul 25 00:00:00 2018 GMT', 'subjectAltName': (('DNS', '*.parkingcrew.net'), ('DNS', 'parkingcrew.net')), 'caIssuers': ('http://cacerts.thawte.com/ThawteTLSRSACAG1.crt',), 'notAfter': 'Jul 24 12:00:00 2020 GMT'}
+2019-07-05 09:57:17,191-INFO-Failed to request from https://scars.co
+2019-07-05 09:57:17,193-INFO-Processing url https://www.neosporin.com
+2019-07-05 09:58:27,954-INFO-Processing url https://www.msif.org
+2019-07-05 09:58:29,904-INFO-Status code is not 200
+2019-07-05 09:58:29,905-INFO-Processing url https://newint.org
+2019-07-05 09:59:21,071-INFO-Processing url https://www.kix921.com
+2019-07-05 10:00:13,788-INFO-Processing url https://www.avitamedical.co
+2019-07-05 10:00:13,806-INFO-Failed to request from https://www.avitamedical.co
+2019-07-05 10:00:13,806-INFO-Processing url https://lumenis.com
+2019-07-05 10:03:37,448-INFO-Processing url https://syneron-candela.com
+2019-07-05 10:03:38,153-INFO-Failed to request from https://syneron-candela.com
+2019-07-05 10:03:38,154-INFO-Processing url https://bestskindoctorindelhi-93.webself.net
+2019-07-05 10:06:57,790-INFO-Processing url https://atwork.realself.com
+2019-07-05 10:07:36,153-INFO-Processing url https://www.nowtv.com
+2019-07-05 10:08:11,691-INFO-Processing url https://www.bap-medical.com
+2019-07-05 10:10:08,477-INFO-Processing url https://aestheticsjournal.com
+2019-07-05 10:12:08,773-INFO-Processing url https://www.mtgtop8.com
+2019-07-05 10:13:29,084-INFO-Processing url https://www.theprp.com
+2019-07-05 10:14:24,124-INFO-Processing url https://www.philosophytalk.org
+2019-07-05 10:16:15,069-INFO-Processing url https://www.myast.org
+2019-07-05 10:18:15,169-INFO-Processing url https://www.lp.org
+2019-07-05 10:18:16,137-INFO-Status code is not 200
+2019-07-05 10:18:16,138-INFO-Processing url https://soulsellerrecords.bandcamp.co
+2019-07-05 10:20:06,339-INFO-Processing url https://www.pressherald.com
+2019-07-05 10:21:18,870-INFO-Processing url https://digitalcommons.law.umaryland.edu
+2019-07-05 10:23:00,604-INFO-Processing url https://zcomm.org
+2019-07-05 10:24:59,079-INFO-Processing url https://www.ourdocuments.gov
+2019-07-05 10:28:38,642-INFO-Processing url https://cryptobriefing.com
+2019-07-05 10:29:49,362-INFO-Processing url https://fox8.com
+2019-07-05 10:33:13,516-INFO-Processing url https://www.larepublica.cat
+2019-07-05 10:35:28,846-INFO-Processing url https://pure.knaw.nl
+2019-07-05 10:41:52,720-INFO-Processing url https://apo18.com
+2019-07-05 10:41:53,168-INFO-Failed to request from https://apo18.com
+2019-07-05 10:41:53,169-INFO-Processing url https://voiceofeurope.com
+2019-07-05 10:42:37,769-INFO-Processing url https://iproject.com.ng
+2019-07-05 10:44:50,045-INFO-Processing url https://gael.univ-grenoble-alpes.fr
+2019-07-05 10:46:54,760-INFO-Processing url https://www.onecountry.com
+2019-07-05 10:46:55,037-INFO-Status code is not 200
+2019-07-05 10:46:55,038-INFO-Processing url https://www.novelupdates.co
+2019-07-05 10:46:56,401-INFO-Failed to request from https://www.novelupdates.co
+2019-07-05 10:46:56,401-INFO-Processing url https://www.tulsaworld.com
+2019-07-05 10:50:21,029-INFO-Processing url https://ryananddave.podbean.com
+2019-07-05 10:53:58,146-INFO-Processing url https://lasvegassun.com
+2019-07-05 10:55:06,640-INFO-Processing url https://utopiayouarestandinginit.com
+2019-07-05 10:58:30,425-INFO-Processing url https://rogersmovienation.com
+2019-07-05 11:01:53,600-INFO-Processing url https://www.metro.us
+2019-07-05 11:05:34,294-INFO-Processing url https://kiow.com
+2019-07-05 11:07:36,518-INFO-Processing url https://www.theburningplatform.com
+2019-07-05 11:08:53,255-INFO-Processing url https://victorygirlsblog.com
+2019-07-05 11:10:48,271-INFO-Processing url https://ntknetwork.com
+2019-07-05 11:10:49,407-INFO-Status code is not 200
+2019-07-05 11:10:49,408-INFO-Processing url https://step-back.org
+2019-07-05 11:12:53,220-INFO-Processing url https://www.theweek.co.uk
+2019-07-05 11:14:39,577-INFO-Processing url https://www.buddylist.co
+2019-07-05 11:15:24,439-INFO-Processing url https://ahvalnews.com
+2019-07-05 11:16:02,299-INFO-Processing url https://whowhatwhy.org
+2019-07-05 11:18:01,814-INFO-Processing url https://blogs.spectator.co.uk
+2019-07-05 11:20:04,984-INFO-Processing url https://investors.interactivebrokers.com
+2019-07-05 11:23:56,216-INFO-Processing url https://www.kungfunecktie.com
+2019-07-05 11:24:36,643-INFO-Processing url https://www.washingtoninstitute.org
+2019-07-05 11:25:48,938-INFO-Processing url https://www.usingenglish.com
+2019-07-05 11:27:02,178-INFO-Processing url https://www.aspistrategist.org.au
+2019-07-05 11:27:02,540-INFO-Status code is not 200
+2019-07-05 11:27:02,540-INFO-Processing url https://www.lincolninstitute.org
+2019-07-05 11:28:16,694-INFO-Processing url https://case.edu
+2019-07-05 11:32:15,211-INFO-Processing url https://hazlitt.net
+2019-07-05 11:33:33,347-INFO-Processing url https://www.subpop.com
+2019-07-05 11:35:33,705-INFO-Processing url https://www.reformer.com
+2019-07-05 11:36:48,857-INFO-Processing url https://www.newdawnmagazine.com
+2019-07-05 11:36:54,654-INFO-Failed to request from https://www.newdawnmagazine.com
+2019-07-05 11:36:54,654-INFO-Processing url https://www.margaretthatcher.org
+2019-07-05 11:37:32,017-INFO-Processing url https://www.bunkhousedowntown.com
+2019-07-05 11:37:33,714-INFO-Status code is not 200
+2019-07-05 11:37:33,714-INFO-Processing url https://coolidgefoundation.org
+2019-07-05 11:38:11,587-INFO-Processing url https://media-outreach.sg
+2019-07-05 11:39:05,239-INFO-Processing url https://intermezzo.typepad.com
+2019-07-05 11:42:00,332-INFO-Processing url https://nemaloknig.com
+2019-07-05 11:42:52,722-INFO-Processing url https://www.anthonyburgess.org
+2019-07-05 11:44:50,219-INFO-Processing url https://www.expressandstar.com
+2019-07-05 11:46:05,056-INFO-Processing url https://balkanist.net
+2019-07-05 11:47:59,071-INFO-Processing url https://forums.digitalspy.com
+2019-07-05 11:49:06,460-INFO-Processing url https://www.mea.gov.in
+2019-07-05 11:49:43,457-INFO-Processing url https://www.gmwatch.org
+2019-07-05 11:51:40,845-INFO-Processing url https://www.englishforums.com
+2019-07-05 11:52:18,301-INFO-Processing url https://biepag.eu
+2019-07-05 11:52:21,065-INFO-Status code is not 200
+2019-07-05 11:52:21,066-INFO-Processing url https://deterritorialinvestigations.wordpress.com
+2019-07-05 11:55:45,455-INFO-Processing url https://www.stylist.co.uk
+2019-07-05 11:58:00,925-INFO-Processing url https://singletrackworld.com
+2019-07-05 11:58:01,515-INFO-Status code is not 200
+2019-07-05 11:58:01,515-INFO-Processing url https://tubular.net
+2019-07-05 12:00:08,874-INFO-Processing url https://www.bestcommentz.com
+2019-07-05 12:01:22,449-INFO-Processing url https://www.onthebox.com
+2019-07-05 12:02:23,052-INFO-Processing url https://www.milwaukeemag.com
+2019-07-05 12:02:23,994-INFO-Status code is not 200
+2019-07-05 12:02:23,994-INFO-Processing url https://urbanistamagazine.uk
+2019-07-05 12:02:25,211-INFO-Status code is not 200
+2019-07-05 12:02:25,212-INFO-Processing url https://www.shreveporttimes.com
+2019-07-05 12:06:23,173-INFO-Processing url https://johnmenadue.com
+2019-07-05 12:08:08,281-INFO-Processing url https://beestonia.wordpress.com
+2019-07-05 12:11:33,005-INFO-Processing url https://radiography.hypotheses.org
+2019-07-05 12:12:38,689-INFO-Processing url https://ecpr.eu
+2019-07-05 12:14:18,116-INFO-Processing url https://labourlist.org
+2019-07-05 12:15:47,029-INFO-Processing url https://endparalysis.org
+2019-07-05 12:17:56,015-INFO-Processing url https://www.spinal-research.org
+2019-07-05 12:19:49,075-INFO-Processing url https://jcggdb.jp
+2019-07-05 12:20:39,235-INFO-Processing url https://www.technologynetworks.com
+2019-07-05 12:24:28,337-INFO-Processing url https://www.jkns.or.kr
+2019-07-05 12:25:31,024-INFO-Processing url https://www.scbt.com
+2019-07-05 12:27:15,021-INFO-Processing url https://www.bioz.com
+2019-07-05 12:32:16,479-INFO-Processing url https://forum.hegnar.no
+2019-07-05 12:36:17,471-INFO-Processing url https://www.mysafetysign.com
+2019-07-05 12:38:00,799-INFO-Processing url https://www.rfs.nsw.gov.au
+2019-07-05 12:40:32,135-INFO-Processing url https://www.navcen.uscg.gov
+2019-07-05 12:42:16,484-INFO-Processing url https://www.sportdiver.com
+2019-07-05 12:43:40,851-INFO-Processing url https://www.avg.com
+2019-07-05 12:44:15,314-INFO-Processing url https://save.org
+2019-07-05 12:44:16,209-INFO-Status code is not 200
+2019-07-05 12:44:16,209-INFO-Processing url https://www.quitalcohol.com
+2019-07-05 12:46:11,769-INFO-Processing url https://www.invivogen.com
+2019-07-05 12:48:10,595-INFO-Processing url https://www.stocksigns.co.uk
+2019-07-05 12:49:20,132-INFO-Processing url https://www.seton.com
+2019-07-05 12:52:44,414-INFO-Processing url https://www.seton.net.au
+2019-07-05 12:52:50,246-INFO-Failed to request from https://www.seton.net.au
+2019-07-05 12:52:50,246-INFO-Processing url https://www.labmanager.com
+2019-07-05 12:52:56,270-INFO-Failed to request from https://www.labmanager.com
+2019-07-05 12:52:56,270-INFO-Processing url https://www.whiteribbon.org.au
+2019-07-05 12:54:58,539-INFO-Processing url https://polarisproject.org
+2019-07-05 12:55:36,307-INFO-Processing url https://www.ntc.gov.au
+2019-07-05 12:56:21,301-INFO-Processing url https://misophonia-research.com
+2019-07-05 12:58:26,095-INFO-Processing url https://www.aldonco.com
+2019-07-05 13:01:15,083-INFO-Processing url https://thebulletin.org
+2019-07-05 13:02:28,904-INFO-Processing url https://www.hko.gov.hk
+2019-07-05 13:03:21,554-INFO-Processing url https://begriffs.com
+2019-07-05 13:05:16,163-INFO-Processing url https://download.asperasoft.com
+2019-07-05 13:05:17,230-INFO-Status code is not 200
+2019-07-05 13:05:17,230-INFO-Processing url https://eosauthority.com
+2019-07-05 13:06:30,650-INFO-Processing url https://pypicloud.readthedocs.io
+2019-07-05 13:08:13,788-INFO-Processing url https://vuldb.com
+2019-07-05 13:10:10,939-INFO-Processing url https://docs.adjust.com
