@@ -8044,3 +8044,404 @@ AttributeError: 'str' object has no attribute 'items'
 2019-04-24 02:54:28,892-INFO-Extracting features from herbpathy.com_2019-01-22_11-25-32.pcap
 2019-04-24 02:54:30,535-INFO-Extracting features from www.brandextract.com_2019-01-22_11-23-35.pcap
 2019-04-24 02:54:32,285-INFO-Extracting features from www.tatapower.com_2019-01-22_11-27-25.pcap
+2019-04-27 18:05:21,342-INFO-Extracting features from howlingpixel.com_2019-01-31_19-41-54_0.pcap
+2019-04-27 18:05:24,025-INFO-Extracting features from www.ejao.org_2019-01-31_19-39-50_0.pcap
+2019-04-27 18:05:26,207-INFO-Extracting features from www.americansignaturefurniture.co_2019-01-31_19-58-36_0.pcap
+2019-04-27 18:05:27,942-INFO-Extracting features from www.crowdcow.co_2019-01-31_19-54-54_0.pcap
+2019-04-27 18:05:29,766-INFO-Extracting features from vet.uga.edu_2019-01-31_19-37-58_0.pcap
+2019-04-27 18:05:31,656-INFO-Extracting features from tedlab.mit.edu_2019-01-31_20-00-31_0.pcap
+2019-04-27 18:05:33,306-INFO-Extracting features from www.cedia.net_2019-01-31_19-55-31_0.pcap
+2019-04-27 18:05:35,175-INFO-Extracting features from www.midamericanenergy.co_2019-01-31_19-44-26_0.pcap
+2019-04-27 18:05:36,752-INFO-Extracting features from sauder.co_2019-01-31_19-58-33_0.pcap
+2019-04-27 18:05:38,357-INFO-Extracting features from dict.eudic.net_2019-01-31_19-54-24_0.pcap
+2019-04-27 18:05:39,975-INFO-Extracting features from www.ijpediatrics.com_2019-01-31_20-03-31_0.pcap
+2019-04-27 18:05:41,513-INFO-Extracting features from www.northerntrust.co_2019-01-31_20-01-10_0.pcap
+2019-04-27 18:05:43,097-INFO-Extracting features from totaliceland.com_2019-01-31_19-43-34_0.pcap
+2019-04-27 18:05:45,107-INFO-Extracting features from www.emka.si_2019-01-31_19-57-51_0.pcap
+2019-04-27 18:05:46,637-INFO-Extracting features from www.ehs.harvard.edu_2019-01-31_19-56-28_0.pcap
+2019-04-27 18:05:48,379-ERROR-Serious error in file www.ehs.harvard.edu_2019-01-31_19-56-28_0.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 41, in search_and_extract
+    tls_features = utils.extract_tslssl_features(os.path.join(root, f), enums, limit=traffic_limit)
+  File "/Users/YiLong/Desktop/SUTD/NUS-Singtel_Research/tls_attack/feature-extraction/utils.py", line 608, in extract_tslssl_features
+    for certificate in certificates:
+TypeError: 'JsonLayer' object is not iterable
+2019-04-27 18:05:48,389-INFO-Extracting features from www.thenerve.net_2019-01-31_20-03-43_0.pcap
+2019-04-27 18:05:50,441-INFO-Extracting features from store.enthought.com_2019-01-31_19-43-46_0.pcap
+2019-04-27 18:05:51,987-INFO-Extracting features from playground.arduino.cc_2019-01-31_19-54-07_0.pcap
+2019-04-27 18:05:53,592-INFO-Extracting features from www.conns.co_2019-01-31_19-41-18_0.pcap
+2019-04-27 18:05:55,121-INFO-Extracting features from npidb.org_2019-01-31_20-02-03_0.pcap
+2019-04-27 18:05:56,663-INFO-Extracting features from www.unitedwifi.co_2019-01-31_19-52-02_0.pcap
+2019-04-27 18:05:58,286-INFO-Extracting features from www.sfsymphony.org_2019-01-31_20-03-19_0.pcap
+2019-04-27 18:06:00,300-INFO-Extracting features from www.ywam.org_2019-01-31_20-05-40_0.pcap
+2019-04-27 18:06:02,014-INFO-Extracting features from www.dotcom-tools.com_2019-01-31_19-59-32_0.pcap
+2019-04-27 18:06:03,671-INFO-Extracting features from tvi24.iol.pt_2019-01-31_19-55-58_0.pcap
+2019-04-27 18:06:05,689-INFO-Extracting features from www.jossandmain.co_2019-01-31_19-58-38_0.pcap
+2019-04-27 18:06:07,164-INFO-Extracting features from www.teamwendy.com_2019-01-31_19-40-39_0.pcap
+2019-04-27 18:06:08,802-INFO-Extracting features from soar.wichita.edu_2019-01-31_20-05-19_0.pcap
+2019-04-27 18:06:10,496-INFO-Extracting features from faculty.missouri.edu_2019-01-31_19-49-02_0.pcap
+2019-04-27 18:06:12,001-INFO-Extracting features from www.halfords.ie_2019-01-31_19-44-51_0.pcap
+2019-04-27 18:06:14,170-INFO-Extracting features from www.speakeasy.net_2019-01-31_19-59-38_0.pcap
+2019-04-27 18:06:15,643-INFO-Extracting features from agents.sagesure.co_2019-01-31_19-57-56_0.pcap
+2019-04-27 18:06:17,372-INFO-Extracting features from sensing.konicaminolta.us_2019-01-31_19-47-59_0.pcap
+2019-04-27 18:06:18,999-INFO-Extracting features from www.ffri.hr_2019-01-31_19-46-54_0.pcap
+2019-04-27 18:06:20,449-INFO-Extracting features from parco.jp_2019-01-31_19-55-13_0.pcap
+2019-04-27 18:06:22,113-INFO-Extracting features from www.homelight.co_2019-01-31_19-58-09_0.pcap
+2019-04-27 18:06:23,596-INFO-Extracting features from cereals.ahdb.org.uk_2019-01-31_19-44-31_0.pcap
+2019-04-27 18:06:25,244-INFO-Extracting features from www.riogrande.coop_2019-01-31_19-57-28_0.pcap
+2019-04-27 18:06:27,173-INFO-Extracting features from easychair.org_2019-01-31_19-48-57_0.pcap
+2019-04-27 18:06:28,849-INFO-Extracting features from syneron-candela.com_2019-01-31_20-06-44_0.pcap
+2019-04-27 18:06:30,474-INFO-Extracting features from www.aa.com.tr_2019-01-31_20-01-40_0.pcap
+2019-04-27 18:06:32,950-INFO-Extracting features from www.oilfieldtechnology.com_2019-01-31_20-01-30_0.pcap
+2019-04-27 18:06:34,809-INFO-Extracting features from www.deccanrummy.co_2019-01-31_19-39-41_0.pcap
+2019-04-27 18:06:36,379-INFO-Extracting features from www.igi-global.com_2019-01-31_20-04-28_0.pcap
+2019-04-27 18:06:38,649-INFO-Extracting features from www.aacr.org_2019-01-31_20-00-53_0.pcap
+2019-04-27 18:06:40,291-INFO-Extracting features from www.feelif.com_2019-01-31_19-54-12_0.pcap
+2019-04-27 18:06:42,526-INFO-Extracting features from ionary.org_2019-01-31_19-37-34_0.pcap
+2019-04-27 18:06:44,038-INFO-Extracting features from go.spcollege.edu_2019-01-31_19-48-24_0.pcap
+2019-04-27 18:06:45,536-INFO-Extracting features from bio-protocol.org_2019-01-31_19-56-26_0.pcap
+2019-04-27 18:06:47,855-INFO-Extracting features from robotask.com_2019-01-31_19-46-52_0.pcap
+2019-04-27 18:06:49,683-INFO-Extracting features from www.wolf-alkmaar.nl_2019-01-31_19-54-36_0.pcap
+2019-04-27 18:06:51,493-WARNING-Unknown client key exchange algo in ClientKeyExchange for file ../../dataset/sample/outsslv3/poodle/1/www.wolf-alkmaar.nl_2019-01-31_19-54-36_0.pcap
+2019-04-27 18:06:51,656-INFO-Extracting features from bgp.he.net_2019-01-31_20-01-14_0.pcap
+2019-04-27 18:06:53,185-INFO-Extracting features from www.florencebank.co_2019-01-31_20-06-11_0.pcap
+2019-04-27 18:06:54,692-INFO-Extracting features from press.uchicago.edu_2019-01-31_19-43-55_0.pcap
+2019-04-27 18:06:56,245-INFO-Extracting features from www.adventures-abroad.com_2019-01-31_20-04-53_0.pcap
+2019-04-27 18:06:57,975-ERROR-Serious error in file www.adventures-abroad.com_2019-01-31_20-04-53_0.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 41, in search_and_extract
+    tls_features = utils.extract_tslssl_features(os.path.join(root, f), enums, limit=traffic_limit)
+  File "/Users/YiLong/Desktop/SUTD/NUS-Singtel_Research/tls_attack/feature-extraction/utils.py", line 619, in extract_tslssl_features
+    for k,v in certificate.items():
+AttributeError: 'str' object has no attribute 'items'
+2019-04-27 18:06:57,976-INFO-Extracting features from docs.pulsesecure.net_2019-01-31_19-53-14_0.pcap
+2019-04-27 18:06:59,545-INFO-Extracting features from www.acro.police.uk_2019-01-31_20-00-17_0.pcap
+2019-04-27 18:07:01,266-INFO-Extracting features from eta.gov.lk_2019-01-31_19-39-09_0.pcap
+2019-04-27 18:07:02,927-ERROR-Serious error in file eta.gov.lk_2019-01-31_19-39-09_0.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 41, in search_and_extract
+    tls_features = utils.extract_tslssl_features(os.path.join(root, f), enums, limit=traffic_limit)
+  File "/Users/YiLong/Desktop/SUTD/NUS-Singtel_Research/tls_attack/feature-extraction/utils.py", line 619, in extract_tslssl_features
+    for k,v in certificate.items():
+AttributeError: 'str' object has no attribute 'items'
+2019-04-27 18:07:02,927-INFO-Extracting features from www.crucial.co_2019-01-31_19-58-54_0.pcap
+2019-04-27 18:07:04,573-INFO-Extracting features from www.gelest.com_2019-01-31_19-49-45_0.pcap
+2019-04-27 18:07:06,530-INFO-Extracting features from www.globalsources.co_2019-01-31_19-48-40_0.pcap
+2019-04-27 18:07:08,349-INFO-Extracting features from xoops.ec-cube.net_2019-01-31_19-58-49_0.pcap
+2019-04-27 18:07:10,252-INFO-Extracting features from www.pennymacusa.co_2019-01-31_20-06-30_0.pcap
+2019-04-27 18:07:11,773-INFO-Extracting features from www.hwalibrary.com_2019-01-31_19-40-12_0.pcap
+2019-04-27 18:07:13,413-INFO-Extracting features from www.bicyclebluebook.com_2019-01-31_19-43-54_0.pcap
+2019-04-27 18:07:15,153-INFO-Extracting features from documentation.centreon.com_2019-01-31_20-00-29_0.pcap
+2019-04-27 18:07:16,809-INFO-Extracting features from web-app.usc.edu_2019-01-31_19-46-19_0.pcap
+2019-04-27 18:07:18,302-INFO-Extracting features from revistas.uchile.cl_2019-01-31_19-59-48_0.pcap
+2019-04-27 18:07:20,863-INFO-Extracting features from sol.du.ac.in_2019-01-31_19-41-51_0.pcap
+2019-04-27 18:07:23,954-INFO-Extracting features from www.over-blog.com_2019-01-31_19-57-36_0.pcap
+2019-04-27 18:07:26,368-INFO-Extracting features from www.traditioninaction.org_2019-01-31_20-05-12_0.pcap
+2019-04-27 18:07:28,290-INFO-Extracting features from pgjonline.com_2019-01-31_19-56-32_0.pcap
+2019-04-27 18:07:30,163-INFO-Extracting features from orlandofringe.showare.co_2019-01-31_20-05-04_0.pcap
+2019-04-27 18:07:31,726-INFO-Extracting features from wildpitch-baseball.club_2019-01-31_20-06-41_0.pcap
+2019-04-27 18:07:33,547-ERROR-Serious error in file wildpitch-baseball.club_2019-01-31_20-06-41_0.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 41, in search_and_extract
+    tls_features = utils.extract_tslssl_features(os.path.join(root, f), enums, limit=traffic_limit)
+  File "/Users/YiLong/Desktop/SUTD/NUS-Singtel_Research/tls_attack/feature-extraction/utils.py", line 608, in extract_tslssl_features
+    for certificate in certificates:
+TypeError: 'JsonLayer' object is not iterable
+2019-04-27 18:07:33,548-INFO-Extracting features from www.spendwithpennies.co_2019-01-31_20-06-34_0.pcap
+2019-04-27 18:07:35,354-INFO-Extracting features from www.saddahaq.com_2019-01-31_19-48-50_0.pcap
+2019-04-27 18:07:37,199-INFO-Extracting features from www.discounttire.co_2019-01-31_19-56-00_0.pcap
+2019-04-27 18:07:38,781-INFO-Extracting features from openpsychometrics.org_2019-01-31_19-54-37_0.pcap
+2019-04-27 18:07:40,398-ERROR-Serious error in file openpsychometrics.org_2019-01-31_19-54-37_0.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 41, in search_and_extract
+    tls_features = utils.extract_tslssl_features(os.path.join(root, f), enums, limit=traffic_limit)
+  File "/Users/YiLong/Desktop/SUTD/NUS-Singtel_Research/tls_attack/feature-extraction/utils.py", line 608, in extract_tslssl_features
+    for certificate in certificates:
+TypeError: 'JsonLayer' object is not iterable
+2019-04-27 18:07:40,399-INFO-Extracting features from www.rbg.ca_2019-01-31_19-50-14_0.pcap
+2019-04-27 18:07:42,056-INFO-Extracting features from crn.lhh.co_2019-01-31_19-57-27_0.pcap
+2019-04-27 18:07:43,731-INFO-Extracting features from www.boersen-zeitung.de_2019-01-31_19-40-08_0.pcap
+2019-04-27 18:07:45,443-INFO-Extracting features from www.vermillionbank.co_2019-01-31_19-46-01_0.pcap
+2019-04-27 18:07:47,303-INFO-Extracting features from www.rvca.com_2019-01-31_19-39-54_0.pcap
+2019-04-27 18:07:49,599-INFO-Extracting features from www.mnstate.edu_2019-01-31_19-40-46_0.pcap
+2019-04-27 18:07:51,918-INFO-Extracting features from www.ponant.com_2019-01-31_19-47-56_0.pcap
+2019-04-27 18:07:54,193-INFO-Extracting features from loyaltylobby.co_2019-01-31_19-55-20_0.pcap
+2019-04-27 18:07:55,981-INFO-Extracting features from fedorani.ni.ac.rs_2019-01-31_19-59-54_0.pcap
+2019-04-27 18:07:58,175-INFO-Extracting features from recon.cx_2019-01-31_19-48-35_0.pcap
+2019-04-27 18:08:00,179-INFO-Extracting features from global.hurtigruten.co_2019-01-31_19-48-04_0.pcap
+2019-04-27 18:08:01,772-INFO-Extracting features from oursocialtimes.com_2019-01-31_19-58-57_0.pcap
+2019-04-27 18:08:03,889-ERROR-Serious error in file oursocialtimes.com_2019-01-31_19-58-57_0.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 41, in search_and_extract
+    tls_features = utils.extract_tslssl_features(os.path.join(root, f), enums, limit=traffic_limit)
+  File "/Users/YiLong/Desktop/SUTD/NUS-Singtel_Research/tls_attack/feature-extraction/utils.py", line 608, in extract_tslssl_features
+    for certificate in certificates:
+TypeError: 'JsonLayer' object is not iterable
+2019-04-27 18:08:03,889-INFO-Extracting features from www.halfords.com_2019-01-31_19-44-54_0.pcap
+2019-04-27 18:08:06,189-INFO-Extracting features from www.marwadionline.com_2019-01-31_19-50-03_0.pcap
+2019-04-27 18:08:08,103-INFO-Extracting features from www.tzell.co_2019-01-31_19-48-13_0.pcap
+2019-04-27 18:08:09,576-INFO-Extracting features from www.nobodesign.se_2019-01-31_19-48-26_0.pcap
+2019-04-27 18:08:11,923-INFO-Extracting features from www.oklahomanaturalgas.co_2019-01-31_19-44-30_0.pcap
+2019-04-27 18:08:13,948-INFO-Extracting features from www.tecnicasports.com_2019-01-31_19-55-05_0.pcap
+2019-04-27 18:08:15,990-INFO-Extracting features from www.stalbans.gov.uk_2019-01-31_20-06-21_0.pcap
+2019-04-27 18:08:18,044-INFO-Extracting features from www.anc1912.org.za_2019-01-31_19-54-03_0.pcap
+2019-04-27 18:08:18,718-WARNING-Found SSL packet with unknown SSL type 8787 in file ../../dataset/sample/outsslv3/poodle/1/www.anc1912.org.za_2019-01-31_19-54-03_0.pcap
+2019-04-27 18:08:20,352-INFO-Extracting features from litnet.co_2019-01-31_20-01-13_0.pcap
+2019-04-27 18:08:22,018-INFO-Extracting features from www.epa.ie_2019-01-31_19-40-53_0.pcap
+2019-04-27 18:08:23,849-INFO-Extracting features from gunk.com_2019-01-31_19-44-50_0.pcap
+2019-04-27 18:08:25,917-INFO-Extracting features from www.masterbond.com_2019-01-31_19-44-47_0.pcap
+2019-04-27 18:08:27,891-INFO-Extracting features from mywiki.wooledge.org_2019-01-31_20-03-37_0.pcap
+2019-04-27 18:08:29,485-INFO-Extracting features from www.tetongravity.com_2019-01-31_19-45-21_0.pcap
+2019-04-27 18:08:31,021-INFO-Extracting features from file-scavenger.en.softonic.co_2019-01-31_19-46-21_0.pcap
+2019-04-27 18:08:32,513-INFO-Extracting features from tcil.com_2019-01-31_20-01-47_0.pcap
+2019-04-27 18:08:33,997-INFO-Extracting features from www.sum.dk_2019-01-31_20-02-01_0.pcap
+2019-04-27 18:08:35,523-INFO-Extracting features from shop.franklinplanner.co_2019-01-31_19-57-18_0.pcap
+2019-04-27 18:08:37,278-INFO-Extracting features from www.leberry.fr_2019-01-31_19-58-43_0.pcap
+2019-04-27 18:08:39,410-INFO-Extracting features from repozitorij.uni-lj.si_2019-01-31_19-54-08_0.pcap
+2019-04-27 18:08:41,083-INFO-Extracting features from hoi4.paradoxwikis.com_2019-01-31_19-40-50_0.pcap
+2019-04-27 18:08:42,599-ERROR-Serious error in file hoi4.paradoxwikis.com_2019-01-31_19-40-50_0.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 41, in search_and_extract
+    tls_features = utils.extract_tslssl_features(os.path.join(root, f), enums, limit=traffic_limit)
+  File "/Users/YiLong/Desktop/SUTD/NUS-Singtel_Research/tls_attack/feature-extraction/utils.py", line 619, in extract_tslssl_features
+    for k,v in certificate.items():
+AttributeError: 'str' object has no attribute 'items'
+2019-04-27 18:08:42,600-INFO-Extracting features from ybca.org_2019-01-31_19-41-31_0.pcap
+2019-04-27 18:08:44,526-INFO-Extracting features from k9ballistics.co_2019-01-31_19-40-41_0.pcap
+2019-04-27 18:08:46,123-INFO-Extracting features from agora-parl.org_2019-01-31_19-40-32_0.pcap
+2019-04-27 18:08:47,854-INFO-Extracting features from www.museumfuernaturkunde.berlin_2019-01-31_20-04-17_0.pcap
+2019-04-27 18:08:49,645-INFO-Extracting features from www.kingston.vic.gov.au_2019-01-31_20-06-19_0.pcap
+2019-04-27 18:08:51,181-INFO-Extracting features from www.naesb.org_2019-01-31_19-56-36_0.pcap
+2019-04-27 18:08:52,768-INFO-Extracting features from www.dvdfab.cn_2019-01-31_19-39-09_0.pcap
+2019-04-27 18:08:54,601-INFO-Extracting features from www.vp.com_2019-01-31_19-42-05_0.pcap
+2019-04-27 18:08:56,282-INFO-Extracting features from scars.co_2019-01-31_20-06-43_0.pcap
+2019-04-27 18:08:57,863-INFO-Extracting features from www.meetingsint.com_2019-01-31_20-06-07_0.pcap
+2019-04-27 18:09:00,282-INFO-Extracting features from bestsellerexperiment.com_2019-01-31_19-40-15_0.pcap
+2019-04-27 18:09:01,117-WARNING-Found SSL packet with unknown SSL type 12471 in file ../../dataset/sample/outsslv3/poodle/1/bestsellerexperiment.com_2019-01-31_19-40-15_0.pcap
+2019-04-27 18:09:01,216-WARNING-Found SSL packet with unknown SSL type 9652 in file ../../dataset/sample/outsslv3/poodle/1/bestsellerexperiment.com_2019-01-31_19-40-15_0.pcap
+2019-04-27 18:09:02,404-INFO-Extracting features from www.orlandohealth.co_2019-01-31_20-05-01_0.pcap
+2019-04-27 18:09:03,951-INFO-Extracting features from www.songfacts.com_2019-01-31_19-53-49_0.pcap
+2019-04-27 18:09:06,274-INFO-Extracting features from www.curbellplastics.com_2019-01-31_19-43-59_0.pcap
+2019-04-27 18:09:08,215-INFO-Extracting features from ebook.com_2019-01-31_19-37-33_0.pcap
+2019-04-27 18:09:09,933-ERROR-Serious error in file ebook.com_2019-01-31_19-37-33_0.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 41, in search_and_extract
+    tls_features = utils.extract_tslssl_features(os.path.join(root, f), enums, limit=traffic_limit)
+  File "/Users/YiLong/Desktop/SUTD/NUS-Singtel_Research/tls_attack/feature-extraction/utils.py", line 619, in extract_tslssl_features
+    for k,v in certificate.items():
+AttributeError: 'str' object has no attribute 'items'
+2019-04-27 18:09:09,934-INFO-Extracting features from www.thegearpage.net_2019-01-31_19-45-53_0.pcap
+2019-04-27 18:09:11,970-INFO-Extracting features from www.biodiversidad.gob.mx_2019-01-31_19-59-21_0.pcap
+2019-04-27 18:09:13,892-ERROR-Serious error in file www.biodiversidad.gob.mx_2019-01-31_19-59-21_0.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 41, in search_and_extract
+    tls_features = utils.extract_tslssl_features(os.path.join(root, f), enums, limit=traffic_limit)
+  File "/Users/YiLong/Desktop/SUTD/NUS-Singtel_Research/tls_attack/feature-extraction/utils.py", line 619, in extract_tslssl_features
+    for k,v in certificate.items():
+AttributeError: 'str' object has no attribute 'items'
+2019-04-27 18:09:13,892-INFO-Extracting features from www.awaytravel.co_2019-01-31_19-51-32_0.pcap
+2019-04-27 18:09:15,833-INFO-Extracting features from us.mentos.com_2019-01-31_19-49-37_0.pcap
+2019-04-27 18:09:18,040-INFO-Extracting features from www.mitacs.ca_2019-01-31_20-00-52_0.pcap
+2019-04-27 18:09:19,798-INFO-Extracting features from www.aerotek.co_2019-01-31_19-58-12_0.pcap
+2019-04-27 18:09:21,501-INFO-Extracting features from www.aphl.org_2019-01-31_19-39-52_0.pcap
+2019-04-27 18:09:23,311-INFO-Extracting features from www.fusfoo.com_2019-01-31_20-03-34_0.pcap
+2019-04-27 18:09:25,305-ERROR-Serious error in file www.fusfoo.com_2019-01-31_20-03-34_0.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 41, in search_and_extract
+    tls_features = utils.extract_tslssl_features(os.path.join(root, f), enums, limit=traffic_limit)
+  File "/Users/YiLong/Desktop/SUTD/NUS-Singtel_Research/tls_attack/feature-extraction/utils.py", line 608, in extract_tslssl_features
+    for certificate in certificates:
+TypeError: 'JsonLayer' object is not iterable
+2019-04-27 18:09:25,306-INFO-Extracting features from www.bookrix.de_2019-01-31_20-00-23_0.pcap
+2019-04-27 18:09:27,339-INFO-Extracting features from www.duchyoflancaster.co.uk_2019-01-31_20-06-36_0.pcap
+2019-04-27 18:09:29,114-INFO-Extracting features from www.rrc.state.tx.us_2019-01-31_19-56-34_0.pcap
+2019-04-27 18:09:30,928-INFO-Extracting features from www.viata-libera.ro_2019-01-31_19-59-28_0.pcap
+2019-04-27 18:09:31,775-WARNING-Found SSL packet with unknown SSL type 32007 in file ../../dataset/sample/outsslv3/poodle/1/www.viata-libera.ro_2019-01-31_19-59-28_0.pcap
+2019-04-27 18:09:31,791-WARNING-Found SSL packet with unknown SSL type 4647 in file ../../dataset/sample/outsslv3/poodle/1/www.viata-libera.ro_2019-01-31_19-59-28_0.pcap
+2019-04-27 18:09:33,114-ERROR-Serious error in file www.viata-libera.ro_2019-01-31_19-59-28_0.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 41, in search_and_extract
+    tls_features = utils.extract_tslssl_features(os.path.join(root, f), enums, limit=traffic_limit)
+  File "/Users/YiLong/Desktop/SUTD/NUS-Singtel_Research/tls_attack/feature-extraction/utils.py", line 608, in extract_tslssl_features
+    for certificate in certificates:
+TypeError: 'JsonLayer' object is not iterable
+2019-04-27 18:09:33,114-INFO-Extracting features from www.countryfinancial.co_2019-01-31_19-58-11_0.pcap
+2019-04-27 18:09:34,971-INFO-Extracting features from wasnap-ed.org_2019-01-31_19-57-41_0.pcap
+2019-04-27 18:09:35,858-WARNING-Found SSL packet with unknown SSL type 29758 in file ../../dataset/sample/outsslv3/poodle/1/wasnap-ed.org_2019-01-31_19-57-41_0.pcap
+2019-04-27 18:09:37,415-ERROR-Serious error in file wasnap-ed.org_2019-01-31_19-57-41_0.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 41, in search_and_extract
+    tls_features = utils.extract_tslssl_features(os.path.join(root, f), enums, limit=traffic_limit)
+  File "/Users/YiLong/Desktop/SUTD/NUS-Singtel_Research/tls_attack/feature-extraction/utils.py", line 608, in extract_tslssl_features
+    for certificate in certificates:
+TypeError: 'JsonLayer' object is not iterable
+2019-04-27 18:09:37,416-INFO-Extracting features from www.mikerindersblog.org_2019-01-31_19-43-25_0.pcap
+2019-04-27 18:09:39,630-INFO-Extracting features from www.e-jsm.org_2019-01-31_19-41-28_0.pcap
+2019-04-27 18:09:41,763-INFO-Extracting features from urologyweek.org_2019-01-31_19-49-42_0.pcap
+2019-04-27 18:09:43,847-INFO-Extracting features from www.nifootballleague.com_2019-01-31_20-00-42_0.pcap
+2019-04-27 18:09:44,838-WARNING-Found SSL packet with unknown SSL type 51400 in file ../../dataset/sample/outsslv3/poodle/1/www.nifootballleague.com_2019-01-31_20-00-42_0.pcap
+2019-04-27 18:09:46,604-ERROR-Serious error in file www.nifootballleague.com_2019-01-31_20-00-42_0.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 41, in search_and_extract
+    tls_features = utils.extract_tslssl_features(os.path.join(root, f), enums, limit=traffic_limit)
+  File "/Users/YiLong/Desktop/SUTD/NUS-Singtel_Research/tls_attack/feature-extraction/utils.py", line 608, in extract_tslssl_features
+    for certificate in certificates:
+TypeError: 'JsonLayer' object is not iterable
+2019-04-27 18:09:46,605-INFO-Extracting features from hattrbridge.co_2019-01-31_19-48-17_0.pcap
+2019-04-27 18:09:48,476-INFO-Extracting features from www.roadmaptozero.com_2019-01-31_19-44-54_0.pcap
+2019-04-27 18:09:50,215-ERROR-Serious error in file www.roadmaptozero.com_2019-01-31_19-44-54_0.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 41, in search_and_extract
+    tls_features = utils.extract_tslssl_features(os.path.join(root, f), enums, limit=traffic_limit)
+  File "/Users/YiLong/Desktop/SUTD/NUS-Singtel_Research/tls_attack/feature-extraction/utils.py", line 608, in extract_tslssl_features
+    for certificate in certificates:
+TypeError: 'JsonLayer' object is not iterable
+2019-04-27 18:09:50,216-INFO-Extracting features from haveibeenpwned.co_2019-01-31_20-01-11_0.pcap
+2019-04-27 18:09:51,981-INFO-Extracting features from www.cira.it_2019-01-31_19-44-22_0.pcap
+2019-04-27 18:09:53,558-ERROR-Serious error in file www.cira.it_2019-01-31_19-44-22_0.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 41, in search_and_extract
+    tls_features = utils.extract_tslssl_features(os.path.join(root, f), enums, limit=traffic_limit)
+  File "/Users/YiLong/Desktop/SUTD/NUS-Singtel_Research/tls_attack/feature-extraction/utils.py", line 608, in extract_tslssl_features
+    for certificate in certificates:
+TypeError: 'JsonLayer' object is not iterable
+2019-04-27 18:09:53,559-INFO-Extracting features from fpnotebook.com_2019-01-31_19-48-54_0.pcap
+2019-04-27 18:09:55,320-INFO-Extracting features from netforum.avectra.com_2019-01-31_19-50-04_0.pcap
+2019-04-27 18:09:56,829-INFO-Extracting features from www.nhlottery.co_2019-01-31_19-50-19_0.pcap
+2019-04-27 18:09:58,710-INFO-Extracting features from www.freemanhealth.co_2019-01-31_19-42-00_0.pcap
+2019-04-27 18:10:00,312-INFO-Extracting features from www.chusj.org_2019-01-31_19-42-51_0.pcap
+2019-04-27 18:10:02,469-INFO-Extracting features from www.touriocity.com_2019-01-31_19-59-49_0.pcap
+2019-04-27 18:10:04,045-INFO-Extracting features from www.medievalcollectibles.co_2019-01-31_19-45-04_0.pcap
+2019-04-27 18:10:05,667-INFO-Extracting features from www.humanbenchmark.com_2019-01-31_19-48-22_0.pcap
+2019-04-27 18:10:07,752-INFO-Extracting features from www.citywest.ca_2019-01-31_19-43-14_0.pcap
+2019-04-27 18:10:10,010-INFO-Extracting features from b2b.orderingmemory.com_2019-01-31_19-58-55_0.pcap
+2019-04-27 18:10:11,852-INFO-Extracting features from www.universalorlando.co_2019-01-31_20-04-59_0.pcap
+2019-04-27 18:10:13,509-INFO-Extracting features from www.thumbtack.co_2019-01-31_19-41-04_0.pcap
+2019-04-27 18:10:15,327-INFO-Extracting features from convergencia.uaemex.mx_2019-01-31_19-47-10_0.pcap
+2019-04-27 18:10:17,728-WARNING-Unknown client key exchange algo in ClientKeyExchange for file ../../dataset/sample/outsslv3/poodle/1/convergencia.uaemex.mx_2019-01-31_19-47-10_0.pcap
+2019-04-27 18:10:17,836-INFO-Extracting features from integralcare.e3applicants.com_2019-01-31_19-37-37_0.pcap
+2019-04-27 18:10:19,562-INFO-Extracting features from www.chemours.com_2019-01-31_19-39-11_0.pcap
+2019-04-27 18:10:21,548-INFO-Extracting features from mihealthyschools.org_2019-01-31_19-57-38_0.pcap
+2019-04-27 18:10:23,116-INFO-Extracting features from ecastats.uneca.org_2019-01-31_20-00-26_0.pcap
+2019-04-27 18:10:24,641-INFO-Extracting features from omekalib.bard.edu_2019-01-31_19-47-42_0.pcap
+2019-04-27 18:10:26,218-INFO-Extracting features from www.asil.org_2019-01-31_20-00-48_0.pcap
+2019-04-27 18:10:28,138-INFO-Extracting features from marketrealist.co_2019-01-31_19-58-47_0.pcap
+2019-04-27 18:10:29,691-INFO-Extracting features from awoko.org_2019-01-31_19-53-59_0.pcap
+2019-04-27 18:10:31,302-INFO-Extracting features from ionary.org_2019-01-31_19-37-32_0.pcap
+2019-04-27 18:10:32,885-INFO-Extracting features from www.accjournal.org_2019-01-31_19-44-25_0.pcap
+2019-04-27 18:10:35,147-INFO-Extracting features from clinate.com_2019-01-31_19-49-42_0.pcap
+2019-04-27 18:10:36,847-INFO-Extracting features from atn.ua_2019-01-31_20-00-45_0.pcap
+2019-04-27 18:10:38,830-INFO-Extracting features from virtual-piano-1.en.softonic.co_2019-01-31_19-52-06_0.pcap
+2019-04-27 18:10:40,437-INFO-Extracting features from www2.stat.duke.edu_2019-01-31_19-51-55_0.pcap
+2019-04-27 18:10:42,170-ERROR-Serious error in file www2.stat.duke.edu_2019-01-31_19-51-55_0.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 41, in search_and_extract
+    tls_features = utils.extract_tslssl_features(os.path.join(root, f), enums, limit=traffic_limit)
+  File "/Users/YiLong/Desktop/SUTD/NUS-Singtel_Research/tls_attack/feature-extraction/utils.py", line 619, in extract_tslssl_features
+    for k,v in certificate.items():
+AttributeError: 'str' object has no attribute 'items'
+2019-04-27 18:10:42,171-INFO-Extracting features from nmpb.nic.in_2019-01-31_19-45-47_0.pcap
+2019-04-27 18:10:44,170-INFO-Extracting features from consumerhelpline.gov.in_2019-01-31_19-41-52_0.pcap
+2019-04-27 18:10:45,987-ERROR-Serious error in file consumerhelpline.gov.in_2019-01-31_19-41-52_0.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 41, in search_and_extract
+    tls_features = utils.extract_tslssl_features(os.path.join(root, f), enums, limit=traffic_limit)
+  File "/Users/YiLong/Desktop/SUTD/NUS-Singtel_Research/tls_attack/feature-extraction/utils.py", line 608, in extract_tslssl_features
+    for certificate in certificates:
+TypeError: 'JsonLayer' object is not iterable
+2019-04-27 18:10:45,988-INFO-Extracting features from accessories.harley-davidson.ca_2019-01-31_20-06-02_0.pcap
+2019-04-27 18:10:48,188-INFO-Extracting features from www.clearcareonline.co_2019-01-31_19-42-36_0.pcap
+2019-04-27 18:10:49,897-INFO-Extracting features from www.kobelcocm-global.com_2019-01-31_20-05-44_0.pcap
+2019-04-27 18:10:51,796-INFO-Extracting features from www.surlyhorns.com_2019-01-31_19-50-56_0.pcap
+2019-04-27 18:10:53,577-INFO-Extracting features from www.worldtimeserver.com_2019-01-31_19-46-12_0.pcap
+2019-04-27 18:10:55,560-INFO-Extracting features from www.nseindia.co_2019-01-31_20-04-43_0.pcap
+2019-04-27 18:10:57,339-INFO-Extracting features from www.brandextract.com_2019-01-31_19-37-55_0.pcap
+2019-04-27 18:10:59,951-INFO-Extracting features from www.stanleysteemer.co_2019-01-31_19-40-24_0.pcap
+2019-04-27 18:11:02,022-INFO-Extracting features from www.confirmtkt.com_2019-01-31_20-00-56_0.pcap
+2019-04-27 18:11:04,360-INFO-Extracting features from www.mathnasium.com_2019-01-31_19-54-40_0.pcap
+2019-04-27 18:11:06,569-INFO-Extracting features from www.thebostoncalendar.com_2019-01-31_19-46-48_0.pcap
+2019-04-27 18:11:09,070-INFO-Extracting features from draxe.co_2019-01-31_19-41-58_0.pcap
+2019-04-27 18:11:10,705-INFO-Extracting features from www.posta.si_2019-01-31_19-54-17_0.pcap
+2019-04-27 18:11:12,332-INFO-Extracting features from www.sfbar.org_2019-01-31_19-39-59_0.pcap
+2019-04-27 18:11:14,257-INFO-Extracting features from www.sedis.com_2019-01-31_20-01-42_0.pcap
+2019-04-27 18:11:16,743-ERROR-Serious error in file www.sedis.com_2019-01-31_20-01-42_0.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 41, in search_and_extract
+    tls_features = utils.extract_tslssl_features(os.path.join(root, f), enums, limit=traffic_limit)
+  File "/Users/YiLong/Desktop/SUTD/NUS-Singtel_Research/tls_attack/feature-extraction/utils.py", line 619, in extract_tslssl_features
+    for k,v in certificate.items():
+AttributeError: 'str' object has no attribute 'items'
+2019-04-27 18:11:16,743-INFO-Extracting features from www.smgov.net_2019-01-31_19-50-25_0.pcap
+2019-04-27 18:11:19,188-INFO-Extracting features from www.fathomevents.co_2019-01-31_19-51-30_0.pcap
+2019-04-27 18:11:20,712-INFO-Extracting features from www.tdh.ch_2019-01-31_19-42-46_0.pcap
+2019-04-27 18:11:22,201-INFO-Extracting features from www.wandoujia.com_2019-01-31_19-57-25_0.pcap
+2019-04-27 18:11:24,471-INFO-Extracting features from photius.com_2019-01-31_19-45-17_0.pcap
+2019-04-27 18:11:26,813-INFO-Extracting features from www.tosoheurope.com_2019-01-31_19-57-49_0.pcap
+2019-04-27 18:11:29,278-INFO-Extracting features from www.wasteconnections.co_2019-01-31_20-06-18_0.pcap
+2019-04-27 18:11:31,234-INFO-Extracting features from www.mahanews.gov.in_2019-01-31_19-51-51_0.pcap
+2019-04-27 18:11:32,930-INFO-Extracting features from www.chairish.co_2019-01-31_19-56-52_0.pcap
+2019-04-27 18:11:34,586-INFO-Extracting features from hiphopdx.co_2019-01-31_20-03-30_0.pcap
+2019-04-27 18:11:36,062-INFO-Extracting features from www.jkns.or.kr_2019-01-31_20-06-47_0.pcap
+2019-04-27 18:11:38,116-INFO-Extracting features from brewpublic.com_2019-01-31_19-41-07_0.pcap
+2019-04-27 18:11:39,814-INFO-Extracting features from www.osehra.org_2019-01-31_19-40-33_0.pcap
+2019-04-27 18:11:41,437-INFO-Extracting features from www.koncertomania.pl_2019-01-31_19-55-38_0.pcap
+2019-04-27 18:11:43,239-INFO-Extracting features from www.misaves.co_2019-01-31_19-57-53_0.pcap
+2019-04-27 18:11:44,908-INFO-Extracting features from www.jmisst.org_2019-01-31_19-54-57_0.pcap
+2019-04-27 18:11:47,277-INFO-Extracting features from www1.agric.gov.ab.ca_2019-01-31_20-05-28_0.pcap
+2019-04-27 18:11:48,996-INFO-Extracting features from www.millsandboon.co.uk_2019-01-31_19-55-02_0.pcap
+2019-04-27 18:11:51,085-INFO-Extracting features from www.dchsystem.co_2019-01-31_20-02-12_0.pcap
+2019-04-27 18:11:52,808-INFO-Extracting features from www.judici.co_2019-01-31_19-56-15_0.pcap
+2019-04-27 18:11:54,845-INFO-Extracting features from dailyverses.net_2019-01-31_19-55-07_0.pcap
+2019-04-27 18:11:56,923-INFO-Extracting features from www.bmocm.co_2019-01-31_20-05-55_0.pcap
+2019-04-27 18:11:58,688-INFO-Extracting features from www.mcmaster.co_2019-01-31_19-53-45_0.pcap
+2019-04-27 18:12:00,441-INFO-Extracting features from www.speechink.com_2019-01-31_19-56-17_0.pcap
+2019-04-27 18:12:01,979-INFO-Extracting features from www.prodigygame.co_2019-01-31_19-59-09_0.pcap
+2019-04-27 18:12:03,461-INFO-Extracting features from conservancy.umn.edu_2019-01-31_19-44-16_0.pcap
+2019-04-27 18:12:05,122-INFO-Extracting features from www.milwaukeetool.co_2019-01-31_19-54-56_0.pcap
+2019-04-27 18:12:06,610-INFO-Extracting features from www.consultingroom.com_2019-01-31_20-01-54_0.pcap
+2019-04-27 18:12:08,223-INFO-Extracting features from www.viber.co_2019-01-31_19-47-46_0.pcap
+2019-04-27 18:12:09,737-INFO-Extracting features from www.usccr.gov_2019-01-31_19-46-06_0.pcap
+2019-04-27 18:12:11,296-INFO-Extracting features from www.pedroamador.com_2019-01-31_19-40-26_0.pcap
+2019-04-27 18:12:13,200-INFO-Extracting features from www.marijuanabreak.co_2019-01-31_20-00-37_0.pcap
+2019-04-27 18:12:14,680-INFO-Extracting features from support.bioconductor.org_2019-01-31_19-58-52_0.pcap
+2019-04-27 18:12:16,860-INFO-Extracting features from sawmillcreek.org_2019-01-31_20-00-35_0.pcap
+2019-04-27 18:12:18,444-WARNING-Unknown client key exchange algo in ClientKeyExchange for file ../../dataset/sample/outsslv3/poodle/1/sawmillcreek.org_2019-01-31_20-00-35_0.pcap
+2019-04-27 18:12:18,467-INFO-Extracting features from www.rskdatabasen.se_2019-01-31_20-00-07_0.pcap
+2019-04-27 18:12:20,128-INFO-Extracting features from www.comicartfans.com_2019-01-31_20-05-30_0.pcap
+2019-04-27 18:12:21,999-INFO-Extracting features from www.cmrbristol.com_2019-01-31_19-42-41_0.pcap
+2019-04-27 18:12:23,869-INFO-Extracting features from www.tenderdetail.com_2019-01-31_19-51-33_0.pcap
+2019-04-27 18:12:25,483-INFO-Extracting features from moon.vn_2019-01-31_19-38-17_0.pcap
+2019-04-27 18:12:27,354-INFO-Extracting features from bee.cityofboise.org_2019-01-31_20-05-26_0.pcap
+2019-04-27 18:12:29,154-INFO-Extracting features from ammo.co_2019-01-31_19-57-45_0.pcap
+2019-04-27 18:12:29,823-WARNING-Found SSL packet with unknown SSL type 11560 in file ../../dataset/sample/outsslv3/poodle/1/ammo.co_2019-01-31_19-57-45_0.pcap
+2019-04-27 18:12:30,990-INFO-Extracting features from www.hobbylobby.co_2019-01-31_19-55-22_0.pcap
+2019-04-27 18:12:32,514-INFO-Extracting features from districts.ecourts.gov.in_2019-01-31_19-51-33_0.pcap
+2019-04-27 18:12:34,149-ERROR-Serious error in file districts.ecourts.gov.in_2019-01-31_19-51-33_0.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 41, in search_and_extract
+    tls_features = utils.extract_tslssl_features(os.path.join(root, f), enums, limit=traffic_limit)
+  File "/Users/YiLong/Desktop/SUTD/NUS-Singtel_Research/tls_attack/feature-extraction/utils.py", line 619, in extract_tslssl_features
+    for k,v in certificate.items():
+AttributeError: 'str' object has no attribute 'items'
+2019-04-27 18:12:34,150-INFO-Extracting features from sccn.ucsd.edu_2019-01-31_19-56-29_0.pcap
+2019-04-27 18:12:36,014-ERROR-Serious error in file sccn.ucsd.edu_2019-01-31_19-56-29_0.pcap. Traffic is skipped
+Traceback (most recent call last):
+  File "main.py", line 41, in search_and_extract
+    tls_features = utils.extract_tslssl_features(os.path.join(root, f), enums, limit=traffic_limit)
+  File "/Users/YiLong/Desktop/SUTD/NUS-Singtel_Research/tls_attack/feature-extraction/utils.py", line 619, in extract_tslssl_features
+    for k,v in certificate.items():
+AttributeError: 'str' object has no attribute 'items'
+2019-04-27 18:12:36,014-INFO-Extracting features from eau18.uroweb.org_2019-01-31_19-49-00_0.pcap
+2019-04-27 18:12:38,157-INFO-Extracting features from www.kslottery.co_2019-01-31_19-56-48_0.pcap
+2019-04-27 18:12:39,890-INFO-Extracting features from www.storagetreasures.co_2019-01-31_20-05-42_0.pcap
+2019-04-27 18:12:41,605-INFO-Extracting features from allaboutwatersheds.org_2019-01-31_20-05-22_0.pcap
+2019-04-27 18:12:43,495-INFO-Extracting features from www.metrorio.com.br_2019-01-31_20-06-39_0.pcap
+2019-04-27 18:12:45,450-INFO-Extracting features from www.athenadiagnostics.co_2019-01-31_19-41-36_0.pcap
+2019-04-27 18:12:47,024-INFO-Extracting features from media.asrt.org_2019-01-31_19-40-54_0.pcap
+2019-04-27 18:12:48,906-INFO-Extracting features from www.teamknowhow.co_2019-01-31_20-01-08_0.pcap
+2019-04-27 18:12:50,393-INFO-Extracting features from reizen-en-recreatie.infonu.nl_2019-01-31_20-04-55_0.pcap
+2019-04-27 18:12:51,993-INFO-Extracting features from www.leyton.com_2019-01-31_19-45-45_0.pcap
+2019-04-27 18:12:54,604-INFO-Extracting features from www.itrcweb.org_2019-01-31_20-04-31_0.pcap
+2019-04-27 18:12:56,301-INFO-Extracting features from www.wholefoodsmarket.co_2019-01-31_20-01-44_0.pcap
+2019-04-27 18:12:57,854-INFO-Extracting features from www.palmbeachpost.co_2019-01-31_19-42-28_0.pcap
+2019-04-27 18:12:59,635-INFO-Extracting features from dontforgetthebubbles.com_2019-01-31_19-44-23_0.pcap

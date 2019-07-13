@@ -3,7 +3,7 @@
 import math
 from utils import *
 
-sample = 'sample-pcap/tls/www.stripes.com_2018-12-21_16-20-12.pcap'
+sample = 'sample-pcap/copy/www.stripes.com_2018-12-21_16-20-12.pcap'
 packets = [packet for packet in pyshark.FileCapture(sample)]
 packet1 = packets[0]
 packet4 = packets[3]
@@ -70,29 +70,29 @@ assert len(output) == expected_len
 expected_dim = 19
 assert len(output[0]) == expected_dim
 
-sample1 = 'sample-pcap/tls/www.stripes.com_2018-12-21_16-20-12.pcap'
-sample2 = 'sample-pcap/tls/australianmuseum.net.au_2018-12-21_16-15-59.pcap'
-sample3 = 'sample-pcap/tls/ari.nus.edu.sg_2018-12-24_14-30-02.pcap'
-sample4 = 'sample-pcap/tls/www.zeroaggressionproject.org_2018-12-21_16-19-03.pcap'
-sample5 = 'sample-pcap/tls/alis.alberta.ca_2019-01-22_19-26-05.pcap'
-sample6 = 'sample-pcap/tls/dataverse.harvard.edu_2018-12-24_17-16-00.pcap'
-sample7 = 'sample-pcap/tls/whc.unesco.org_2018-12-24_17-09-08.pcap'
-sample8 = 'sample-pcap/tls/www.cancerresearchuk.org_2018-12-24_17-15-46.pcap'
-sample9 = 'sample-pcap/tls/www.orkin.com_2018-12-24_17-10-27.pcap'
-sample10 = 'sample-pcap/tls/www.tmr.qld.gov.au_2018-12-24_17-20-56.pcap'
-sample_dos = 'sample-pcap/tls/actorsaccess.com_2019-02-26_00-09-45_0.pcap'
+sample1 = 'sample-pcap/copy/www.stripes.com_2018-12-21_16-20-12.pcap'
+sample2 = 'sample-pcap/copy/australianmuseum.net.au_2018-12-21_16-15-59.pcap'
+sample3 = 'sample-pcap/copy/ari.nus.edu.sg_2018-12-24_14-30-02.pcap'
+sample4 = 'sample-pcap/copy/www.zeroaggressionproject.org_2018-12-21_16-19-03.pcap'
+# sample5 = 'sample-pcap/tls/alis.alberta.ca_2019-01-22_19-26-05.pcap'
+# sample6 = 'sample-pcap/tls/dataverse.harvard.edu_2018-12-24_17-16-00.pcap'
+# sample7 = 'sample-pcap/tls/whc.unesco.org_2018-12-24_17-09-08.pcap'
+# sample8 = 'sample-pcap/tls/www.cancerresearchuk.org_2018-12-24_17-15-46.pcap'
+# sample9 = 'sample-pcap/tls/www.orkin.com_2018-12-24_17-10-27.pcap'
+# sample10 = 'sample-pcap/tls/www.tmr.qld.gov.au_2018-12-24_17-20-56.pcap'
+# sample_dos = 'sample-pcap/tls/actorsaccess.com_2019-02-26_00-09-45_0.pcap'
 
 sample1_packets = [packet for packet in pyshark.FileCapture(sample1, use_json=True)]
 sample2_packets = [packet for packet in pyshark.FileCapture(sample2, use_json=True)]
 sample3_packets = [packet for packet in pyshark.FileCapture(sample3, use_json=True)]
 sample4_packets = [packet for packet in pyshark.FileCapture(sample4, use_json=True)]
-sample5_packets = [packet for packet in pyshark.FileCapture(sample5, use_json=True)]
-sample6_packets = [packet for packet in pyshark.FileCapture(sample6, use_json=True)]
-sample7_packets = [packet for packet in pyshark.FileCapture(sample7, use_json=True)]
-sample8_packets = [packet for packet in pyshark.FileCapture(sample8, use_json=True)]
-sample9_packets = [packet for packet in pyshark.FileCapture(sample9, use_json=True)]
-sample10_packets = [packet for packet in pyshark.FileCapture(sample10, use_json=True)]
-sampledos_packets = [packet for packet in pyshark.FileCapture(sample_dos, use_json=True)]
+# sample5_packets = [packet for packet in pyshark.FileCapture(sample5, use_json=True)]
+# sample6_packets = [packet for packet in pyshark.FileCapture(sample6, use_json=True)]
+# sample7_packets = [packet for packet in pyshark.FileCapture(sample7, use_json=True)]
+# sample8_packets = [packet for packet in pyshark.FileCapture(sample8, use_json=True)]
+# sample9_packets = [packet for packet in pyshark.FileCapture(sample9, use_json=True)]
+# sample10_packets = [packet for packet in pyshark.FileCapture(sample10, use_json=True)]
+# sampledos_packets = [packet for packet in pyshark.FileCapture(sample_dos, use_json=True)]
 
 sample1_clienthello = sample1_packets[3]
 sample1_serverhello_cert_serverhellodone = sample1_packets[7]
@@ -126,12 +126,12 @@ sample4_appdata_pure = sample4_packets[13]
 sample4_appdata_segment = sample4_packets[27]
 sample4_appdata_double = sample4_packets[15]
 
-sample5_cert = sample5_packets[16]  # double ssl layer
-sample6_cert = sample6_packets[8]  # double ssl layer
-sample7_cert = sample7_packets[8]  # double ssl layer
-sample10_cert = sample10_packets[10]
-
-sampledos_clienthello = sampledos_packets[3]
+# sample5_cert = sample5_packets[16]  # double ssl layer
+# sample6_cert = sample6_packets[8]  # double ssl layer
+# sample7_cert = sample7_packets[8]  # double ssl layer
+# sample10_cert = sample10_packets[10]
+#
+# sampledos_clienthello = sampledos_packets[3]
 
 # Test function extractClienthelloLength()
 output = extractClienthelloLength(sample1_clienthello)
@@ -163,9 +163,9 @@ assert output == expected
 # output = extractClienthelloCiphersuite(sample4_clienthello)
 # expected = [1, 1, 1, 0, 1]
 # assert output == expected
-output = extractClienthelloCiphersuite(sampledos_clienthello)
-expected = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0]
-assert all([math.isclose(output[i], expected[i]) for i in range(len(expected))])
+# output = extractClienthelloCiphersuite(sampledos_clienthello)
+# expected = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0]
+# assert all([math.isclose(output[i], expected[i]) for i in range(len(expected))])
 
 # Test function extractClienthelloCiphersuiteLength
 output = extractClienthelloCiphersuiteLength(sample1_clienthello)
@@ -444,35 +444,55 @@ assert output == expected
 
 # Test function extractAppDataLength
 output = extractAppDataLength(sample1_appdata_pure)
-expected = [272]
+expected = [277]
 assert output == expected
 output = extractAppDataLength(sample1_appdata_segment)
-expected = [16464]
+expected = [1460]
 assert output == expected
 output = extractAppDataLength(sample1_normal)
 expected = [0]
 assert output == expected
 output = extractAppDataLength(sample2_appdata_pure)
-expected = [228]
+expected = [233]
 assert output == expected
 output = extractAppDataLength(sample2_appdata_segment)
-expected = [2921]
+expected = [1460]
 assert output == expected
 output = extractAppDataLength(sample3_appdata_pure)
-expected = [304]
+expected = [309]
 assert output == expected
 output = extractAppDataLength(sample3_appdata_segment)
-expected = [16464]
+expected = [1380]
 assert output == expected
 output = extractAppDataLength(sample4_appdata_pure)
-expected = [265]
+expected = [270]
 assert output == expected
 output = extractAppDataLength(sample4_appdata_segment)
-expected = [16408]
+expected = [1460]
 assert output == expected
 output = extractAppDataLength(sample4_appdata_double)
-expected = [658]
+expected = [1460]
 assert output == expected
+
+# Test encoding of app data length
+enums = {'ciphersuites': [], 'compressionmethods': [], 'supportedgroups': [], 'sighashalgorithms_client': [],
+         'sighashalgorithms_cert': []}
+limit = 1000
+sample1_tls_features = extract_tslssl_features(sample1, enums, limit)
+assert sample1_tls_features[10][-1] == 277.0
+print(sample1_tls_features[24][-1])
+assert sample1_tls_features[24][-1] == 1460.0
+assert sample1_tls_features[15][-1] == 1460.0
+sample2_tls_features = extract_tslssl_features(sample2, enums, limit)
+assert sample2_tls_features[12][-1] == 233.0
+assert sample2_tls_features[16][-1] == 1460.0
+sample3_tls_features = extract_tslssl_features(sample3, enums, limit)
+assert sample3_tls_features[9][-1] == 309.0
+assert sample3_tls_features[26][-1] == 1380.0
+sample4_tls_features = extract_tslssl_features(sample4, enums, limit)
+assert sample4_tls_features[13][-1] == 270.0
+assert sample4_tls_features[27][-1] == 1460.0
+assert sample4_tls_features[15][-1] == 1460.0
 
 # pkt = sample1_serverhello_cert_serverhellodone
 # print(pkt)
