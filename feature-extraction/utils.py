@@ -106,7 +106,8 @@ def searchEnums(rootdir, limit):
 
 def extract_tcp_features(pcapfile, limit):
     traffic_features = []
-    packets = pyshark.FileCapture(pcapfile)
+    traffic_appdata_segments_data = []
+    packets = [packet for packet in pyshark.FileCapture(pcapfile, use_json=True)]
     for i, packet in enumerate(packets):
         if i >= limit:
             break
@@ -139,6 +140,16 @@ def extract_tcp_features(pcapfile, limit):
 
         traffic_features.append(packet_features)
 
+        packet_appdata_segments_idx = findIdxOfAppDataSegments(packets[i])
+        if packet_appdata_segments_idx:
+            traffic_appdata_segments_data.append((packet_appdata_segments_idx, protocolFeature))
+
+    prot_start_idx = 1
+    num_prot = 6
+    print(traffic_appdata_segments_data)
+    for idx_list, flag in traffic_appdata_segments_data:
+        for idx in idx_list:
+            traffic_features[idx][prot_start_idx:prot_start_idx + num_prot] = flag
     if len(traffic_features) == 0:
         raise ZeroPacketError('Pcap file contains no packet')
 
@@ -157,17 +168,22 @@ def extractProtocolFromPacket(packet):
     # prot: ['TCP' (-), 'SSL2.0' (0x0200), 'SSL3.0' (0x0300), 'TLS1.0' (0x0301), 'TLS1.1' (0x0302), 'TLS1.2' (0x0303)]
     protcol_ver = [0, 512, 768, 769, 770, 771]
     feature = [0] * len(protcol_ver)
-    # Bug in detecting SSL layer despite plain TCP packet
-    if ('ssl' in packet) and (packet.ssl.get('record_version') != None):
-        # Convert hex into integer and return the index in the ref list
-        prot = int(packet.ssl.record_version, 16)
-        try:
-            protocol_id = protcol_ver.index(prot)
+    try:
+        if hasattr(packet, 'ssl'):
+            if hasattr(packet.ssl, 'value') and type(packet.ssl.value) != str:
+                protocol = int(packet.ssl.value[0]['ssl.record']['ssl.record.version'],16)
+            else:
+                protocol = int(packet.ssl.record.version, 16)
+            protocol_id = protcol_ver.index(protocol)
             feature[protocol_id] = 1
-        except ValueError:
-            logging.warning('Found SSL packet with unknown SSL type {}'.format(prot))
-    else:
-        feature[0] = 1
+        elif hasattr(packet, 'tcp'):
+            feature[0] = 1
+
+    except ValueError:
+        logging.warning('Found SSL packet with unknown SSL type {}'.format(protocol))
+
+    except AttributeError:
+        pass
 
     return feature
 
@@ -203,8 +219,7 @@ def extract_tslssl_features(pcapfile, enums, limit):
 
     # Traffic features for storing features of packets
     traffic_features = []
-    packets_json = pyshark.FileCapture(pcapfile, use_json=True)
-
+    packets_json = [packet for packet in pyshark.FileCapture(pcapfile, use_json=True)]
     traffic_appdata_segments_idx = []
     for i, packet_json in enumerate(packets_json):
         # Break the loop when limit is reached
@@ -312,7 +327,7 @@ def extract_tslssl_features(pcapfile, enums, limit):
     for idx in traffic_appdata_segments_idx:
         try:
             # Use tcp.len as the application data length
-            traffic_features[idx-1][-1] = float(packets_json[idx-1].tcp.len)
+            traffic_features[idx][-1] = float(packets_json[idx].tcp.len)
         except AttributeError:
             pass
 
@@ -608,7 +623,7 @@ def findIdxOfAppDataSegments(packet):
 
         if appdata:
             if hasattr(packet, 'tcp.segments'):
-                appdata_segments_idx.extend(list(map(int, getattr(packet, 'tcp.segments').segment)))
+                appdata_segments_idx.extend(list(map(lambda x: int(x)-1, getattr(packet, 'tcp.segments').segment)))
     except (AttributeError, KeyError):
         pass
     return appdata_segments_idx
@@ -697,46 +712,4 @@ if __name__ == '__main__':
     # enums = searchEnums(rootdir, limit=100)
     # for k,v in enums.items():
     #     print(k, v)
-
-    # rootdir = 'sample-pcap/tls'
-    # filename = 'www.stripes.com_2018-12-21_16-20-12.pcap'
-    # dirpath = os.path.join(rootdir, filename)
-    # packets_json = pyshark.FileCapture(dirpath, use_json=True)
-    # for i, packet_json in enumerate(packets_json):
-    #     # packet 26: normal tcp packet with ack
-    #     # packet 27: tcp segment of a reassembled pdu
-    #     if i == 25 or i == 26:
-    #         x = packet_json
-    #         print(x)
-    #     # packet 37: application data
-    #     if i == 36:
-    #         x = packet_json
-    #         print(x)
-
-    rootdir = 'sample-pcap/copy/'
-    filename = 'www.zeroaggressionproject.org_2018-12-21_16-19-03.pcap'
-    packets_json = pyshark.FileCapture(os.path.join(rootdir, filename), use_json=True)
-    traffic_appdata_segments_idx = []
-    for i,packet in enumerate(packets_json):
-        if i == 26:
-            x = packet
-            print(packet)
-        # try:
-        #     appdata = []
-        #     if hasattr(packet.ssl, 'value'):
-        #         find_appdata(packet.ssl.value, appdata)
-        #     else:
-        #         find_appdata(packet.ssl, appdata)
-        #
-        #     if appdata:
-        #         print('Packet #: {}'.format(i+1))
-        #         print('Contains multiple tcp segments : {}'.format(hasattr(packet, 'tcp.segments')))
-        #         # print(getattr(packet, 'tcp.segments'))
-        #         print('Segments from packet: {}'.format(list(map(int, getattr(packet, 'tcp.segments').segment))))
-        # except (AttributeError, KeyError):
-        #     pass
-    #     packet_appdata_segments_idx = findIdxOfAppDataSegments(packet)
-    #     traffic_appdata_segments_idx.extend(packet_appdata_segments_idx)
-    # print(traffic_appdata_segments_idx)
-    # print(list(set(traffic_appdata_segments_idx)))
 

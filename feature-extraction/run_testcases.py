@@ -3,14 +3,17 @@
 import math
 from utils import *
 
+print('Loading packets...')
 sample = 'sample-pcap/copy/www.stripes.com_2018-12-21_16-20-12.pcap'
-packets = [packet for packet in pyshark.FileCapture(sample)]
+packets = [packet for packet in pyshark.FileCapture(sample, use_json=True)]
 packet1 = packets[0]
 packet4 = packets[3]
 packet5 = packets[4]
 packet8 = packets[7]
 packet11 = packets[10]
+packet21 = packets[20]
 packet25 = packets[24]
+packet46 = packets[45]
 
 # Test function extractComeLeaveFromPacket()
 output = extractComeLeaveFromPacket(packet1)
@@ -19,6 +22,7 @@ assert output == expected
 output = extractComeLeaveFromPacket(packet25)
 expected = [1]
 assert output == expected
+print('Done testing function extractComeLeaveFromPacket()')
 
 # Test function extractProtocolFromPacket()
 output = extractProtocolFromPacket(packet1)
@@ -30,6 +34,22 @@ assert output == expected
 output = extractProtocolFromPacket(packet8)
 expected = [0, 0, 0, 0, 0, 1]
 assert output == expected
+print('Done testing function extractProtocolFromPacket()')
+
+# Test extraction of protocol for TCP segments of a reassembed PDU
+tcp_features = extract_tcp_features(sample,limit=100)
+prot_start_idx = 1
+num_prot = 6
+output = tcp_features[20][prot_start_idx:prot_start_idx+num_prot]
+expected = [0, 0, 0, 0, 0, 1]
+assert output == expected
+output = tcp_features[45][prot_start_idx:prot_start_idx+num_prot]
+expected = [0, 0, 0, 0, 0, 1]
+assert output == expected
+output = tcp_features[5][prot_start_idx:prot_start_idx+num_prot]
+expected = [1, 0, 0, 0, 0, 0]
+assert output == expected
+print('Done testing extraction of protocol for TCP segments of a reassembed PDU')
 
 # Test function extractLengthFromPacket()
 output = extractLengthFromPacket(packet1)
@@ -38,6 +58,7 @@ assert output == expected
 output = extractLengthFromPacket(packet5)
 expected = [1514]
 assert output == expected
+print('Done testing function extractLengthFromPacket()')
 
 # Test function extractIntervalFromPacket()
 output = extractIntervalFromPacket(packet1)
@@ -46,6 +67,7 @@ assert math.isclose(output[0], expected[0])
 output = extractIntervalFromPacket(packet4)
 expected = [20.716]
 assert math.isclose(output[0], expected[0])
+print('Done testing function extractIntervalFromPacket()')
 
 # Test function extractFlagFromPacket()
 output = extractFlagFromPacket(packet1)
@@ -54,6 +76,7 @@ assert output == expected
 output = extractFlagFromPacket(packet11)
 expected = [0, 0, 0, 0, 1, 1, 0, 0, 0]
 assert output == expected
+print('Done testing function extractFlagFromPacket()')
 
 # Test function extractWindowSizeFromPacket(packet1)
 output = extractWindowSizeFromPacket(packet1)
@@ -62,6 +85,7 @@ assert output == expected
 output = extractWindowSizeFromPacket(packet4)
 expected = [66048]
 assert output == expected
+print('Done testing function extractWindowSizeFromPacket()')
 
 # Test function extract_tcp_features()
 output = extract_tcp_features(sample, limit=100)
@@ -69,7 +93,9 @@ expected_len = 100
 assert len(output) == expected_len
 expected_dim = 19
 assert len(output[0]) == expected_dim
+print('Done testing function extract_tcp_features()')
 
+print('Loading packets...')
 sample1 = 'sample-pcap/copy/www.stripes.com_2018-12-21_16-20-12.pcap'
 sample2 = 'sample-pcap/copy/australianmuseum.net.au_2018-12-21_16-15-59.pcap'
 sample3 = 'sample-pcap/copy/ari.nus.edu.sg_2018-12-24_14-30-02.pcap'
@@ -146,6 +172,7 @@ assert output == expected
 output = extractClienthelloLength(sample4_clienthello)
 expected = [241]
 assert output == expected
+print('Done testing function extractClienthelloLength()')
 
 # Test function extractClienthelloCiphersuiteAndEncode()
 # output = extractClienthelloCiphersuite(sample1_clienthello)
@@ -166,6 +193,7 @@ assert output == expected
 # output = extractClienthelloCiphersuite(sampledos_clienthello)
 # expected = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0]
 # assert all([math.isclose(output[i], expected[i]) for i in range(len(expected))])
+print('Done testing function extractClienthelloCiphersuiteAndEncode()')
 
 # Test function extractClienthelloCiphersuiteLength
 output = extractClienthelloCiphersuiteLength(sample1_clienthello)
@@ -183,6 +211,7 @@ assert output == expected
 output = extractClienthelloCiphersuiteLength(sample4_clienthello)
 expected = [92]
 assert output == expected
+print('Done testing function extractClienthelloCiphersuiteLength()')
 
 # Test function extractClienthelloCompressionmethodAndEncode
 enums = [0]
@@ -201,6 +230,7 @@ assert output == expected
 output = extractClienthelloCompressionmethodAndEncode(sample4_clienthello, enums)
 expected = [1, 0]
 assert output == expected
+print('Done testing function extractClienthelloCompressionmethodAndEncode()')
 
 # Test function extractClienthelloSupportedgroupLength
 output = extractClienthelloSupportedgroupLength(sample1_clienthello)
@@ -218,6 +248,7 @@ assert output == expected
 output = extractClienthelloSupportedgroupLength(sample4_clienthello)
 expected = [10]
 assert output == expected
+print('Done testing function extractClienthelloSupportedgroupLength()')
 
 # Test function extractClienthelloSupportedgroupAndEncode
 enums = [29, 23]
@@ -236,6 +267,7 @@ assert output == expected
 output = extractClienthelloSupportedgroupAndEncode(sample4_clienthello, enums)
 expected = [1, 1, 1]
 assert output == expected
+print('Done testing function extractClienthelloSupportedgroupAndEncode()')
 
 # Test function extractClienthelloEncryptthenmacLength
 output = extractClienthelloEncryptthenmacLength(sample1_clienthello)
@@ -253,6 +285,7 @@ assert output == expected
 output = extractEncryptedhandshakemsgLength(sample4_clienthello)
 expected = [0]
 assert output == expected
+print('Done testing function extractClienthelloEncryptthemacLength()')
 
 # Test function extractClienthelloExtendedmastersecretLength
 output = extractClienthelloExtendedmastersecretLength(sample1_clienthello)
@@ -270,6 +303,7 @@ assert output == expected
 output = extractClienthelloExtendedmastersecretLength(sample4_clienthello)
 expected = [0]
 assert output == expected
+print('Done testing function extractClienthelloExtendedmastersecretLength()')
 
 # Test function extractClienthelloSignaturehashAndEncode
 enums = [1537, 769]
@@ -288,6 +322,7 @@ assert output == expected
 output = extractClienthelloSignaturehashAndEncode(sample4_clienthello, enums)
 expected = [1, 1, 1]
 assert output == expected
+print('Done testing function extractClienthelloSignaturehashAndEncode()')
 
 # Test function extractServerhelloLength
 output = extractServerhelloLength(sample1_serverhello_cert_serverhellodone)
@@ -305,6 +340,7 @@ assert output == expected
 output = extractServerhelloLength(sample4_serverhello)
 expected = [61]
 assert output == expected
+print('Done testing function extractServerhelloLength()')
 
 # Test function extractServerhelloRenegoLength
 output = extractServerhelloRenegoLength(sample1_serverhello_cert_serverhellodone)
@@ -322,6 +358,7 @@ assert output == expected
 output = extractServerhelloRenegoLength(sample4_serverhello)
 expected = [1]
 assert output == expected
+print('Done testing function extractServerhelloRenegoLength()')
 
 # Test function extractCertificateInfo
 output = extractCertificateLengthInfo(sample1_serverhello_cert_serverhellodone)
@@ -339,6 +376,7 @@ assert all([math.isclose(output[i], expected[i]) for i in range(len(expected))])
 output = extractCertificateLengthInfo(sample4_cert)
 expected = [4, 1356.25, 1548, 1082]
 assert all([math.isclose(output[i], expected[i]) for i in range(len(expected))])
+print('Done testing function extractCertificateInfo()')
 
 # Test function extractCertificateAndEncode
 enums = ['1.2.840.113549.1.1.11', '1.2.840.113549.1.1.13', '1.2.840.113549.1.1.5']
@@ -357,6 +395,7 @@ assert output == expected
 output = extractCertificateAndEncode(sample4_cert, enums)
 expected = [1, 0, 1, 1]
 assert output == expected
+print('Done testing function extractCertificateAndEncode()')
 
 # Test function extractServerhellodoneLength
 output = extractServerhellodoneLength(sample1_serverhello_cert_serverhellodone)
@@ -373,6 +412,7 @@ assert output == expected
 output = extractServerhellodoneLength(sample4_serverhellodone)
 expected = [0]
 assert output == expected
+print('Done testing function extractServerhellodoneLength()')
 
 # Test function extractClientkeyexchangeLength
 output = extractClientkeyexchangeLength(sample1_clientkeyexchange_encryptedhandshakemsg_changecipherspec)
@@ -390,6 +430,7 @@ assert output == expected
 output = extractClientkeyexchangeLength(sample4_clientkeyexchange_changecipherspec_encryptedhandshakemsg)
 expected = [66]
 assert output == expected
+print('Done testing function extractClientketexchangeLength()')
 
 # Test function extractClientkeyexchangePubkeyLength
 output = extractClientkeyexchangePubkeyLength(sample1_clientkeyexchange_encryptedhandshakemsg_changecipherspec)
@@ -407,6 +448,7 @@ assert output == expected
 output = extractClientkeyexchangePubkeyLength(sample4_clientkeyexchange_changecipherspec_encryptedhandshakemsg)
 expected = [65]
 assert output == expected
+print('Done testing function extractClientkeyechangePubkeyLength()')
 
 # Test function extractEncryptedhandshakemsgLength
 output = extractEncryptedhandshakemsgLength(sample1_clientkeyexchange_encryptedhandshakemsg_changecipherspec)
@@ -424,6 +466,7 @@ assert output == expected
 output = extractEncryptedhandshakemsgLength(sample4_clientkeyexchange_changecipherspec_encryptedhandshakemsg)
 expected = [40]
 assert output == expected
+print('Done testing function extractEncryptedhandshakemsgLength()')
 
 # Test function extractChangeCipherSpecLength
 output = extractChangeCipherSpecLength(sample1_changecipherspec_encryptedhandshakemsg)
@@ -441,6 +484,7 @@ assert output == expected
 output = extractChangeCipherSpecLength(sample4_clientkeyexchange_changecipherspec_encryptedhandshakemsg)
 expected = [1]
 assert output == expected
+print('Done testing function extractChangeCipherSpecLength()')
 
 # Test function extractAppDataLength
 output = extractAppDataLength(sample1_appdata_pure)
@@ -473,14 +517,14 @@ assert output == expected
 output = extractAppDataLength(sample4_appdata_double)
 expected = [1460]
 assert output == expected
+print('Done testing function extractAppDataLength()')
 
 # Test encoding of app data length
 enums = {'ciphersuites': [], 'compressionmethods': [], 'supportedgroups': [], 'sighashalgorithms_client': [],
          'sighashalgorithms_cert': []}
-limit = 1000
+limit = 100
 sample1_tls_features = extract_tslssl_features(sample1, enums, limit)
 assert sample1_tls_features[10][-1] == 277.0
-print(sample1_tls_features[24][-1])
 assert sample1_tls_features[24][-1] == 1460.0
 assert sample1_tls_features[15][-1] == 1460.0
 sample2_tls_features = extract_tslssl_features(sample2, enums, limit)
@@ -493,6 +537,7 @@ sample4_tls_features = extract_tslssl_features(sample4, enums, limit)
 assert sample4_tls_features[13][-1] == 270.0
 assert sample4_tls_features[27][-1] == 1460.0
 assert sample4_tls_features[15][-1] == 1460.0
+print('Done testing encoding of app data length for for TCP segments of a reassembed PDU')
 
 # pkt = sample1_serverhello_cert_serverhellodone
 # print(pkt)
