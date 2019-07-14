@@ -11,8 +11,7 @@ kiwisolver==1.0.1
 Markdown==3.0.1
 matplotlib==3.0.2
 mock==3.0.5
-numpy==1.15.4
-pkg-resources==0.0.0
+numpy==1.16.4
 protobuf==3.6.1
 pyparsing==2.3.0
 python-dateutil==2.7.5
