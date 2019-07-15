@@ -4,7 +4,7 @@ import math
 from utils import *
 
 print('Loading packets...')
-sample = 'sample-pcap/copy/www.stripes.com_2018-12-21_16-20-12.pcap'
+sample = 'sample-pcap/tls/www.stripes.com_2018-12-21_16-20-12.pcap'
 packets = [packet for packet in pyshark.FileCapture(sample, use_json=True)]
 packet1 = packets[0]
 packet4 = packets[3]
@@ -96,29 +96,29 @@ assert len(output[0]) == expected_dim
 print('Done testing function extract_tcp_features()')
 
 print('Loading packets...')
-sample1 = 'sample-pcap/copy/www.stripes.com_2018-12-21_16-20-12.pcap'
-sample2 = 'sample-pcap/copy/australianmuseum.net.au_2018-12-21_16-15-59.pcap'
-sample3 = 'sample-pcap/copy/ari.nus.edu.sg_2018-12-24_14-30-02.pcap'
-sample4 = 'sample-pcap/copy/www.zeroaggressionproject.org_2018-12-21_16-19-03.pcap'
-# sample5 = 'sample-pcap/tls/alis.alberta.ca_2019-01-22_19-26-05.pcap'
-# sample6 = 'sample-pcap/tls/dataverse.harvard.edu_2018-12-24_17-16-00.pcap'
-# sample7 = 'sample-pcap/tls/whc.unesco.org_2018-12-24_17-09-08.pcap'
-# sample8 = 'sample-pcap/tls/www.cancerresearchuk.org_2018-12-24_17-15-46.pcap'
-# sample9 = 'sample-pcap/tls/www.orkin.com_2018-12-24_17-10-27.pcap'
-# sample10 = 'sample-pcap/tls/www.tmr.qld.gov.au_2018-12-24_17-20-56.pcap'
-# sample_dos = 'sample-pcap/tls/actorsaccess.com_2019-02-26_00-09-45_0.pcap'
+sample1 = 'sample-pcap/tls/www.stripes.com_2018-12-21_16-20-12.pcap'
+sample2 = 'sample-pcap/tls/australianmuseum.net.au_2018-12-21_16-15-59.pcap'
+sample3 = 'sample-pcap/tls/ari.nus.edu.sg_2018-12-24_14-30-02.pcap'
+sample4 = 'sample-pcap/tls/www.zeroaggressionproject.org_2018-12-21_16-19-03.pcap'
+sample5 = 'sample-pcap/tls/alis.alberta.ca_2019-01-22_19-26-05.pcap'
+sample6 = 'sample-pcap/tls/dataverse.harvard.edu_2018-12-24_17-16-00.pcap'
+sample7 = 'sample-pcap/tls/whc.unesco.org_2018-12-24_17-09-08.pcap'
+sample8 = 'sample-pcap/tls/www.cancerresearchuk.org_2018-12-24_17-15-46.pcap'
+sample9 = 'sample-pcap/tls/www.orkin.com_2018-12-24_17-10-27.pcap'
+sample10 = 'sample-pcap/tls/www.tmr.qld.gov.au_2018-12-24_17-20-56.pcap'
+sample_dos = 'sample-pcap/tls/actorsaccess.com_2019-02-26_00-09-45_0.pcap'
 
 sample1_packets = [packet for packet in pyshark.FileCapture(sample1, use_json=True)]
 sample2_packets = [packet for packet in pyshark.FileCapture(sample2, use_json=True)]
 sample3_packets = [packet for packet in pyshark.FileCapture(sample3, use_json=True)]
 sample4_packets = [packet for packet in pyshark.FileCapture(sample4, use_json=True)]
-# sample5_packets = [packet for packet in pyshark.FileCapture(sample5, use_json=True)]
-# sample6_packets = [packet for packet in pyshark.FileCapture(sample6, use_json=True)]
-# sample7_packets = [packet for packet in pyshark.FileCapture(sample7, use_json=True)]
-# sample8_packets = [packet for packet in pyshark.FileCapture(sample8, use_json=True)]
-# sample9_packets = [packet for packet in pyshark.FileCapture(sample9, use_json=True)]
-# sample10_packets = [packet for packet in pyshark.FileCapture(sample10, use_json=True)]
-# sampledos_packets = [packet for packet in pyshark.FileCapture(sample_dos, use_json=True)]
+sample5_packets = [packet for packet in pyshark.FileCapture(sample5, use_json=True)]
+sample6_packets = [packet for packet in pyshark.FileCapture(sample6, use_json=True)]
+sample7_packets = [packet for packet in pyshark.FileCapture(sample7, use_json=True)]
+sample8_packets = [packet for packet in pyshark.FileCapture(sample8, use_json=True)]
+sample9_packets = [packet for packet in pyshark.FileCapture(sample9, use_json=True)]
+sample10_packets = [packet for packet in pyshark.FileCapture(sample10, use_json=True)]
+sampledos_packets = [packet for packet in pyshark.FileCapture(sample_dos, use_json=True)]
 
 sample1_clienthello = sample1_packets[3]
 sample1_serverhello_cert_serverhellodone = sample1_packets[7]
