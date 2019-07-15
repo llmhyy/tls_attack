@@ -10,7 +10,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 from keras.layers import Activation
-from keras.layers import LSTM
+from keras.layers import LSTM, CuDNNLSTM
 from keras.models import Sequential
 from keras.models import load_model
 
@@ -20,10 +20,13 @@ import utils_plot as utilsPlot
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-e', '--epoch', help='Input epoch for training', default=100, type=int)
+parser.add_argument('-q', '--tstep', help='Input the number of time steps for RNN model training', default=1000, type=int)
+parser.add_argument('-p', '--split', help='Input the split ratio for the validation set as a percentage of the dataset', default=0.05, type=float)
 parser.add_argument('-r', '--rootdir', help='Input the directory path of the folder containing the feature file and other supporting files', required=True)
 parser.add_argument('-s', '--savedir', help='Input the directory path to save the rnn model and its training results', required=True)  # e.g foo/bar/trained-rnn/normal/
-parser.add_argument('-o', '--show', help='Flag for displaying plots', action='store_true', default=False)
 parser.add_argument('-m', '--model', help='Input directory for existing model to be trained')
+parser.add_argument('-o', '--show', help='Flag for displaying plots', action='store_true', default=False)
+parser.add_argument('-g', '--gpu', help='Flag for using GPU in model training', action='store_true')
 args = parser.parse_args()
 
 # Define filenames from args.rootdir
@@ -36,12 +39,10 @@ minmax_dir = os.path.join(args.rootdir, '..', '..', MINMAX_FILENAME)
 # Config info
 DATETIME_NOW = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 BATCH_SIZE = 64
-SEQUENCE_LEN = 100
+SEQUENCE_LEN = args.tstep
 EPOCH = args.epoch
 SAVE_EVERY_EPOCH = 5
-# SAVE_EVERY_EPOCH = 1
-SPLIT_RATIO = 0.05
-# SPLIT_RATIO = 0.5
+SPLIT_RATIO = args.split
 SEED = 2019
 
 # Start diagnostic analysis
@@ -84,12 +85,26 @@ test_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, test_idx, B
 # MODEL BUILDING
 #####################################################
 
+if args.gpu:
+    import tensorflow as tf
+    from keras.backend.tensorflow_backend import set_session
+
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
+    config.log_device_placement = True  # to log device placement (on which device the operation ran)
+                                        # (nothing gets printed in Jupyter, only if you run it standalone)
+    sess = tf.Session(config=config)
+    set_session(sess)  # set this TensorFlow session as the default session for Keras
+
 # Build RNN model or load existing RNN model
 if args.model:
     model = load_model(args.model)
 else:
     model = Sequential()
-    model.add(LSTM(INPUT_DIM, input_shape=(SEQUENCE_LEN,INPUT_DIM), return_sequences=True))
+    if args.gpu:
+        model.add(CuDNNLSTM(INPUT_DIM, input_shape=(SEQUENCE_LEN, INPUT_DIM), return_sequences=True))
+    else:
+        model.add(LSTM(INPUT_DIM, input_shape=(SEQUENCE_LEN, INPUT_DIM), return_sequences=True))
     model.add(Activation('relu'))
     model.compile(loss='mean_squared_error',
                     optimizer='rmsprop')
