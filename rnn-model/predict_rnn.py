@@ -12,6 +12,8 @@ import utils_metric as utilsMetric
 import utils_datagen as utilsDatagen
 import utils_predict as utilsPredict
 
+
+import tracemalloc
 '''
 PREDICT RNN
 
@@ -48,6 +50,8 @@ parser.add_argument('-l', '--lower', help='Input the lower bound for sampling tr
 parser.add_argument('-u', '--upper', help='Input upper bound for sampling traffic', default=1, type=restricted_float)
 args = parser.parse_args()
 
+tracemalloc.start()
+
 # Switches to run the test
 if args.mode == 0:
     BASIC_TEST_SWITCH = True
@@ -71,9 +75,18 @@ pcapname_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, PCAP
 minmax_dir = os.path.join(args.rootdir, '..', '..', MINMAX_FILENAME)
 
 BATCH_SIZE = 64
-SEQUENCE_LEN = 100
+SEQUENCE_LEN = 1000
 SPLIT_RATIO = 0.05
 SEED = 2019
+
+import tensorflow as tf
+from keras.backend.tensorflow_backend import set_session
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
+config.log_device_placement = True  # to log device placement (on which device the operation ran)
+                                    # (nothing gets printed in Jupyter, only if you run it standalone)
+sess = tf.Session(config=config)
+set_session(sess)  # set this TensorFlow session as the default session for Keras
 
 # Load the trained model
 print('Loading trained model...')
@@ -98,23 +111,38 @@ train_idx,test_idx = utilsDatagen.split_train_test(byte_offset, SPLIT_RATIO, SEE
 # Initialize the normalization function
 norm_fn = utilsDatagen.normalize(2, min_max_feature)
 # Initialize the batch generator
-train_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, train_idx, BATCH_SIZE, SEQUENCE_LEN, norm_fn, 
-                                                return_seq_len=True, return_batch_idx=True)
-test_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, test_idx, BATCH_SIZE, SEQUENCE_LEN, norm_fn, 
-                                                return_seq_len=True, return_batch_idx=True)
+# train_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, train_idx, BATCH_SIZE, SEQUENCE_LEN, norm_fn, 
+#                                                 return_seq_len=True, return_batch_idx=True)
+# test_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, test_idx, BATCH_SIZE, SEQUENCE_LEN, norm_fn, 
+#                                                 return_seq_len=True, return_batch_idx=True)
 
-
-def evaluate_model_on_generator(model, data_generator, featureinfo_dir, pcapname_dir, save_dir):
+# def evaluate_model_on_generator(model, data_generator, featureinfo_dir, pcapname_dir, save_dir):
+def evaluate_model_on_generator(model, split, featureinfo_dir, pcapname_dir, save_dir):
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
-
+    if split == 'train':
+        this_idx = train_idx
+    else:
+        this_idx = test_idx
     # Compute metrics used for conducting tests
-    metrics = utilsPredict.compute_metrics(model, data_generator, return_output=True)
-    acc_for_all_traffic = metrics['acc']
-    mean_acc_for_all_traffic = metrics['mean_acc']
-    squared_error_for_all_traffic = metrics['squared_error']
-    mean_squared_error_for_all_traffic = metrics['mean_squared_error']
-    idx_for_all_traffic = metrics['idx']
+    # print('Computing metrics..')
+    # metrics = utilsPredict.compute_metrics(model, data_generator, return_output=True)
+    # print('Done computing metrics')
+    # acc_for_all_traffic = metrics['acc']
+    # mean_acc_for_all_traffic = metrics['mean_acc']
+    # squared_error_for_all_traffic = metrics['squared_error']
+    # mean_squared_error_for_all_traffic = metrics['mean_squared_error']
+    # idx_for_all_traffic = metrics['idx']
+    idx_for_all_traffic = utilsPredict.compute_metrics_on_the_fly(model,
+                                                                    utilsDatagen.BatchGenerator(mmap_data,
+                                                                                                byte_offset,
+                                                                                                this_idx,
+                                                                                                BATCH_SIZE,
+                                                                                                SEQUENCE_LEN,
+                                                                                                norm_fn,
+                                                                                                return_seq_len=True,
+                                                                                                return_batch_idx=True),
+                                                                    metric='idx')
 
     # Extract dim names for identifying dim
     dim_names = []
@@ -150,32 +178,56 @@ def evaluate_model_on_generator(model, data_generator, featureinfo_dir, pcapname
         logfile = open(os.path.join(save_dir, 'predict_log.txt'),'w')
 
         ####  TEST 1 ####
+        print('Computing metric for mean acc')
+        mean_acc_for_all_traffic = utilsPredict.compute_metrics_on_the_fly(model,
+                                                                            utilsDatagen.BatchGenerator(mmap_data,
+                                                                                                        byte_offset,
+                                                                                                        this_idx,
+                                                                                                        BATCH_SIZE,
+                                                                                                        SEQUENCE_LEN,
+                                                                                                        norm_fn,
+                                                                                                        return_seq_len=True,
+                                                                                                        return_batch_idx=True),
+                                                                            metric='mean_acc')
+        print('Plotting accuracy of traffic...')
         utilsPredict.test_accuracy_of_traffic(mean_acc_for_all_traffic, logfile, save_dir)
 
         ####  TEST 2 ####
+        print('Computing metric for squared error...')
+        squared_error_for_all_traffic = utilsPredict.compute_metrics_on_the_fly(model,
+                                                                            utilsDatagen.BatchGenerator(mmap_data,
+                                                                                                        byte_offset,
+                                                                                                        this_idx,
+                                                                                                        BATCH_SIZE,
+                                                                                                        SEQUENCE_LEN,
+                                                                                                        norm_fn,
+                                                                                                        return_seq_len=True,
+                                                                                                        return_batch_idx=True),
+                                                                            metric='squared_error')
+        print('Plottiing mse dim of traffic...')
         utilsPredict.test_mse_dim_of_traffic(squared_error_for_all_traffic, dim_names, logfile, save_dir)
 
-        if len(idx_for_all_traffic) > 100: # find outliers only for sufficiently large datasets
-            # Get outliers from traffic based on mean acc
-            outlier_count = 10
-            bottom_idx, top_idx = utilsPredict.find_outlier(outlier_count, mean_acc_for_all_traffic)
+        # if len(idx_for_all_traffic) > 100: # find outliers only for sufficiently large datasets
+        #     # Get outliers from traffic based on mean acc
+        #     outlier_count = 10
+        #     bottom_idx, top_idx = utilsPredict.find_outlier(outlier_count, mean_acc_for_all_traffic)
 
-            ####  TEST 3a ####
-            utilsPredict.test_mse_dim_of_outlier(bottom_idx, top_idx, mean_acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, logfile, save_dir)
+        #     ####  TEST 3a ####
+        #     utilsPredict.test_mse_dim_of_outlier(bottom_idx, top_idx, mean_acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, logfile, save_dir)
 
-            ####  TEST 3b ####
-            outlier_traffic_types = ['bottom10traffic', 'top10traffic']
-            outlier_traffic_idx = [bottom_idx, top_idx]
-            for i in range(len(outlier_traffic_types)):
-                save_traffic_dir = os.path.join(save_dir,  outlier_traffic_types[i])
-                if os.path.exists(save_traffic_dir):
-                    shutil.rmtree(save_traffic_dir)
-                os.makedirs(save_traffic_dir)
-                sampled_metrics = utilsPredict.get_metrics_from_idx(outlier_traffic_idx[i], mean_acc_for_all_traffic, acc_for_all_traffic, 
-                                                                    squared_error_for_all_traffic, mean_squared_error_for_all_traffic,
-                                                                    idx_for_all_traffic, pcap_filename,
-                                                                    mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model)
-                utilsPredict.summary_for_sampled_traffic(sampled_metrics, dim_names, save_traffic_dir)
+        #     ####  TEST 3b ####
+        #     outlier_traffic_types = ['bottom10traffic', 'top10traffic']
+        #     outlier_traffic_idx = [bottom_idx, top_idx]
+        #     for i in range(len(outlier_traffic_types)):
+        #         save_traffic_dir = os.path.join(save_dir,  outlier_traffic_types[i])
+        #         if os.path.exists(save_traffic_dir):
+        #             shutil.rmtree(save_traffic_dir)
+        #         os.makedirs(save_traffic_dir)
+        #         sampled_metrics = utilsPredict.get_metrics_from_idx(outlier_traffic_idx[i], mean_acc_for_all_traffic, acc_for_all_traffic, 
+        #                                                             squared_error_for_all_traffic, mean_squared_error_for_all_traffic,
+        #                                                             idx_for_all_traffic, pcap_filename,
+        #                                                             mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model)
+        #         utilsPredict.summary_for_sampled_traffic(sampled_metrics, dim_names, save_traffic_dir)
 
         logfile.close()
 
@@ -220,7 +272,7 @@ def evaluate_model_on_generator(model, data_generator, featureinfo_dir, pcapname
             f.write(str(x)+'\n')
 
 dataset_name = ['train', 'val']
-dataset_generator = [train_generator, test_generator]
+# dataset_generator = [train_generator, test_generator]
 for i in range(len(dataset_name)):
     print('Computing metrics for {} traffic...'.format(dataset_name[i]))
-    evaluate_model_on_generator(model, dataset_generator[i], featureinfo_dir, pcapname_dir, os.path.join(args.savedir, dataset_name[i]))
+    evaluate_model_on_generator(model, dataset_name[i], featureinfo_dir, pcapname_dir, os.path.join(args.savedir, dataset_name[i]))

@@ -3,6 +3,8 @@ import utils_plot as utilsPlot
 import utils_datagen as utilsDatagen
 import utils_metric as utilsMetric
 
+import tracemalloc
+
 def compute_metrics(model, data_generator, return_output=False):
     # Generate predictions and perform computation of metrics
     acc_for_all_traffic = []
@@ -44,6 +46,32 @@ def compute_metrics(model, data_generator, return_output=False):
                 'true':true_for_all_traffic, 'predict':predict_for_all_traffic,
                 'idx':idx_for_all_traffic}
     return metrics
+
+def compute_metrics_on_the_fly(model, data_generator, metric=None):
+    output = []
+    for (batch_inputs, batch_true, batch_info) in data_generator:
+        batch_seq_len = batch_info['seq_len']
+        batch_predict = batch_predict = model.predict_on_batch(batch_inputs)
+        if metric == 'acc' or metric == 'mean_acc':
+            padded_batch_acc = utilsMetric.calculate_acc_of_traffic(batch_predict, batch_true)
+            batch_acc = [padded_batch_acc[i,0:seq_len] for i,seq_len in enumerate(batch_seq_len)]
+            if metric == 'acc':
+                output.extend(batch_acc)
+            elif metric == 'mean_acc':
+                batch_mean_acc = [np.mean(acc) for acc in batch_acc]
+                output.extend(batch_mean_acc)
+        elif metric == 'squared_error' or metric == 'mean_squared_error':
+            padded_batch_squared_error = utilsMetric.calculate_squared_error_of_traffic(batch_predict, batch_true)
+            batch_squared_error = [padded_batch_squared_error[i,0:seq_len,:] for i,seq_len in enumerate(batch_seq_len)]
+            if metric == 'squared_error':
+                output.extend(batch_squared_error)
+            elif metric == 'mean_squared_error':
+                batch_mean_squared_error = [np.sum(sqerr, axis=0)/sqerr.shape[0] for i,sqerr in enumerate(batch_squared_error)]
+                output.extend(batch_mean_squared_error)
+        elif metric == 'idx':
+            batch_idx = batch_info['batch_idx']
+            output.extend(batch_idx.tolist())
+    return output
 
 def test_accuracy_of_traffic(mean_acc_for_all_traffic, logfile, save_dir):
     overall_mean_acc = np.mean(mean_acc_for_all_traffic)
