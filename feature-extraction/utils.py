@@ -146,7 +146,6 @@ def extract_tcp_features(pcapfile, limit):
 
     prot_start_idx = 1
     num_prot = 6
-    print(traffic_appdata_segments_data)
     for idx_list, flag in traffic_appdata_segments_data:
         for idx in idx_list:
             traffic_features[idx][prot_start_idx:prot_start_idx + num_prot] = flag
