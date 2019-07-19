@@ -5,53 +5,53 @@ import utils_metric as utilsMetric
 
 import tracemalloc
 
-def compute_metrics(model, data_generator, return_output=False):
-    # Generate predictions and perform computation of metrics
-    acc_for_all_traffic = []
-    mean_acc_for_all_traffic = []
-    squared_error_for_all_traffic = []
-    mean_squared_error_for_all_traffic = []
-    idx_for_all_traffic = [] # idx_for_all_traffic is a list of the original index of the traffic in the feature file and the pcapname file. this is the ground truth
-    true_for_all_traffic = []
-    predict_for_all_traffic = []
-
-    # Data collection about traffic while iterating through traffic
-    for (batch_inputs, batch_true, batch_info) in data_generator:
-        batch_seq_len = batch_info['seq_len']
-        batch_idx = batch_info['batch_idx']
-        batch_predict = model.predict_on_batch(batch_inputs)
-        idx_for_all_traffic.extend(batch_idx.tolist())
-
-        padded_batch_acc = utilsMetric.calculate_acc_of_traffic(batch_predict, batch_true)
-        batch_acc = [padded_batch_acc[i,0:seq_len] for i,seq_len in enumerate(batch_seq_len)]
-        batch_mean_acc = [np.mean(acc) for acc in batch_acc]
-        acc_for_all_traffic.extend(batch_acc)
-        mean_acc_for_all_traffic.extend(batch_mean_acc)
-        
-        padded_batch_squared_error = utilsMetric.calculate_squared_error_of_traffic(batch_predict, batch_true)
-        batch_squared_error = [padded_batch_squared_error[i,0:seq_len,:] for i,seq_len in enumerate(batch_seq_len)]
-        batch_mean_squared_error = [np.sum(sqerr, axis=0)/sqerr.shape[0] for i,sqerr in enumerate(batch_squared_error)]
-        squared_error_for_all_traffic.extend(batch_squared_error)
-        mean_squared_error_for_all_traffic.extend(batch_mean_squared_error)
-
-        if return_output:
-            batch_true_list = [i_true for i_true in batch_true]
-            batch_predict_list = [i_predict for i_predict in batch_predict]
-            true_for_all_traffic.extend(batch_true_list)
-            predict_for_all_traffic.extend(batch_predict_list)
-
-    # return acc_for_all_traffic, mean_acc_for_all_traffic, squared_error_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic
-    metrics = {'acc':acc_for_all_traffic, 'mean_acc':mean_acc_for_all_traffic, 
-                'squared_error':squared_error_for_all_traffic, 'mean_squared_error':mean_squared_error_for_all_traffic,
-                'true':true_for_all_traffic, 'predict':predict_for_all_traffic,
-                'idx':idx_for_all_traffic}
-    return metrics
+# def compute_metrics(model, data_generator, return_output=False):
+#     # Generate predictions and perform computation of metrics
+#     acc_for_all_traffic = []
+#     mean_acc_for_all_traffic = []
+#     squared_error_for_all_traffic = []
+#     mean_squared_error_for_all_traffic = []
+#     idx_for_all_traffic = [] # idx_for_all_traffic is a list of the original index of the traffic in the feature file and the pcapname file. this is the ground truth
+#     true_for_all_traffic = []
+#     predict_for_all_traffic = []
+#
+#     # Data collection about traffic while iterating through traffic
+#     for (batch_inputs, batch_true, batch_info) in data_generator:
+#         batch_seq_len = batch_info['seq_len']
+#         batch_idx = batch_info['batch_idx']
+#         batch_predict = model.predict_on_batch(batch_inputs)
+#         idx_for_all_traffic.extend(batch_idx.tolist())
+#
+#         padded_batch_acc = utilsMetric.calculate_acc_of_traffic(batch_predict, batch_true)
+#         batch_acc = [padded_batch_acc[i,0:seq_len] for i,seq_len in enumerate(batch_seq_len)]
+#         batch_mean_acc = [np.mean(acc) for acc in batch_acc]
+#         acc_for_all_traffic.extend(batch_acc)
+#         mean_acc_for_all_traffic.extend(batch_mean_acc)
+#
+#         padded_batch_squared_error = utilsMetric.calculate_squared_error_of_traffic(batch_predict, batch_true)
+#         batch_squared_error = [padded_batch_squared_error[i,0:seq_len,:] for i,seq_len in enumerate(batch_seq_len)]
+#         batch_mean_squared_error = [np.sum(sqerr, axis=0)/sqerr.shape[0] for i,sqerr in enumerate(batch_squared_error)]
+#         squared_error_for_all_traffic.extend(batch_squared_error)
+#         mean_squared_error_for_all_traffic.extend(batch_mean_squared_error)
+#
+#         if return_output:
+#             batch_true_list = [i_true for i_true in batch_true]
+#             batch_predict_list = [i_predict for i_predict in batch_predict]
+#             true_for_all_traffic.extend(batch_true_list)
+#             predict_for_all_traffic.extend(batch_predict_list)
+#
+#     # return acc_for_all_traffic, mean_acc_for_all_traffic, squared_error_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic
+#     metrics = {'acc':acc_for_all_traffic, 'mean_acc':mean_acc_for_all_traffic,
+#                 'squared_error':squared_error_for_all_traffic, 'mean_squared_error':mean_squared_error_for_all_traffic,
+#                 'true':true_for_all_traffic, 'predict':predict_for_all_traffic,
+#                 'idx':idx_for_all_traffic}
+#     return metrics
 
 def compute_metrics_on_the_fly(model, data_generator, metric=None):
     output = []
     for (batch_inputs, batch_true, batch_info) in data_generator:
         batch_seq_len = batch_info['seq_len']
-        batch_predict = batch_predict = model.predict_on_batch(batch_inputs)
+        batch_predict = model.predict_on_batch(batch_inputs)
         if metric == 'acc' or metric == 'mean_acc':
             padded_batch_acc = utilsMetric.calculate_acc_of_traffic(batch_predict, batch_true)
             batch_acc = [padded_batch_acc[i,0:seq_len] for i,seq_len in enumerate(batch_seq_len)]
@@ -72,6 +72,52 @@ def compute_metrics_on_the_fly(model, data_generator, metric=None):
             batch_idx = batch_info['batch_idx']
             output.extend(batch_idx.tolist())
     return output
+
+def compute_metrics_generator(model, data_generator, metrics=None):
+    output = {}
+    for (batch_inputs, batch_true, batch_info) in data_generator:
+        batch_seq_len = batch_info['seq_len']
+        batch_predict = model.predict_on_batch(batch_inputs)
+
+        for metric in metrics:
+            if metric == 'acc' or metric == 'mean_acc':
+                padded_batch_acc = utilsMetric.calculate_acc_of_traffic(batch_predict, batch_true)
+                masked_batch_acc = np.ma.array(padded_batch_acc)
+                # Mask based on true seq len for every row
+                for i in range(len(batch_seq_len)):
+                    masked_batch_acc[i,batch_seq_len[i]:] = np.ma.masked
+                if metric == 'acc':
+                    output[metric] = masked_batch_acc
+                elif metric == 'mean_acc':
+                    batch_mean_acc = np.mean(masked_batch_acc, axis=-1)
+                    output[metric] = batch_mean_acc
+
+            elif metric == 'squared_error' or metric == 'mean_squared_error':
+                padded_batch_squared_error = utilsMetric.calculate_squared_error_of_traffic(batch_predict, batch_true)
+                masked_batch_squared_error = np.ma.array(padded_batch_squared_error)
+                # Mask based on true seq len for every row
+                for i in range(len(batch_seq_len)):
+                    masked_batch_squared_error[i,batch_seq_len[i]:,:] = np.ma.masked
+                if metric == 'squared_error':
+                    output[metric] = masked_batch_squared_error
+                elif metric == 'mean_squared_error':
+                    batch_mean_squared_error = np.mean(masked_batch_squared_error, axis=1)
+                    output[metric] = batch_mean_squared_error
+
+            elif metric == 'idx':
+                batch_idx = batch_info['batch_idx']
+                output[metric] = batch_idx
+
+            elif metric == 'seq_len':
+                output[metric] = batch_seq_len
+
+            elif type(metric) == int:  # dim number
+                output[metric] = (batch_true[:,:,metric:metric+1], batch_predict[:,:,metric:metric+1])
+
+            elif metric == 'true_predict':
+                output[metric] = (batch_true, batch_predict)
+
+        yield output
 
 def test_accuracy_of_traffic(mean_acc_for_all_traffic, logfile, save_dir):
     overall_mean_acc = np.mean(mean_acc_for_all_traffic)
@@ -155,5 +201,4 @@ def summary_for_sampled_traffic(sampled_metrics, dim_names, save_dir):
                                             save_dir, trough_marker=True)
 
 if __name__ == '__main__':
-    y = [np.array([[1,2,3],[4,5,6]]), np.array([[1,2,3],[4,5,6],[4,5,6],[4,5,6]])]
-    test_mse_of_dim(y, None,None,None)
+    pass

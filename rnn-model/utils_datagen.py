@@ -1,16 +1,19 @@
 import json
 import math
 import mmap
+import argparse
 import numpy as np
 from functools import partial
 from random import shuffle
 from keras.utils import Sequence
 from keras.preprocessing.sequence import pad_sequences
 
+import utils_metric as utilsMetric
+
 def find_lines(data):
     for i, char in enumerate(data):
         if char == b'\n':
-            yield i 
+            yield i
 
 def get_mmapdata_and_byteoffset(feature_file):
     ########################################################################
@@ -42,10 +45,10 @@ def get_min_max(mmap_data, byte_offset):
         max_feature = np.max(dataline, axis=0)
     return (min_feature, max_feature)
 
-def split_train_test(byte_offset, split_ratio, seed):
+def split_train_test(dataset_size, split_ratio, seed):
     # Shuffling the indices to give a random train test split
-    indices = np.random.RandomState(seed=seed).permutation(len(byte_offset)) 
-    split_idx = math.ceil((1-split_ratio)*len(byte_offset))
+    indices = np.random.RandomState(seed=seed).permutation(dataset_size)
+    split_idx = math.ceil((1-split_ratio)*dataset_size)
     train_idx, test_idx = indices[:split_idx], indices[split_idx:]
     # Avoid an empty list in test set
     if len(test_idx) == 0:
@@ -84,13 +87,6 @@ def get_feature_vector(selected_idx, mmap_data, byte_offset, sequence_len, norm_
         selected_data.append(json.loads('['+dataline+']'))
     selected_seq_len = [len(data) for data in selected_data]
     selected_inputs,selected_targets = preprocess_data(selected_data, pad_len=sequence_len, norm_fn=norm_fn)
-    # selected_data = pad_sequences(selected_data, maxlen=sequence_len, dtype='float32', padding='post', value=0.0)
-    # selected_data = norm_fn(selected_data)
-    # packet_zero = np.zeros((selected_data.shape[0],1,selected_data.shape[2]))
-    # selected_data = np.concatenate((packet_zero, selected_data), axis=1)
-    # selected_inputs = selected_data[:,:-1,:]
-    # selected_targets = selected_data[:,1:,:]    
-
     return (selected_inputs, selected_targets, selected_seq_len)
 
 def preprocess_data(batch_data, pad_len, norm_fn):
@@ -104,19 +100,18 @@ def preprocess_data(batch_data, pad_len, norm_fn):
     # Step 4: Split the data into inputs and targets
     batch_inputs = batch_data[:,:-1,:]
     batch_targets = batch_data[:,1:,:]
-    
+
     return batch_inputs, batch_targets
 
 class BatchGenerator(Sequence):
-    def __init__(self, mmap_data, byte_offset, selected_idx, batch_size, sequence_len, norm_fn, return_seq_len=False, return_batch_idx=False):
+    def __init__(self, mmap_data, byte_offset, selected_idx, batch_size, sequence_len, norm_fn, return_batch_info=False):
         self.mmap_data = mmap_data
         self.byte_offset = byte_offset
         self.selected_idx = selected_idx
         self.batch_size = batch_size
         self.sequence_len = sequence_len
         self.norm_fn = norm_fn
-        self.return_seq_len = return_seq_len
-        self.return_batch_idx = return_batch_idx
+        self.return_batch_info = return_batch_info
 
     def __len__(self):
         return int(np.ceil(len(self.selected_idx)/float(self.batch_size)))
@@ -124,42 +119,75 @@ class BatchGenerator(Sequence):
     def __getitem__(self, idx):
         batch_idx = self.selected_idx[idx*self.batch_size:(idx+1)*self.batch_size]
         batch_byte_offset = [self.byte_offset[i] for i in batch_idx]
-        # batch_idx = self.byte_offset[idx*self.batch_size:(idx+1)*self.batch_size]
+
         batch_data = []
         for start,end in batch_byte_offset:
             dataline = self.mmap_data[start:end+1].decode('ascii').strip().rstrip(',')
             batch_data.append(json.loads('['+dataline+']'))
-        
-        if self.return_seq_len:
-             y = [len(data) for data in batch_data]
-
-        # # Pad the sequence
-        # batch_data = pad_sequences(batch_data, maxlen=self.sequence_len, dtype='float32', padding='post',value=0.0)
-
-        # # Scale the features
-        # batch_data = self.norm_fn(batch_data)
-
-        # # Append zero to the start of the sequence
-        # packet_zero = np.zeros((batch_data.shape[0],1,batch_data.shape[2]))
-        # batch_data = np.concatenate((packet_zero, batch_data), axis=1)
-
-        # # Split the data into inputs and targets
-        # batch_inputs = batch_data[:,:-1,:]
-        # batch_targets = batch_data[:,1:,:]
-        batch_seq_len = [len(data) for data in batch_data]
         batch_inputs, batch_targets = preprocess_data(batch_data, pad_len=self.sequence_len, norm_fn=self.norm_fn)
 
-        batch_info = {}
-        if self.return_seq_len:
-            batch_info['seq_len'] = batch_seq_len
-        if self.return_batch_idx:
-            batch_info['batch_idx'] = batch_idx
-        
-        if bool(batch_info):
-            return (batch_inputs, batch_targets, batch_info)
-        else:
+        if not self.return_batch_info:
             return (batch_inputs, batch_targets)
-    
+
+        batch_info = {}
+        batch_seq_len = [len(data) for data in batch_data]
+        batch_info['seq_len'] = np.array(batch_seq_len)  # Standardize output into numpy array
+        batch_info['batch_idx'] = batch_idx  # batch_idx is already a numpy array
+
+        return (batch_inputs, batch_targets, batch_info)
+
     def on_epoch_end(self):
-        #shuffle(self.byte_offset)
         shuffle(self.selected_idx)
+
+def compute_metrics_generator(model, data_generator, metrics=None):
+    for (batch_inputs, batch_true, batch_info) in data_generator:
+        output = {}
+        batch_seq_len = batch_info['seq_len']
+        batch_predict = model.predict_on_batch(batch_inputs)
+
+        for metric in metrics:
+            if metric == 'acc' or metric == 'mean_acc':
+                padded_batch_acc = utilsMetric.calculate_acc_of_traffic(batch_predict, batch_true)
+                masked_batch_acc = np.ma.array(padded_batch_acc)
+                # Mask based on true seq len for every row
+                for i in range(len(batch_seq_len)):
+                    masked_batch_acc[i,batch_seq_len[i]:] = np.ma.masked
+                if metric == 'acc':
+                    output[metric] = masked_batch_acc
+                elif metric == 'mean_acc':
+                    batch_mean_acc = np.mean(masked_batch_acc, axis=-1)
+                    output[metric] = batch_mean_acc
+
+            elif metric == 'squared_error' or metric == 'mean_squared_error':
+                padded_batch_squared_error = utilsMetric.calculate_squared_error_of_traffic(batch_predict, batch_true)
+                masked_batch_squared_error = np.ma.array(padded_batch_squared_error)
+                # Mask based on true seq len for every row
+                for i in range(len(batch_seq_len)):
+                    masked_batch_squared_error[i,batch_seq_len[i]:,:] = np.ma.masked
+                if metric == 'squared_error':
+                    output[metric] = masked_batch_squared_error
+                elif metric == 'mean_squared_error':
+                    batch_mean_squared_error = np.mean(masked_batch_squared_error, axis=1)
+                    output[metric] = batch_mean_squared_error
+
+            elif metric == 'idx':
+                batch_idx = batch_info['batch_idx']
+                output[metric] = batch_idx
+
+            elif metric == 'seq_len':
+                output[metric] = batch_seq_len
+
+            elif type(metric) == int:  # dim number
+                output[metric] = (batch_true[:,:,metric:metric+1], batch_predict[:,:,metric:metric+1])
+
+            elif metric == 'true_predict':
+                output[metric] = (batch_true, batch_predict)
+
+        yield output
+
+# For defining float values between 0 and 1 for argparse
+def restricted_float(x):
+    x = float(x)
+    if x < 0.0 or x > 1.0:
+        raise argparse.ArgumentTypeError('{} not in range [0.0, 1.0]'.format(x))
+    return x

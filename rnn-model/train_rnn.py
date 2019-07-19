@@ -1,21 +1,14 @@
-import argparse
-import fnmatch
-import json
 import os
-import tracemalloc
-from datetime import datetime
-
-import keras
+import json
 import math
-import matplotlib.pyplot as plt
+import fnmatch
+import argparse
+import tracemalloc
 import numpy as np
-from keras.layers import Activation
-from keras.layers import LSTM, CuDNNLSTM
-from keras.models import Sequential
-from keras.models import load_model
+from datetime import datetime
+import matplotlib.pyplot as plt
 
 import utils_datagen as utilsDatagen
-import utils_metric as utilsMetric
 import utils_plot as utilsPlot
 
 parser = argparse.ArgumentParser()
@@ -28,6 +21,16 @@ parser.add_argument('-m', '--model', help='Input directory for existing model to
 parser.add_argument('-o', '--show', help='Flag for displaying plots', action='store_true', default=False)
 parser.add_argument('-g', '--gpu', help='Flag for using GPU in model training', action='store_true')
 args = parser.parse_args()
+
+# Force use of CPU before importing keras
+if not args.gpu:
+    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+import keras
+from keras.layers import Activation
+from keras.layers import LSTM, CuDNNLSTM
+from keras.models import Sequential
+from keras.models import load_model
+from keras.models import clone_model
 
 # Define filenames from args.rootdir
 FEATURE_FILENAME = 'features_tls_*.csv'
@@ -63,12 +66,11 @@ try:
 except FileNotFoundError:
     print('Error: Min-max feature file does not exist in args.rootdir')
     exit()
-# min_max_feature = utilsDatagen.get_min_max(mmap_data, byte_offset)
 
 # Split the dataset into train and test and return train/test indexes to the byte offset
-train_idx, test_idx = utilsDatagen.split_train_test(byte_offset, SPLIT_RATIO, SEED)
+train_idx, test_idx = utilsDatagen.split_train_test(dataset_size=len(byte_offset), split_ratio=SPLIT_RATIO, seed=SEED)
 
-# Intializing constants for data
+# Intializing constants for building RNN model
 TRAIN_SIZE = len(train_idx)
 TEST_SIZE = len(test_idx)
 sample_traffic = json.loads('['+mmap_data[byte_offset[0][0]:byte_offset[0][1]+1].decode('ascii').strip().rstrip(',')+']')
@@ -82,7 +84,7 @@ train_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, train_idx,
 test_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, test_idx, BATCH_SIZE, SEQUENCE_LEN, norm_fn)
 
 #####################################################
-# MODEL BUILDING
+# MODEL TRAINING
 #####################################################
 
 if args.gpu:
@@ -111,90 +113,24 @@ else:
 model.summary()
 
 class TrainHistory(keras.callbacks.Callback):
-    def __init__(self, generator):
+    def __init__(self, idx):
         super().__init__()
-        self.generator = generator
+        self.idx = idx
 
     def on_train_begin(self, logs={}):
-        self.mean_acc = {}
-        self.median_acc = {}
-        self.final_mean_acc = {}
-        self.predict_on_len = np.array([])
-        self.true_on_len = np.array([])
+        self.list_of_metrics_generator = []
 
     def on_epoch_end(self, epoch, logs={}):
-        # At the end of every epoch, we make a prediction and evaluate its accuracy, instead of savings the prediction...too much MEM!
-        if epoch%SAVE_EVERY_EPOCH==(SAVE_EVERY_EPOCH-1): # save after every 5,10,15,... epoch
-            temp_mean_acc = {}
-            temp_median_acc = {}
-            temp_predict_on_len = np.array([])
-            temp_true_on_len = np.array([])
-
-            for (batch_inputs, batch_true, batch_info) in self.generator:
-                batch_seq_len = batch_info['seq_len']
-                batch_predict = self.model.predict_on_batch(batch_inputs)
-                batch_acc = utilsMetric.calculate_acc_of_traffic(batch_predict, batch_true)
-
-                # Calculate cosine similarity for true packets
-                if 'true' not in temp_mean_acc:
-                    temp_mean_acc['true'] = np.array([])
-                if 'true' not in temp_median_acc:
-                    temp_median_acc['true'] = np.array([])
-                for i,seq_len in enumerate(batch_seq_len):
-                    acc_spliced = batch_acc[i:i+1,0:seq_len] # slicing to retain the dimensionality
-                    mean_acc_of_true_traffic = utilsMetric.calculate_mean_over_traffic(acc_spliced)
-                    median_acc_of_true_traffic = utilsMetric.calculate_median_over_traffic(acc_spliced)
-                    temp_mean_acc['true'] = np.concatenate((temp_mean_acc['true'], mean_acc_of_true_traffic))
-                    temp_median_acc['true'] = np.concatenate((temp_median_acc['true'], median_acc_of_true_traffic))
-
-                # Calculate cosine similarity for packet length ranging from 10 to 100
-                for seq_len in range(10,101,10):
-                    if seq_len not in temp_mean_acc:
-                        temp_mean_acc[seq_len] = np.array([])
-                    if seq_len not in temp_median_acc:
-                        temp_median_acc[seq_len] = np.array([])
-                    batch_acc_spliced = batch_acc[:,0:seq_len]
-                    mean_batch_acc_of_traffic = utilsMetric.calculate_mean_over_traffic(batch_acc_spliced)
-                    median_batch_acc_of_traffic = utilsMetric.calculate_median_over_traffic(batch_acc_spliced)
-                    temp_mean_acc[seq_len] = np.concatenate((temp_mean_acc[seq_len], mean_batch_acc_of_traffic))
-                    temp_median_acc[seq_len] = np.concatenate((temp_median_acc[seq_len], median_batch_acc_of_traffic))
-
-                # Save prediction on packet length
-                batch_predict_len = batch_predict[:,:,7:8]
-                batch_true_len = batch_true[:,:,7:8]
-                if temp_predict_on_len.size==0:
-                    temp_predict_on_len = temp_predict_on_len.reshape(0,batch_predict_len.shape[1], batch_predict_len.shape[2])
-                if temp_true_on_len.size==0:
-                    temp_true_on_len = temp_true_on_len.reshape(0,batch_true_len.shape[1], batch_true_len.shape[2])
-                temp_predict_on_len = np.concatenate((temp_predict_on_len, batch_predict_len), axis=0)
-                temp_true_on_len = np.concatenate((temp_true_on_len, batch_true_len), axis=0)
-
-            # Calculate mean across all traffic for 1 epoch 
-            for k,v in temp_mean_acc.items():
-                if k not in self.mean_acc:
-                    self.mean_acc[k] = np.array([])
-                self.mean_acc[k] = np.concatenate((self.mean_acc[k], np.mean(v, keepdims=True)))
-                self.final_mean_acc[k] = v
-
-            # Calculate median across all traffic for 1 epoch
-            for k,v in temp_median_acc.items():
-                if k not in self.median_acc:
-                    self.median_acc[k] = np.array([])
-                self.median_acc[k] = np.concatenate((self.median_acc[k], np.median(v, keepdims=True)))
-
-            # Saving the prediction and actual for 1 epoch
-            if self.predict_on_len.size==0:
-                self.predict_on_len = self.predict_on_len.reshape(0,*temp_predict_on_len.shape)
-            if self.true_on_len.size==0:
-                self.true_on_len = self.true_on_len.reshape(0,*temp_true_on_len.shape)
-            self.predict_on_len = np.concatenate((self.predict_on_len, temp_predict_on_len.reshape(1, *temp_predict_on_len.shape))) 
-            self.true_on_len = np.concatenate((self.true_on_len, temp_predict_on_len.reshape(1, *temp_true_on_len.shape)))
+        if epoch%SAVE_EVERY_EPOCH==(SAVE_EVERY_EPOCH-1):
+            data_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, self.idx, BATCH_SIZE, SEQUENCE_LEN, norm_fn, return_batch_info=True)
+            model_copy = clone_model(model)
+            model_copy.set_weights(model.get_weights())
+            metrics_generator = utilsDatagen.compute_metrics_generator(model_copy, data_generator, metrics=['acc', 7])
+            self.list_of_metrics_generator.append(metrics_generator)
 
 # Initialize NEW train and test generators for model prediction
-train_generator_prediction = utilsDatagen.BatchGenerator(mmap_data, byte_offset, train_idx, BATCH_SIZE, SEQUENCE_LEN, norm_fn, return_seq_len=True)
-test_generator_prediction = utilsDatagen.BatchGenerator(mmap_data, byte_offset, test_idx, BATCH_SIZE, SEQUENCE_LEN, norm_fn, return_seq_len=True)
-trainHistory_on_traindata = TrainHistory(train_generator_prediction)
-trainHistory_on_testdata = TrainHistory(test_generator_prediction)
+trainHistory_on_traindata = TrainHistory(train_idx)
+trainHistory_on_testdata = TrainHistory(test_idx)
 
 # Training the RNN model
 history = model.fit_generator(train_generator, steps_per_epoch=math.ceil(TRAIN_SIZE/BATCH_SIZE), 
@@ -216,33 +152,77 @@ os.makedirs(results_dir)
 plt.rcParams['figure.figsize'] = (10,7)
 plt.rcParams['legend.fontsize'] = 8
 
-# Generate plots for the model prediction on packet length over epochs
-utilsPlot.plot_prediction_on_pktlen(trainHistory_on_traindata.predict_on_len, 
-                                    trainHistory_on_traindata.true_on_len, 
-                                    trainHistory_on_testdata.predict_on_len, 
-                                    trainHistory_on_testdata.true_on_len, 
+# Generating the metrics from the generators
+assert len(trainHistory_on_traindata.list_of_metrics_generator) == len(trainHistory_on_testdata.list_of_metrics_generator)
+num_trainhistory = len(trainHistory_on_traindata.list_of_metrics_generator)
+
+# Initializing variables for storing metrics
+list_of_overall_mean_acc_train = []
+list_of_overall_median_acc_train = []
+list_of_overall_mean_acc_test = []
+list_of_overall_median_acc_test = []
+list_of_pkt_len_predict_train = []
+list_of_pkt_len_predict_test = []
+pkt_len_true_train = None
+pkt_len_true_test = None
+
+for i in range(num_trainhistory):
+    print('Computing metrics for epoch {}'.format((i+1)*SAVE_EVERY_EPOCH))
+    # Computing metrics for train dataset
+    metrics_generator_train_for_i_epoch = trainHistory_on_traindata.list_of_metrics_generator[i]
+    epoch_train_metrics = [batch_metrics for batch_metrics in metrics_generator_train_for_i_epoch]
+
+    pkt_acc_train = [batch_metrics['acc'] for batch_metrics in epoch_train_metrics]
+    pkt_acc_train = np.concatenate(pkt_acc_train, axis=0)  # Join up the batches
+    trf_mean_acc_train = np.mean(pkt_acc_train, axis=1)
+    trf_median_acc_train = np.median(pkt_acc_train, axis=1)
+    overall_mean_acc_train = np.mean(trf_mean_acc_train)
+    overall_median_acc_train = np.median(trf_median_acc_train)
+    list_of_overall_mean_acc_train.append(overall_mean_acc_train)
+    list_of_overall_median_acc_train.append(overall_median_acc_train)
+
+    pkt_len_true_predict_train = [metrics[7] for metrics in epoch_train_metrics]
+    zipped_pkt_len_true_predict_train = list(zip(*pkt_len_true_predict_train))
+    if pkt_len_true_train is None:  # Join up batches for true value of pkt len once
+        pkt_len_true_train = np.concatenate(zipped_pkt_len_true_predict_train[0], axis=0)  # Join up the batches
+    pkt_len_predict_train = np.concatenate(zipped_pkt_len_true_predict_train[1], axis=0)  # Join up the batches
+    list_of_pkt_len_predict_train.append(pkt_len_predict_train)
+
+    # Computing metrics for test dataset
+    metrics_generator_test_for_i_epoch = trainHistory_on_testdata.list_of_metrics_generator[i]
+    epoch_test_metrics = [metrics for metrics in metrics_generator_test_for_i_epoch]
+
+    pkt_acc_test = [metrics['acc'] for metrics in epoch_test_metrics]
+    pkt_acc_test = np.concatenate(pkt_acc_test, axis=0)  # Join up the batches
+    trf_mean_acc_test = np.mean(pkt_acc_test,axis=1)
+    trf_median_acc_test = np.median(pkt_acc_test, axis=1)
+    overall_mean_acc_test = np.mean(trf_mean_acc_test)
+    overall_median_acc_test = np.median(trf_median_acc_test)
+    list_of_overall_mean_acc_test.append(overall_mean_acc_test)
+    list_of_overall_median_acc_test.append(overall_median_acc_test)
+
+    pkt_len_true_predict_test = [metrics[7] for metrics in epoch_test_metrics]
+    zipped_pkt_len_true_predict_test = list(zip(*pkt_len_true_predict_test))
+    if pkt_len_true_test is None:  # Join up batches for true value of pkt len once
+        pkt_len_true_test = np.concatenate(zipped_pkt_len_true_predict_test[0], axis=0)  # Join up the batches
+    pkt_len_predict_test = np.concatenate(zipped_pkt_len_true_predict_test[1], axis=0)  # Join up the batches
+    list_of_pkt_len_predict_test.append(pkt_len_predict_test)
+
+# Generate plots for model accuracy
+utilsPlot.plot_accuracy_and_distribution(list_of_overall_mean_acc_train,
+                                    list_of_overall_median_acc_train,
+                                    list_of_overall_mean_acc_test,
+                                    list_of_overall_median_acc_test,
+                                    trf_mean_acc_train,
+                                    trf_mean_acc_test,
                                     save_every_epoch=SAVE_EVERY_EPOCH, save_dir=results_dir, show=args.show)
 
-# Generate plots for model accuracy on different sequence length
-seq_len_keys = ['true'] + list(range(10,101,10))
-for key in seq_len_keys:
-    acc_pkt_mean_train = trainHistory_on_traindata.mean_acc[key]
-    acc_pkt_median_train = trainHistory_on_traindata.median_acc[key]
-    acc_pkt_mean_test = trainHistory_on_testdata.mean_acc[key]
-    acc_pkt_median_test = trainHistory_on_testdata.median_acc[key]
-    final_acc_pkt_mean_train = trainHistory_on_traindata.final_mean_acc[key]
-    final_acc_pkt_mean_test = trainHistory_on_testdata.final_mean_acc[key]
-    print('Final mean cosine similarity for first {} pkts on train data'.format(key))
-    print(acc_pkt_mean_train[-1])
-    print('Final mean cosine similarity for first {} pkts on test data'.format(key))
-    print(acc_pkt_mean_test[-1])
-    utilsPlot.plot_accuracy_and_distribution(acc_pkt_mean_train, 
-                                    acc_pkt_median_train, 
-                                    acc_pkt_mean_test, 
-                                    acc_pkt_median_test, 
-                                    final_acc_pkt_mean_train, 
-                                    final_acc_pkt_mean_test, 
-                                    first=key, save_every_epoch=SAVE_EVERY_EPOCH, save_dir=results_dir, show=args.show)
+# Generate plots for the model prediction on packet length over epochs
+utilsPlot.plot_prediction_on_pktlen(list_of_pkt_len_predict_train,
+                                    pkt_len_true_train,
+                                    list_of_pkt_len_predict_test,
+                                    pkt_len_true_test,
+                                    save_every_epoch=SAVE_EVERY_EPOCH, save_dir=results_dir, show=args.show)
 
 # Generate plots for training & validation loss
 plt.plot(history.history['loss'])
@@ -274,10 +254,10 @@ with open(os.path.join(results_dir, 'train_log.txt'),'w') as logfile:
     for i, (loss, val_loss) in enumerate(zip(history.history['loss'], history.history['val_loss'])):
         logfile.write('Epoch  #{}\tTrain Loss: {:.6f}\tVal Loss: {:.6f}\n'.format(i+1, loss, val_loss))
     logfile.write("\n#####  TRAIN/VAL MEAN ACCURACY  #####\n")
-    for i, (train_mean, test_mean) in enumerate(zip(trainHistory_on_traindata.mean_acc['true'], trainHistory_on_testdata.mean_acc['true'])):
+    for i, (train_mean, test_mean) in enumerate(zip(list_of_overall_mean_acc_train, list_of_overall_mean_acc_test)):
         logfile.write('Epoch  #{}\tTrain Mean Accuracy: {:.6f}\tVal Mean Accuracy: {:.6f}\n'.format((i*SAVE_EVERY_EPOCH)+SAVE_EVERY_EPOCH, train_mean, test_mean))
     logfile.write("\n#####  TRAIN/VAL MEDIAN ACCURACY  #####\n")
-    for i, (train_median, test_median) in enumerate(zip(trainHistory_on_traindata.median_acc['true'], trainHistory_on_testdata.median_acc['true'])):
+    for i, (train_median, test_median) in enumerate(zip(list_of_overall_median_acc_train, list_of_overall_median_acc_test)):
         logfile.write('Epoch  #{}\tTrain Median Accuracy: {:.6f}\tVal Median Accuracy: {:.6f}\n'.format((i*SAVE_EVERY_EPOCH)+SAVE_EVERY_EPOCH, train_median, test_median))
 
 # Save the model

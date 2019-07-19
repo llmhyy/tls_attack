@@ -8,7 +8,6 @@ from matplotlib.pyplot import figure
 from matplotlib.widgets import Slider, Button, RadioButtons
 from matplotlib.patches import Arrow
 
-
 #defaults to rcParams["figure.figsize"] = [6.4, 4.8]
 
 #########   Prediction   ##########
@@ -24,7 +23,7 @@ def plot_distribution(final_acc, overall_mean_acc, save_dir, show=False):
     plt.ylabel('Mean Cosine Similarity')
     plt.axhline(y=round(overall_mean_acc,5), color='r', linestyle='-')
     plt.text(0.05, round(overall_mean_acc,5)-0.025, '{:.5f}'.format(overall_mean_acc), color='r', fontweight='bold', horizontalalignment='left', verticalalignment='top', transform=ax.transAxes)
-    plt.savefig(os.path.join(save_dir, 'acc-traffic'))
+    plt.savefig(save_dir)
     if show:
         plt.show()
     plt.clf()
@@ -81,15 +80,15 @@ def plot_summary_for_sampled_traffic(pcap_filename, mse_dim, dim_name, mean_acc,
     ax2 = plt.subplot(gs[1,:])
     ax2.plot(packetwise_acc)
     if trough_marker:
-        for i,packet_acc in enumerate(packetwise_acc.tolist()):
-            ax2.plot(i, packet_acc, 'ro-')
-            ax2.text(i, (packet_acc-0.05), i+1, fontsize=8, horizontalalignment='center')
-
-        # percentile25_acc = np.percentile(packetwise_acc, 25)
+        x_val = list(range(len(packetwise_acc)))
+        y_val = packetwise_acc - 0.05
+        text = list(range(1,len(packetwise_acc)+1))
+        ax2.plot(x_val, packetwise_acc, 'ro-')
+        ax2.text(x_val, y_val, text, fontsize=8, horizontalalignment='center')
         # for i,packet_acc in enumerate(packetwise_acc.tolist()):
-            # if packet_acc<percentile25_acc:
-                # ax2.plot(i, packet_acc, 'ro-')
-                # ax2.text(i, (packet_acc-0.05), i+1, fontsize=9, horizontalalignment='center')
+        #     ax2.plot(i, packet_acc, 'ro-')
+        #     ax2.text(i, (packet_acc-0.05), i+1, fontsize=8, horizontalalignment='center')
+
     ax2.set_xlabel('Packet #')
     ax2.set_ylabel('Cosine similarity score')
     ax2.set_title('Cosine similarity for each packet')
@@ -108,27 +107,17 @@ def plot_summary_for_sampled_traffic(pcap_filename, mse_dim, dim_name, mean_acc,
         ax_bottom.set_title('{} (B)'.format(dim_name[bottom5dim[i]]))
     handles,labels = ax_top.get_legend_handles_labels()
     fig.legend(handles, labels, loc=(0.85,0.05))
+    print('BEFORE',pcap_filename)
     if '/' in pcap_filename:
         pcap_filename = pcap_filename.replace('/','_')
     elif '\\' in pcap_filename:
         pcap_filename = pcap_filename.replace('\\', '_')
+    print('AFTER',pcap_filename)
+    print(os.path.join(save_dir, '{}.png'.format(pcap_filename)))
     plt.savefig(os.path.join(save_dir, '{}.png'.format(pcap_filename)))
     if show:
         plt.show()
     plt.close()
-
-def plot_mse_for_dim(mse_dim, dim_name, save_dir, show=False):
-    fig = plt.gcf()
-    fig.set_size_inches(25,18)
-    plt.bar(np.arange(len(mse_dim)), mse_dim, tick_label=dim_name)
-    plt.xticks(rotation='vertical', fontsize=6)
-    plt.title('Overall MSE score for each dimension')
-    plt.xlabel('Dimension')
-    plt.ylabel('Mean Squared Error')
-    plt.savefig(os.path.join(save_dir, 'mse-dim'))
-    if show:
-        plt.show()
-    plt.clf()
 
 def plot_interactive_summary_for_sampled_traffic(sampled_metrics, dim_names, save_dir, show=False):
     pcap_filenames = sampled_metrics['pcap_filename']
@@ -156,10 +145,6 @@ def plot_interactive_summary_for_sampled_traffic(sampled_metrics, dim_names, sav
     plot_graph()
 
     def on_pick(event):
-        # print(round(event.mouseevent.xdata))
-        # print(round(event.mouseevent.ydata))
-        # Create an arrow on top of the selected point
-        # print('patches', ax[0].patches)
         if len(ax[0].patches)!=0:
             ax[0].patches[0].remove()
         arrow = Arrow(round(event.mouseevent.xdata), event.mouseevent.ydata-0.11, 0, 0.05, width=0.1, color='red')
@@ -214,7 +199,7 @@ def plot_interactive_summary_for_sampled_traffic(sampled_metrics, dim_names, sav
 #########   Training   ##########
 
 def plot_accuracy_and_distribution(mean_acc_train, median_acc_train, mean_acc_test, median_acc_test, final_acc_train, final_acc_test, 
-                                    first, save_every_epoch, save_dir, show=False):
+                                    save_every_epoch, save_dir, show=False):
     """
     Plots train and test cosine similarity (mean/median) over training epochs 
     AND distribution of mean cosine similarity for train and test dataset.
@@ -237,36 +222,32 @@ def plot_accuracy_and_distribution(mean_acc_train, median_acc_train, mean_acc_te
 
     plt.subplot(311)
     epochs = len(mean_acc_train)
-    # epochs = len(predict_train)
-    # for epoch in range(0, epochs):
-    #     manual_update(epoch)
-    #     plt.savefig(os.path.join(traffic_len, 'traffic_len_epoch{}'.format((epoch*save_every_epoch)+5)))
     x_values = [(epoch*save_every_epoch)+save_every_epoch for epoch in range(0, epochs)]
     plt.plot(x_values, mean_acc_train, alpha=0.7)
     plt.plot(x_values, median_acc_train, alpha=0.7)
     plt.plot(x_values, mean_acc_test, alpha=0.7)
     plt.plot(x_values, median_acc_test, alpha=0.7)
-    plt.title('Model cosine similarity for first {} pkts'.format(first))
+    plt.title('Model cosine similarity')
     plt.ylabel('Cosine Similarity')
     plt.xlabel('Epoch')
     plt.legend(['Train(mean)', 'Train(median)' , 'Val(mean)', 'Val(median)'], loc='upper left')
 
     plt.subplot(312)
     plt.plot(final_acc_train,'|')
-    plt.title('Dist of mean cosine similarity for first {} pkts (train)'.format(first))
+    plt.title('Dist of mean cosine similarity (train)')
     plt.ylabel('Mean Cosine Similarity')
     plt.xlabel('Traffic #')
 
     plt.subplot(313)
     plt.plot(final_acc_test,'|')
-    plt.title('Dist of mean cosine similarity for first {} pkts (validation)'.format(first))
+    plt.title('Dist of mean cosine similarity (validation)')
     plt.ylabel('Mean Cosine Similarity')
     plt.xlabel('Traffic #')
 
     acc_dist = os.path.join(save_dir, 'acc_dist')
     if not os.path.exists(acc_dist):
         os.mkdir(acc_dist)
-    plt.savefig(os.path.join(acc_dist,'acc_dist_{}pkts').format(first))
+    plt.savefig(os.path.join(acc_dist,'acc_dist'))
     if show:
         plt.show()
     plt.clf()
@@ -290,11 +271,11 @@ def plot_prediction_on_pktlen(predict_train, true_train, predict_test, true_test
     for i, index in enumerate(zip(train_random,test_random)):
         ax[0,i].set_ylim([0,1])
         ax[1,i].set_ylim([0,1])
-        predict = ax[0,i].plot(predict_train[0,index[0],:,0],)
-        true = ax[0,i].plot(true_train[0,index[0],:,0], alpha=0.8)
+        predict = ax[0,i].plot(predict_train[0][index[0],:,0])
+        true = ax[0,i].plot(true_train[index[0],:,0], alpha=0.8)
         ax[0,i].set_title('Train #{}'.format(index[0]))
-        ax[1,i].plot(predict_test[0,index[1],:,0])
-        ax[1,i].plot(true_train[0,index[1],:,0], alpha=0.8)
+        ax[1,i].plot(predict_test[0][index[1],:,0])
+        ax[1,i].plot(true_test[index[1],:,0], alpha=0.8)
         ax[1,i].set_title('Test #{}'.format(index[1]))
     fig.legend((predict[0], true[0]),('Predict','True'),loc='center left')
     
@@ -309,11 +290,11 @@ def plot_prediction_on_pktlen(predict_train, true_train, predict_test, true_test
             ax[1,i].clear()
             ax[0,i].set_ylim([0,1])
             ax[1,i].set_ylim([0,1])
-            ax[0,i].plot(predict_train[epoch-1,index[0],:,0])
-            ax[0,i].plot(true_train[0,index[0],:,0], alpha=0.8)
+            ax[0,i].plot(predict_train[epoch-1][index[0],:,0])
+            ax[0,i].plot(true_train[index[0],:,0], alpha=0.8)
             ax[0,i].set_title('Train #{}'.format(index[0]))
-            ax[1,i].plot(predict_test[epoch-1,index[1],:,0])
-            ax[1,i].plot(true_train[0,index[1],:,0], alpha=0.8)
+            ax[1,i].plot(predict_test[epoch-1][index[1],:,0])
+            ax[1,i].plot(true_test[index[1],:,0], alpha=0.8)
             ax[1,i].set_title('Test #{}'.format(index[1]))
         fig.canvas.draw_idle()
 
@@ -323,11 +304,11 @@ def plot_prediction_on_pktlen(predict_train, true_train, predict_test, true_test
             ax[1,i].clear()
             ax[0,i].set_ylim([0,1])
             ax[1,i].set_ylim([0,1])
-            ax[0,i].plot(predict_train[epoch-1,index[0],:,0])
-            ax[0,i].plot(true_train[0,index[0],:,0], alpha=0.8)
+            ax[0,i].plot(predict_train[epoch-1][index[0],:,0])
+            ax[0,i].plot(true_train[index[0],:,0], alpha=0.8)
             ax[0,i].set_title('Train #{}'.format(index[0]))
-            ax[1,i].plot(predict_test[epoch-1,index[1],:,0])
-            ax[1,i].plot(true_train[0,index[1],:,0], alpha=0.8)
+            ax[1,i].plot(predict_test[epoch-1][index[1],:,0])
+            ax[1,i].plot(true_test[index[1],:,0], alpha=0.8)
             ax[1,i].set_title('Test #{}'.format(index[1]))
         fig.canvas.draw_idle()
     
