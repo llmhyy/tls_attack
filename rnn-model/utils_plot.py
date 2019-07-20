@@ -80,14 +80,14 @@ def plot_summary_for_sampled_traffic(pcap_filename, mse_dim, dim_name, mean_acc,
     ax2 = plt.subplot(gs[1,:])
     ax2.plot(packetwise_acc)
     if trough_marker:
-        x_val = list(range(len(packetwise_acc)))
-        y_val = packetwise_acc - 0.05
-        text = list(range(1,len(packetwise_acc)+1))
-        ax2.plot(x_val, packetwise_acc, 'ro-')
-        ax2.text(x_val, y_val, text, fontsize=8, horizontalalignment='center')
-        # for i,packet_acc in enumerate(packetwise_acc.tolist()):
-        #     ax2.plot(i, packet_acc, 'ro-')
-        #     ax2.text(i, (packet_acc-0.05), i+1, fontsize=8, horizontalalignment='center')
+        # x_val = list(range(len(packetwise_acc)))
+        # y_val = packetwise_acc - 0.05
+        # text = list(range(1,len(packetwise_acc)+1))
+        # ax2.plot(x_val, packetwise_acc, 'ro-')
+        # ax2.text(x_val, y_val, text, fontsize=8, horizontalalignment='center')
+        for i,packet_acc in enumerate(packetwise_acc.tolist()):
+            ax2.plot(i, packet_acc, 'ro-')
+            ax2.text(i, (packet_acc-0.05), i+1, fontsize=8, horizontalalignment='center')
 
     ax2.set_xlabel('Packet #')
     ax2.set_ylabel('Cosine similarity score')
@@ -107,25 +107,18 @@ def plot_summary_for_sampled_traffic(pcap_filename, mse_dim, dim_name, mean_acc,
         ax_bottom.set_title('{} (B)'.format(dim_name[bottom5dim[i]]))
     handles,labels = ax_top.get_legend_handles_labels()
     fig.legend(handles, labels, loc=(0.85,0.05))
-    print('BEFORE',pcap_filename)
     if '/' in pcap_filename:
         pcap_filename = pcap_filename.replace('/','_')
     elif '\\' in pcap_filename:
         pcap_filename = pcap_filename.replace('\\', '_')
-    print('AFTER',pcap_filename)
-    print(os.path.join(save_dir, '{}.png'.format(pcap_filename)))
     plt.savefig(os.path.join(save_dir, '{}.png'.format(pcap_filename)))
     if show:
         plt.show()
     plt.close()
 
-def plot_interactive_summary_for_sampled_traffic(sampled_metrics, dim_names, save_dir, show=False):
-    pcap_filenames = sampled_metrics['pcap_filename']
-    mean_acc = sampled_metrics['mean_acc']
-    pktwise_acc = sampled_metrics['acc']
-    pkwise_sqerr = sampled_metrics['squared_error']
-    predict = sampled_metrics['predict']
-    true = sampled_metrics['true']
+def plot_interactive_summary_for_sampled_traffic(pktwise_acc, mean_acc, pktwise_sqerr,
+                                                 predict, true,
+                                                 pcap_filenames, dim_names, save_dir, show=False):
 
     def plot_graph():
         fig.suptitle('{}\nAcc: {}'.format(pcap_filenames[pointer], mean_acc[pointer]))
@@ -171,7 +164,7 @@ def plot_interactive_summary_for_sampled_traffic(sampled_metrics, dim_names, sav
         ax[1].legend()
 
         color = '#000000'
-        ax2.plot(index, pkwise_sqerr[pointer][packet_num], color=color, linewidth=0.7)
+        ax2.plot(index, pktwise_sqerr[pointer][packet_num], color=color, linewidth=0.7)
         ax2.set_ylabel('Squared error', color=color)
 
     def next(event):

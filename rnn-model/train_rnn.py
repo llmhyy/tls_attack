@@ -36,7 +36,11 @@ from keras.models import clone_model
 FEATURE_FILENAME = 'features_tls_*.csv'
 MINMAX_FILENAME = 'features_minmax_ref.csv'
 rootdir_filenames = os.listdir(args.rootdir)
-feature_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, FEATURE_FILENAME)[0])
+try:
+    feature_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, FEATURE_FILENAME)[0])
+except IndexError:
+    print('\nERROR: Feature file is missing in directory.\nHint: Did you remember to join the feature files together?')
+    exit()
 minmax_dir = os.path.join(args.rootdir, '..', '..', MINMAX_FILENAME)
 
 # Config info

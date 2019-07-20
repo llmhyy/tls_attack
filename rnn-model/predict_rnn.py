@@ -45,7 +45,11 @@ FEATUREINFO_FILENAME = 'features_info_*.csv'
 PCAPNAME_FILENAME = 'pcapname_*.csv'
 MINMAX_FILENAME = 'features_minmax_ref.csv'
 rootdir_filenames = os.listdir(args.rootdir)
-feature_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, FEATURE_FILENAME)[0])
+try:
+    feature_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, FEATURE_FILENAME)[0])
+except IndexError:
+    print('\nERROR: Feature file is missing in directory.\nHint: Did you remember to join the feature files together?')
+    exit()
 featureinfo_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, FEATUREINFO_FILENAME)[0])
 pcapname_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, PCAPNAME_FILENAME)[0])
 minmax_dir = os.path.join(args.rootdir, '..', '..', MINMAX_FILENAME)
@@ -223,6 +227,8 @@ def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapn
             sampled_acc = np.concatenate(sampled_acc, axis=0)
             sampled_mean_acc = [batch_metrics['mean_acc'] for batch_metrics in metrics_for_sampled]
             sampled_mean_acc = np.concatenate(sampled_mean_acc, axis=0)
+            sampled_sqerr = [batch_metrics['squared_error'] for batch_metrics in metrics_for_sampled]
+            sampled_sqerr = np.concatenate(sampled_sqerr, axis=0)
             sampled_mean_sqerr = [batch_metrics['mean_squared_error'] for batch_metrics in metrics_for_sampled]
             sampled_mean_sqerr = np.concatenate(sampled_mean_sqerr, axis=0)
             sampled_true_predict = [batch_metrics['true_predict'] for batch_metrics in metrics_for_sampled]
@@ -232,9 +238,6 @@ def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapn
             sampled_pcap_filename = [pcap_filename[idx] for idx in sampled_idx_mmap]
             sampled_seq_len = [batch_metrics['seq_len'] for batch_metrics in metrics_for_sampled]
             sampled_seq_len = np.concatenate(sampled_seq_len, axis=0)
-            # print(sampled_mean_sqerr)
-            # print(type(sampled_mean_sqerr))
-            # print(sampled_mean_sqerr.shape)
 
             for i in range(len(sampled_pcap_filename)):
                 dim_sorted_by_mean_sqerr = sorted(range(len(sampled_mean_sqerr[i])), key=lambda k: sampled_mean_sqerr[i][k])
@@ -250,7 +253,10 @@ def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapn
                                                            save_dir, trough_marker=True)
 
             # Interactive plot for sampled traffic
-            utilsPlot.plot_interactive_summary_for_sampled_traffic(metrics_for_sampled, dim_names, save_sampled_dir, show=True)
+            utilsPlot.plot_interactive_summary_for_sampled_traffic(sampled_acc, sampled_mean_acc, sampled_sqerr,
+                                                                   sampled_predict, sampled_true,
+                                                                   sampled_pcap_filename, dim_names,
+                                                                   save_sampled_dir, show=True)
 
         else:
             print("No traffic found within bound of {}-{}".format(args.lower, args.upper))
