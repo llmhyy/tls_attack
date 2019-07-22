@@ -3,8 +3,8 @@ import math
 import mmap
 import argparse
 import numpy as np
-from functools import partial
 from random import shuffle
+from functools import partial
 from keras.utils import Sequence
 from keras.preprocessing.sequence import pad_sequences
 
@@ -139,49 +139,53 @@ class BatchGenerator(Sequence):
     def on_epoch_end(self):
         shuffle(self.selected_idx)
 
-def compute_metrics_generator(model, data_generator, metrics=None):
+def get_compute_metrics_generator(model, data_generator, metrics):
+    gen = compute_metrics_generator(model, data_generator, metrics)
+    return gen
+
+def compute_metrics_generator(model, data_generator, metrics):
     for (batch_inputs, batch_true, batch_info) in data_generator:
         output = {}
-        batch_seq_len = batch_info['seq_len']
-        batch_predict = model.predict_on_batch(batch_inputs)
-
         for metric in metrics:
-            if metric == 'acc' or metric == 'mean_acc':
-                padded_batch_acc = utilsMetric.calculate_acc_of_traffic(batch_predict, batch_true)
-                masked_batch_acc = np.ma.array(padded_batch_acc)
-                # Mask based on true seq len for every row
-                for i in range(len(batch_seq_len)):
-                    masked_batch_acc[i,batch_seq_len[i]:] = np.ma.masked
-                if metric == 'acc':
-                    output[metric] = masked_batch_acc
-                elif metric == 'mean_acc':
-                    batch_mean_acc = np.mean(masked_batch_acc, axis=-1)
-                    output[metric] = batch_mean_acc
-
-            elif metric == 'squared_error' or metric == 'mean_squared_error':
-                padded_batch_squared_error = utilsMetric.calculate_squared_error_of_traffic(batch_predict, batch_true)
-                masked_batch_squared_error = np.ma.array(padded_batch_squared_error)
-                # Mask based on true seq len for every row
-                for i in range(len(batch_seq_len)):
-                    masked_batch_squared_error[i,batch_seq_len[i]:,:] = np.ma.masked
-                if metric == 'squared_error':
-                    output[metric] = masked_batch_squared_error
-                elif metric == 'mean_squared_error':
-                    batch_mean_squared_error = np.mean(masked_batch_squared_error, axis=1)
-                    output[metric] = batch_mean_squared_error
-
-            elif metric == 'idx':
+            batch_seq_len = batch_info['seq_len']
+            if metric == 'idx':
                 batch_idx = batch_info['batch_idx']
                 output[metric] = batch_idx
 
             elif metric == 'seq_len':
                 output[metric] = batch_seq_len
 
-            elif type(metric) == int:  # dim number
-                output[metric] = (batch_true[:,:,metric:metric+1], batch_predict[:,:,metric:metric+1])
+            else:
+                batch_predict = model.predict_on_batch(batch_inputs)
+                if metric == 'acc' or metric == 'mean_acc':
+                    padded_batch_acc = utilsMetric.calculate_acc_of_traffic(batch_predict, batch_true)
+                    masked_batch_acc = np.ma.array(padded_batch_acc)
+                    # Mask based on true seq len for every row
+                    for i in range(len(batch_seq_len)):
+                        masked_batch_acc[i,batch_seq_len[i]:] = np.ma.masked
+                    if metric == 'acc':
+                        output[metric] = masked_batch_acc
+                    elif metric == 'mean_acc':
+                        batch_mean_acc = np.mean(masked_batch_acc, axis=-1)
+                        output[metric] = batch_mean_acc
 
-            elif metric == 'true_predict':
-                output[metric] = (batch_true, batch_predict)
+                elif metric == 'squared_error' or metric == 'mean_squared_error':
+                    padded_batch_squared_error = utilsMetric.calculate_squared_error_of_traffic(batch_predict, batch_true)
+                    masked_batch_squared_error = np.ma.array(padded_batch_squared_error)
+                    # Mask based on true seq len for every row
+                    for i in range(len(batch_seq_len)):
+                        masked_batch_squared_error[i,batch_seq_len[i]:,:] = np.ma.masked
+                    if metric == 'squared_error':
+                        output[metric] = masked_batch_squared_error
+                    elif metric == 'mean_squared_error':
+                        batch_mean_squared_error = np.mean(masked_batch_squared_error, axis=1)
+                        output[metric] = batch_mean_squared_error
+
+                elif type(metric) == int:  # dim number
+                    output[metric] = (batch_true[:,:,metric:metric+1], batch_predict[:,:,metric:metric+1])
+
+                elif metric == 'true_predict':
+                    output[metric] = (batch_true, batch_predict)
 
         yield output
 

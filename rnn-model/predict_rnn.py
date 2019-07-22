@@ -119,14 +119,8 @@ def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapn
         pcap_filename = [row.strip() for row in f.readlines()]
 
     print('Computing metrics and plotting graph...')
-    metrics_labels = ['idx', 'mean_acc', 'squared_error', 'acc', 7]
-    metrics_generator = utilsDatagen.compute_metrics_generator(model, dataset_generator, metrics=metrics_labels)
-    metrics = [batch_metrics for batch_metrics in metrics_generator]
-    idx_for_all_traffic = [batch_metrics['idx'] for batch_metrics in metrics]
+    idx_for_all_traffic = [batch_metrics['idx'] for batch_metrics in utilsDatagen.get_compute_metrics_generator(model, dataset_generator(), metrics=['idx'])]
     idx_for_all_traffic = np.concatenate(idx_for_all_traffic, axis=0)
-
-    mean_acc_for_all_traffic = [batch_metrics['mean_acc'] for batch_metrics in metrics]
-    mean_acc_for_all_traffic = np.concatenate(mean_acc_for_all_traffic, axis=0)  # Join up the batches
 
     if BASIC_TEST_SWITCH:
 
@@ -134,35 +128,51 @@ def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapn
         logfile = open(os.path.join(save_dir, 'predict_log.txt'),'w')
 
         # Evaluate mean accuracy across packet for each traffic
+        mean_acc_for_all_traffic = [batch_metrics['mean_acc'] for batch_metrics in utilsDatagen.get_compute_metrics_generator(model, dataset_generator(), metrics=['mean_acc'])]
+        mean_acc_for_all_traffic = np.concatenate(mean_acc_for_all_traffic, axis=0)  # Join up the batches
         overall_mean_acc = np.mean(mean_acc_for_all_traffic)
         save_dir_for_plot = os.path.join(save_dir, 'acc-traffic')
         utilsPlot.plot_distribution(mean_acc_for_all_traffic, overall_mean_acc, save_dir_for_plot)
         logfile.write("#####  TEST 1: OVERALL MEAN COSINE SIMILARITY  #####\n")
         logfile.write('Overall Mean Accuracy{:60}{:>10.6f}\n'.format(':', overall_mean_acc))
+        print('Mean accuracy calculation completed!')
 
         # Evaluate mean accuracy across selective packet for each traffic
+        selective_mean_acc_for_all_traffic = np.array([])
         upper_bound_pkt_len = 100
-        acc_for_all_traffic = [batch_metrics['acc'] for batch_metrics in metrics]
-        acc_for_all_traffic = np.concatenate(acc_for_all_traffic, axis=0)
+        pktlen_min, pktlen_max = min_max_feature[0][7], min_max_feature[1][7]
+        met_gen = utilsDatagen.get_compute_metrics_generator(model, dataset_generator(), metrics=['acc', 7])
+        for batch_metrics in met_gen:
+            # Extract and process batch of metrics on the fly to reduce memory allocation
+            # Tried to store all the batches of metrics in a list but encountered memory issues
+            batch_acc = batch_metrics['acc']
+            batch_pktlen = batch_metrics[7][0]
+            batch_pktlen = (batch_pktlen * (pktlen_max - pktlen_min)) + pktlen_min
+            mask = batch_pktlen <= upper_bound_pkt_len
+            masked_batch_acc = np.ma.array(batch_acc)
+            masked_batch_acc.mask = mask
+            batch_selective_mean_acc = np.mean(masked_batch_acc, axis=-1)
+            selective_mean_acc_for_all_traffic = np.hstack([selective_mean_acc_for_all_traffic,batch_selective_mean_acc])
 
-        pkt_len_true_predict_for_all_traffic = [batch_metrics[7] for batch_metrics in metrics]
-        pkt_len_for_all_traffic,_ = list(zip(*pkt_len_true_predict_for_all_traffic))
-        pkt_len_for_all_traffic = np.concatenate(pkt_len_for_all_traffic, axis=0)
-        pkt_len_min, pkt_len_max = min_max_feature[0][7], min_max_feature[1][7]
-        pkt_len_for_all_traffic = (pkt_len_for_all_traffic * (pkt_len_max-pkt_len_min)) + pkt_len_min  # Transform normalized feature back to original
-        mask = pkt_len_for_all_traffic <= upper_bound_pkt_len
-        masked_acc_for_all_traffic = np.ma.array(acc_for_all_traffic)
-        masked_acc_for_all_traffic.mask = mask
-
-        selective_mean_acc_for_all_traffic = np.mean(masked_acc_for_all_traffic, axis=-1)
         selective_overall_mean_acc = np.mean(selective_mean_acc_for_all_traffic)
-        save_dir_for_plot = os.path.join(save_dir, 'acc-traffic(>{} pktlen)'.format(upper_bound_pkt_len))
+        save_dir_for_plot = os.path.join(save_dir, 'acc-traffic(more than {} pktlen)'.format(upper_bound_pkt_len))
         utilsPlot.plot_distribution(np.array(selective_mean_acc_for_all_traffic), selective_overall_mean_acc, save_dir_for_plot)
+        print('Mean accuracy calculation (selective) completed!')
 
         # Evaluate mean squared error across traffic and packet for each dimension
-        squared_error_for_all_traffic = [batch_metrics['squared_error'] for batch_metrics in metrics]
-        squared_error_for_all_traffic = np.concatenate(squared_error_for_all_traffic, axis=0)  # Join up the batches
-        mean_squared_error_for_features = np.mean(squared_error_for_all_traffic, axis=(0,1))
+        sum = None
+        count = 0
+        met_gen = utilsDatagen.get_compute_metrics_generator(model, dataset_generator(), metrics=['squared_error'])
+        for batch_metrics in met_gen:
+            # Extract and process batch of metrics on the fly to reduce memory allocation
+            # Tried to store all the batches of metrics in a list but encountered memory issues
+            batch_sqerr = batch_metrics['squared_error']
+            summed_batch_sqerr = np.sum(batch_sqerr, axis=(0,1))
+            if sum is None:
+                sum = summed_batch_sqerr
+            sum += summed_batch_sqerr
+            count += batch_sqerr.count(axis=(0,1))[0]  # Take the unmasked count of any dimension in batch_sqerr
+        mean_squared_error_for_features = np.divide(sum, count, out=np.zeros_like(sum), where=count != 0)
         utilsPlot.plot_mse_for_dim(mean_squared_error_for_features, dim_names, save_dir)
         logfile.write("\n#####  TEST 2: MEAN SQUARED ERROR FOR EACH DIMENSION  #####\n")
         sorted_mse_idx = sorted(range(len(mean_squared_error_for_features)),
@@ -171,6 +181,7 @@ def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapn
             line = 'Mean Squared Error for {:60}{:>10.6f}\n'.format(dim_names[i] + ':',
                                                                     mean_squared_error_for_features[i])
             logfile.write(line)
+        print('Mean squared error calculation completed!')
 
         # if len(idx_for_all_traffic) > 100: # find outliers only for sufficiently large datasets
         #     # Get outliers from traffic based on mean acc
