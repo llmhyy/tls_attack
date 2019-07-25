@@ -6,6 +6,7 @@ import random
 import argparse
 import tracemalloc
 import numpy as np
+from functools import partial
 
 import utils_plot as utilsPlot
 import utils_datagen as utilsDatagen
@@ -92,10 +93,16 @@ train_idx,test_idx = utilsDatagen.split_train_test(dataset_size=len(byte_offset)
 # Initialize the normalization function
 norm_fn = utilsDatagen.normalize(2, min_max_feature)
 # Initialize the batch generator
-train_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, train_idx, BATCH_SIZE, SEQUENCE_LEN, norm_fn,
-                                                return_batch_info=True)
-test_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, test_idx, BATCH_SIZE, SEQUENCE_LEN, norm_fn,
-                                                return_batch_info=True)
+# train_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, train_idx, BATCH_SIZE, SEQUENCE_LEN, norm_fn,
+#                                                 return_batch_info=True)
+# test_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, test_idx, BATCH_SIZE, SEQUENCE_LEN, norm_fn,
+#                                                 return_batch_info=True)
+train_generator = partial(utilsDatagen.BatchGenerator, mmap_data=mmap_data,byte_offset=byte_offset,selected_idx=train_idx,
+                                                        batch_size=BATCH_SIZE, sequence_len=SEQUENCE_LEN, norm_fn=norm_fn,
+                                                        return_batch_info=True)
+test_generator = partial(utilsDatagen.BatchGenerator, mmap_data=mmap_data,byte_offset=byte_offset,selected_idx=test_idx,
+                                                        batch_size=BATCH_SIZE, sequence_len=SEQUENCE_LEN, norm_fn=norm_fn,
+                                                        return_batch_info=True)
 
 def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapname_dir, save_dir):
     if not os.path.exists(save_dir):
@@ -122,14 +129,31 @@ def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapn
     idx_for_all_traffic = [batch_metrics['idx'] for batch_metrics in utilsDatagen.get_compute_metrics_generator(model, dataset_generator(), metrics=['idx'])]
     idx_for_all_traffic = np.concatenate(idx_for_all_traffic, axis=0)
 
+    mean_acc_for_all_traffic = [batch_metrics['mean_acc'] for batch_metrics in utilsDatagen.get_compute_metrics_generator(model, dataset_generator(), metrics=['mean_acc'])]
+    mean_acc_for_all_traffic = np.concatenate(mean_acc_for_all_traffic, axis=0)  # Join up the batches
+
+    selective_mean_acc_for_all_traffic = np.array([])
+    upper_bound_pkt_len = 100
+    pktlen_min, pktlen_max = min_max_feature[0][7], min_max_feature[1][7]
+    met_gen = utilsDatagen.get_compute_metrics_generator(model, dataset_generator(), metrics=['acc', 7])
+    for batch_metrics in met_gen:
+        # Extract and process batch of metrics on the fly to reduce memory allocation
+        # Tried to store all the batches of metrics in a list but encountered memory issues
+        batch_acc = batch_metrics['acc']
+        batch_pktlen = batch_metrics[7][0]
+        batch_pktlen = (batch_pktlen * (pktlen_max - pktlen_min)) + pktlen_min
+        mask = batch_pktlen <= upper_bound_pkt_len
+        masked_batch_acc = np.ma.array(batch_acc)
+        masked_batch_acc.mask = mask
+        batch_selective_mean_acc = np.mean(masked_batch_acc, axis=-1)
+        selective_mean_acc_for_all_traffic = np.hstack([selective_mean_acc_for_all_traffic, batch_selective_mean_acc])
+
     if BASIC_TEST_SWITCH:
 
         # Create a log file for logging in each tests
         logfile = open(os.path.join(save_dir, 'predict_log.txt'),'w')
 
         # Evaluate mean accuracy across packet for each traffic
-        mean_acc_for_all_traffic = [batch_metrics['mean_acc'] for batch_metrics in utilsDatagen.get_compute_metrics_generator(model, dataset_generator(), metrics=['mean_acc'])]
-        mean_acc_for_all_traffic = np.concatenate(mean_acc_for_all_traffic, axis=0)  # Join up the batches
         overall_mean_acc = np.mean(mean_acc_for_all_traffic)
         save_dir_for_plot = os.path.join(save_dir, 'acc-traffic')
         utilsPlot.plot_distribution(mean_acc_for_all_traffic, overall_mean_acc, save_dir_for_plot)
@@ -138,22 +162,6 @@ def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapn
         print('Mean accuracy calculation completed!')
 
         # Evaluate mean accuracy across selective packet for each traffic
-        selective_mean_acc_for_all_traffic = np.array([])
-        upper_bound_pkt_len = 100
-        pktlen_min, pktlen_max = min_max_feature[0][7], min_max_feature[1][7]
-        met_gen = utilsDatagen.get_compute_metrics_generator(model, dataset_generator(), metrics=['acc', 7])
-        for batch_metrics in met_gen:
-            # Extract and process batch of metrics on the fly to reduce memory allocation
-            # Tried to store all the batches of metrics in a list but encountered memory issues
-            batch_acc = batch_metrics['acc']
-            batch_pktlen = batch_metrics[7][0]
-            batch_pktlen = (batch_pktlen * (pktlen_max - pktlen_min)) + pktlen_min
-            mask = batch_pktlen <= upper_bound_pkt_len
-            masked_batch_acc = np.ma.array(batch_acc)
-            masked_batch_acc.mask = mask
-            batch_selective_mean_acc = np.mean(masked_batch_acc, axis=-1)
-            selective_mean_acc_for_all_traffic = np.hstack([selective_mean_acc_for_all_traffic,batch_selective_mean_acc])
-
         selective_overall_mean_acc = np.mean(selective_mean_acc_for_all_traffic)
         save_dir_for_plot = os.path.join(save_dir, 'acc-traffic(more than {} pktlen)'.format(upper_bound_pkt_len))
         utilsPlot.plot_distribution(np.array(selective_mean_acc_for_all_traffic), selective_overall_mean_acc, save_dir_for_plot)
@@ -213,9 +221,12 @@ def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapn
         if os.path.exists(save_sampled_dir):
             shutil.rmtree(save_sampled_dir)
         os.makedirs(save_sampled_dir)
-        bounded_acc_idx = [(i,mean_acc) for i,mean_acc in enumerate(mean_acc_for_all_traffic) if mean_acc >= args.lower and mean_acc <= args.upper]
+        bounded_acc_idx = [(i,mean_acc) for i,mean_acc in enumerate(selective_mean_acc_for_all_traffic) if mean_acc >= args.lower and mean_acc <= args.upper]
         if len(bounded_acc_idx)>0:
             print("{} traffic found within bound of {}-{}".format(len(bounded_acc_idx), args.lower, args.upper))
+            print('Total traffic: {}   Outlier traffic: {}   Outlier %: {:.5f}'.format(len(idx_for_all_traffic),
+                                                                                         len(bounded_acc_idx),
+                                                                                         len(bounded_acc_idx)/len(idx_for_all_traffic)))
             try:
                 random.seed(2018)
                 sampled_acc_idx = random.sample(bounded_acc_idx, 10)
@@ -271,6 +282,7 @@ def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapn
 
         else:
             print("No traffic found within bound of {}-{}".format(args.lower, args.upper))
+            print('Total traffic: {}'.format(len(idx_for_all_traffic)))
 
     # Record the prediction accuracy into file
     RESULTS_FILENAME = 'results.csv'
