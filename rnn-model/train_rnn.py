@@ -1,10 +1,12 @@
 import os
 import json
 import math
+import random
 import fnmatch
 import argparse
 import tracemalloc
 import numpy as np
+from functools import partial
 from datetime import datetime
 import matplotlib.pyplot as plt
 
@@ -92,6 +94,7 @@ test_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, test_idx, B
 #####################################################
 
 if args.gpu:
+    # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppress Tensorflow debugging information for INFO level
     import tensorflow as tf
     from keras.backend.tensorflow_backend import set_session
 
@@ -129,7 +132,7 @@ class TrainHistory(keras.callbacks.Callback):
             data_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, self.idx, BATCH_SIZE, SEQUENCE_LEN, norm_fn, return_batch_info=True)
             model_copy = clone_model(model)
             model_copy.set_weights(model.get_weights())
-            metrics_generator = utilsDatagen.compute_metrics_generator(model_copy, data_generator, metrics=['acc', 7])
+            metrics_generator = utilsDatagen.compute_metrics_generator(model_copy, data_generator, metrics=['acc', 7, 'idx'])
             self.list_of_metrics_generator.append(metrics_generator)
 
 # Initialize NEW train and test generators for model prediction
@@ -170,46 +173,56 @@ list_of_pkt_len_predict_test = []
 pkt_len_true_train = None
 pkt_len_true_test = None
 
+# Sampling traffic for model prediction on packet length on epochs
+sample_count = 5
+sample_train_idx = random.sample(train_idx.tolist(), sample_count)
+sample_test_idx = random.sample(test_idx.tolist(), sample_count)
+
+def get_and_process_metrics_from_trainhistory_generator(met_gen, sample_idx):
+    trf_mean_acc = np.array([])
+    trf_median_acc = np.array([])
+    pkt_len_predict = []
+    pkt_len_true = []
+
+    # Extract and process batch of metrics on the fly to reduce memory allocation
+    for batch_metrics in met_gen:
+        # Compute metrics for accuracy
+        batch_pkt_acc = batch_metrics['acc']
+        batch_trf_mean_acc = np.mean(batch_pkt_acc, axis=1)
+        batch_trf_median_acc = np.median(batch_pkt_acc, axis=1)
+        trf_mean_acc = np.hstack([trf_mean_acc, batch_trf_mean_acc])
+        trf_median_acc = np.hstack([trf_median_acc, batch_trf_median_acc])
+
+        # Compute metrics for packet length
+        batch_pkt_len_true_predict = batch_metrics[7]
+        batch_idx = batch_metrics['idx']
+        batch_pkt_len_true, batch_pkt_len_predict = batch_pkt_len_true_predict
+        is_inside_sampled_idx = np.in1d(batch_idx, sample_idx)
+        filtered_batch_pkt_len_predict = batch_pkt_len_predict[is_inside_sampled_idx]  # Applying masking
+        pkt_len_predict.append(filtered_batch_pkt_len_predict)
+        filtered_batch_pkt_len_true = batch_pkt_len_true[is_inside_sampled_idx]
+        pkt_len_true.append(filtered_batch_pkt_len_true)
+
+    overall_mean_acc = np.mean(trf_mean_acc)
+    overall_median_acc = np.mean(trf_median_acc)
+
+    pkt_len_predict = np.concatenate(pkt_len_predict, axis=0)
+    pkt_len_true = np.concatenate(pkt_len_true, axis=0)
+
+    return (trf_mean_acc, overall_mean_acc, overall_median_acc, pkt_len_predict, pkt_len_true)
+
 for i in range(num_trainhistory):
     print('Computing metrics for epoch {}'.format((i+1)*SAVE_EVERY_EPOCH))
     # Computing metrics for train dataset
-    metrics_generator_train_for_i_epoch = trainHistory_on_traindata.list_of_metrics_generator[i]
-    epoch_train_metrics = [batch_metrics for batch_metrics in metrics_generator_train_for_i_epoch]
-
-    pkt_acc_train = [batch_metrics['acc'] for batch_metrics in epoch_train_metrics]
-    pkt_acc_train = np.concatenate(pkt_acc_train, axis=0)  # Join up the batches
-    trf_mean_acc_train = np.mean(pkt_acc_train, axis=1)
-    trf_median_acc_train = np.median(pkt_acc_train, axis=1)
-    overall_mean_acc_train = np.mean(trf_mean_acc_train)
-    overall_median_acc_train = np.median(trf_median_acc_train)
+    trf_mean_acc_train, overall_mean_acc_train,overall_median_acc_train,pkt_len_predict_train,pkt_len_true_train = get_and_process_metrics_from_trainhistory_generator(trainHistory_on_traindata.list_of_metrics_generator[i],sample_train_idx)
     list_of_overall_mean_acc_train.append(overall_mean_acc_train)
     list_of_overall_median_acc_train.append(overall_median_acc_train)
-
-    pkt_len_true_predict_train = [metrics[7] for metrics in epoch_train_metrics]
-    zipped_pkt_len_true_predict_train = list(zip(*pkt_len_true_predict_train))
-    if pkt_len_true_train is None:  # Join up batches for true value of pkt len once
-        pkt_len_true_train = np.concatenate(zipped_pkt_len_true_predict_train[0], axis=0)  # Join up the batches
-    pkt_len_predict_train = np.concatenate(zipped_pkt_len_true_predict_train[1], axis=0)  # Join up the batches
     list_of_pkt_len_predict_train.append(pkt_len_predict_train)
 
     # Computing metrics for test dataset
-    metrics_generator_test_for_i_epoch = trainHistory_on_testdata.list_of_metrics_generator[i]
-    epoch_test_metrics = [metrics for metrics in metrics_generator_test_for_i_epoch]
-
-    pkt_acc_test = [metrics['acc'] for metrics in epoch_test_metrics]
-    pkt_acc_test = np.concatenate(pkt_acc_test, axis=0)  # Join up the batches
-    trf_mean_acc_test = np.mean(pkt_acc_test,axis=1)
-    trf_median_acc_test = np.median(pkt_acc_test, axis=1)
-    overall_mean_acc_test = np.mean(trf_mean_acc_test)
-    overall_median_acc_test = np.median(trf_median_acc_test)
+    trf_mean_acc_test, overall_mean_acc_test, overall_median_acc_test, pkt_len_predict_test,pkt_len_true_test = get_and_process_metrics_from_trainhistory_generator(trainHistory_on_testdata.list_of_metrics_generator[i],sample_test_idx)
     list_of_overall_mean_acc_test.append(overall_mean_acc_test)
     list_of_overall_median_acc_test.append(overall_median_acc_test)
-
-    pkt_len_true_predict_test = [metrics[7] for metrics in epoch_test_metrics]
-    zipped_pkt_len_true_predict_test = list(zip(*pkt_len_true_predict_test))
-    if pkt_len_true_test is None:  # Join up batches for true value of pkt len once
-        pkt_len_true_test = np.concatenate(zipped_pkt_len_true_predict_test[0], axis=0)  # Join up the batches
-    pkt_len_predict_test = np.concatenate(zipped_pkt_len_true_predict_test[1], axis=0)  # Join up the batches
     list_of_pkt_len_predict_test.append(pkt_len_predict_test)
 
 # Generate plots for model accuracy
