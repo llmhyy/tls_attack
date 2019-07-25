@@ -22,6 +22,9 @@ from matplotlib.backends.backend_qt5agg import (FigureCanvas, NavigationToolbar2
 from matplotlib.figure import Figure
 from ruamel.yaml import YAML
 
+import tensorflow as tf
+from keras.backend.tensorflow_backend import set_session
+
 sys.path.append(os.path.join('..','rnn-model'))
 import utils_datagen as utilsDatagen
 import utils_metric as utilsMetric
@@ -70,15 +73,15 @@ class DimCanvas(FigureCanvas):
 
         predict = data['predict']
         true = data['true']
-        sqerr = data['squared_error'][0]
+        sqerr = data['squared_error']
         dim_names = data['dim_names']
         ndim = len(dim_names)
         index = [i for i in range(ndim)]
         packet_num = int(round(event.mouseevent.ydata))-1
 
-        self.dim_ax.bar(index, predict[0,packet_num,:], self.bar_width,
+        self.dim_ax.bar(index, predict[packet_num,:], self.bar_width,
                             alpha=self.opacity, color='b', label='Predict')
-        self.dim_ax.bar([i+self.bar_width for i in index], true[0,packet_num,:], self.bar_width,
+        self.dim_ax.bar([i+self.bar_width for i in index], true[packet_num,:], self.bar_width,
                             alpha=self.opacity, color='r', label='True')
         self.dim_ax.set_xticks([i+(self.bar_width/2) for i in index])
         self.dim_ax.set_xticklabels(dim_names, rotation='vertical', fontsize=6)
@@ -129,8 +132,8 @@ class AccCanvas(FigureCanvas):
         self.acc_ax.clear()
 
         self.data = data
-        acc = self.data['acc'][0]
-        mean_acc = self.data['mean_acc'][0]
+        acc = self.data['acc']
+        mean_acc = self.data['mean_acc']
         self.line, = self.acc_ax.plot(acc, [i+1 for i in range(len(acc))])
         for i,pkt_acc in enumerate(acc):
             self.acc_ax.plot(pkt_acc, i+1, 'ro', picker=2, markersize=3)
@@ -231,17 +234,29 @@ class Ui_MainWindow(object):
         self.searchCriteriaLabel = QtWidgets.QLabel()
         self.searchCriteriaLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.searchCriteriaLabel.setObjectName("searchCriteriaLabel")
-        
-        self.chooseSearchCriteria = QtWidgets.QComboBox()
-        self.chooseSearchCriteria.setObjectName("chooseSearchCriteria")
-        self.chooseSearchCriteria.addItem("search...")
-        for c in config.criteria.keys():
-            if c == 'low':
-                self.chooseSearchCriteria.addItem('Low Accuracy (<{})'.format(config.criteria[c]))
-            elif c == 'high':
-                self.chooseSearchCriteria.addItem('High Accuracy (>{})'.format(config.criteria[c]))
-            elif c is 'none':
-                self.chooseSearchCriteria.addItem('None')
+        self.searchCriteriaLabel.setText('Search traffic with acc score between')
+
+        self.lowerboundLineEdit = QtWidgets.QLineEdit()
+        self.lowerboundLineEdit.setObjectName('lowerBound')
+        # print('HERE',self.lowerboundLineEdit.frameGeometry().width())
+        # print('HERE', self.lowerboundLineEdit.frameGeometry().height())
+        # self.lowerboundLineEdit.resize(1000,400)
+        # self.lowerboundLineEdit.resize((100,32))
+        self.lowerboundLineEdit.setPlaceholderText('enter btw 0.0-1.0')
+        self.lowerboundLineEdit.setText('0.0')
+        # print(self.lowerboundLineEdit.minimumSizeHint())
+        # self.lowerboundLineEdit.setMinimumWidth(64)
+        # print(self.lowerboundLineEdit.minimumSizeHint())
+
+        self.andLabel = QtWidgets.QLabel()
+        self.andLabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.andLabel.setObjectName('andLabel')
+        self.andLabel.setText('and')
+
+        self.upperboundLineEdit = QtWidgets.QLineEdit()
+        self.upperboundLineEdit.setObjectName('upperBound')
+        self.upperboundLineEdit.setPlaceholderText('enter btw 0.0-1.0')
+        self.upperboundLineEdit.setText('1.0')
 
         self.searchButton = QtWidgets.QPushButton()
         self.searchButton.setObjectName("searchButton")
@@ -258,7 +273,10 @@ class Ui_MainWindow(object):
         self.hbox1.addWidget(self.chooseTraffic)
         self.hbox1.addStretch(1)
         self.hbox1.addWidget(self.searchCriteriaLabel)
-        self.hbox1.addWidget(self.chooseSearchCriteria)
+        self.hbox1.addWidget(self.lowerboundLineEdit)
+        # self.hbox1.addWidget(self.chooseSearchCriteria)
+        self.hbox1.addWidget(self.andLabel)
+        self.hbox1.addWidget(self.upperboundLineEdit)
         self.hbox1.addWidget(self.searchButton)
         self.hbox1.addWidget(self.settingButton)
 
@@ -337,6 +355,14 @@ class Ui_MainWindow(object):
         try:
             self.model_name = str(self.chooseModel.currentText()).lower().replace(" model", "")
             model_dir = os.path.join(self.model_dirs, config.model[self.model_name])
+            print('Using model from {}'.format(model_dir))
+
+            tf_config = tf.ConfigProto()
+            tf_config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
+            tf_config.log_device_placement = True  # to log device placement (on which device the operation ran)
+                                                # (nothing gets printed in Jupyter, only if you run it standalone)
+            sess = tf.Session(config=tf_config)
+            set_session(sess)  # set this TensorFlow session as the default session for Keras 
             self.model = load_model(model_dir)
         except FileNotFoundError:
             QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Model {} not found in directory path {}. Check config.py'.format(self.model_name))
@@ -388,7 +414,7 @@ class Ui_MainWindow(object):
             for i, line in enumerate(f):
                 pass
             line_count = i+1
-        train_idx, test_idx = utilsDatagen.split_train_test(range(line_count), SPLIT_RATIO, SEED)
+        train_idx, test_idx = utilsDatagen.split_train_test(line_count, SPLIT_RATIO, SEED)
         print('line count: {}'.format(line_count))
         print('train idx: {}'.format(len(train_idx)))
         print('test idx: {}'.format(len(test_idx)))
@@ -419,38 +445,26 @@ class Ui_MainWindow(object):
                     dim_name = '('+tls_protocol+')'+dim_name
                 self.dim_names.append(dim_name)
 
-        # Get the search critiera
-        tmp = str(self.chooseSearchCriteria.currentText()).lower()
-        if 'low' in tmp:
-            level = 'low'
-            value = float(tmp.split('<')[1].rstrip(')'))
-        elif 'high' in tmp:
-            level = 'high'
-            value = float(tmp.split('>')[1].rstrip(')'))
-        elif 'none' in tmp:
-            level = None
-            value = None
-        else:
-            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Please select a criteria')
+        # Obtain the lower and upper bound of acc for search criteria
+        try:
+            lowerBound = float(self.lowerboundLineEdit.text())
+            upperBound = float(self.upperboundLineEdit.text())
+
+            if lowerBound > upperBound:
+                QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Lowerbound value must be smaller than upperbound value'.format(self.dataset_name))
+                return
+
+        except ValueError:
+            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Please input appropriate values between 0.0 and 1.0')
             return
 
-        def filterTraffic(level, value):
-            def filterTraffic2(x, level, value):
-                if level is 'low':
-                    if x < value:
-                        return True
-                    else:
-                        return False
-                elif level is 'high':
-                    if x > value:
-                        return True
-                    else:
-                        return False
-                elif level is None:
+        def filterTraffic(lowerbound, upperbound):
+            def filterTraffic2(x, lowerbound, upperbound):
+                if x >= lowerbound and x <= upperbound:
                     return True
-            return partial(filterTraffic2, level=level, value=value)
-        
-        self.filter_fn = filterTraffic(level,value)
+            return partial(filterTraffic2, lowerbound=lowerbound, upperbound=upperbound)
+
+        self.filter_fn = filterTraffic(lowerBound, upperBound)
 
         # Load the traffic into ListWidget
         try:
@@ -492,16 +506,21 @@ class Ui_MainWindow(object):
             sorted_pcap_dir_files = sorted(pcap_dir_files)
             sorted_zipped_name_acc = sorted(zipped_name_acc)
             pointer = 0
-            for pf in sorted_pcap_dir_files:
+
+            self.full_path_list = []
+            for fullpath in sorted_pcap_dir_files:
                 fail_count = 0
                 for i in range(pointer, len(sorted_zipped_name_acc)):
                     name,acc = sorted_zipped_name_acc[i]
-                    if name in pf:
+                    if name in fullpath:
                         if self.filter_fn(acc):
                             # print('THIS IS THE ACC {}'.format(acc))
-                            item = QtWidgets.QListWidgetItem(pf)
-                            item.setToolTip(pf)
+                            # pf
+                            filename = fullpath.split(os.path.sep)[-1]
+                            item = QtWidgets.QListWidgetItem(filename)
+                            item.setToolTip(fullpath)
                             self.listWidget.addItem(item)
+                            self.full_path_list.append(fullpath)
                             pointer = i+1
                             count+=1
                             break
@@ -521,8 +540,9 @@ class Ui_MainWindow(object):
             return
 
     def onClickTraffic(self, item):
+        print('CURRENT ROW', self.listWidget.currentRow())
         # Load pcap table
-        self.selected_pcapfile = item.text()
+        self.selected_pcapfile = self.full_path_list[self.listWidget.currentRow()]
         if self.selected_pcapfile == 0:
             return
         self.loadPcapTable()
@@ -541,32 +561,41 @@ class Ui_MainWindow(object):
         traffic_features = traffic_features.reshape(1, *traffic_features.shape)     # Batchify the traffic features
         
         # Preprocess the features
-        SEQUENCE_LEN = 100
+        SEQUENCE_LEN = 1000
         MINMAX_FILENAME = 'features_minmax_ref.csv'
         try:
-            with open(os.path.join(self.feature_dir,'..',MINMAX_FILENAME)) as f:
+            with open(os.path.join(self.feature_dir,'..','..',MINMAX_FILENAME)) as f:
                 min_max_feature_list = json.load(f)
             min_max_feature = (np.array(min_max_feature_list[0]), np.array(min_max_feature_list[1]))
         except FileNotFoundError:
             print('Error: min-max feature file cannot be found in the extracted-features directory of the selected database')
             return
         norm_fn = utilsDatagen.normalize(2, min_max_feature)
-        selected_seq_len = [len(traffic_features[0])]
+        selected_seq_len = len(traffic_features[0])
         selected_input, selected_target = utilsDatagen.preprocess_data(traffic_features, pad_len=SEQUENCE_LEN, norm_fn=norm_fn)
 
         # Compute metrics for GUI 
         data = {}
         selected_predict = self.model.predict_on_batch(selected_input)
         selected_acc_padded = utilsMetric.calculate_acc_of_traffic(selected_predict, selected_target)
-        selected_acc_true = [selected_acc_padded[i,0:seq_len] for i,seq_len in enumerate(selected_seq_len)]
-        selected_mean_acc = [np.mean(acc) for acc in selected_acc_true]
+        selected_acc_padded = np.squeeze(selected_acc_padded)  # De-batchify the data
+        selected_acc_masked = np.ma.array(selected_acc_padded)
+        selected_acc_masked[selected_seq_len:] = np.ma.masked
+        selected_mean_acc = np.mean(selected_acc_masked)
         selected_sqerr_padded = utilsMetric.calculate_squared_error_of_traffic(selected_predict, selected_target)
-        selected_sqerr_true = [selected_sqerr_padded[i,0:seq_len,:] for i,seq_len in enumerate(selected_seq_len)]
+        selected_sqerr_padded = np.squeeze(selected_sqerr_padded)  # De-batchify the data
+        selected_sqerr_masked = np.ma.array(selected_sqerr_padded)
+        selected_sqerr_masked[selected_seq_len:] = np.ma.masked
+
+        # De-batchify the data
+        selected_predict = np.squeeze(selected_predict)
+        selected_target = np.squeeze(selected_target)
+
         data['predict'] = selected_predict
         data['true'] = selected_target
-        data['acc'] = selected_acc_true
+        data['acc'] = selected_acc_masked
         data['mean_acc'] = selected_mean_acc
-        data['squared_error'] = selected_sqerr_true
+        data['squared_error'] = selected_sqerr_masked
         data['dim_names'] = self.dim_names
 
         # Load accuracy graph
