@@ -252,25 +252,29 @@ def plot_prediction_on_pktlen(predict_train, true_train, predict_test, true_test
     whether the model is learning anything at all. We can callback this method at every epoch to observe 
     the changes in predicted traffic
     """
-    count = 5
-    def choose_random(min, max, count):
-        return random.sample(range(min, max), count)
 
-    fig, ax = plt.subplots(nrows=2, ncols=count)
+    def replot():
+        predict_plot,true_plot = None, None
+        for i in range(num_sample):
+            ax[0, i].clear()
+            ax[1, i].clear()
+            ax[0, i].set_ylim([0, 1])
+            ax[1, i].set_ylim([0, 1])
+            predict_plot = ax[0, i].plot(predict_train[0][i, :, 0])
+            true_plot = ax[0, i].plot(true_train[i, :, 0], alpha=0.8)
+            ax[0, i].set_title('Train Sample #{}'.format(i))
+            ax[1, i].plot(predict_test[0][i, :, 0])
+            ax[1, i].plot(true_test[i, :, 0], alpha=0.8)
+            ax[1, i].set_title('Test Sample #{}'.format(i))
+        return predict_plot, true_plot
+
+    assert len(predict_train[0]) == len(predict_test[0])
+    num_sample = len(predict_train[0])
+    fig, ax = plt.subplots(nrows=2, ncols=num_sample)
     plt.subplots_adjust(left=0.15, bottom=0.25, wspace=0.4, hspace=0.4)
     fig.set_size_inches(10, 8)
-    train_random = choose_random(0, predict_train[0].shape[0], count)
-    test_random = choose_random(0, predict_test[0].shape[0], count)
-    for i, index in enumerate(zip(train_random,test_random)):
-        ax[0,i].set_ylim([0,1])
-        ax[1,i].set_ylim([0,1])
-        predict = ax[0,i].plot(predict_train[0][index[0],:,0])
-        true = ax[0,i].plot(true_train[index[0],:,0], alpha=0.8)
-        ax[0,i].set_title('Train #{}'.format(index[0]))
-        ax[1,i].plot(predict_test[0][index[1],:,0])
-        ax[1,i].plot(true_test[index[1],:,0], alpha=0.8)
-        ax[1,i].set_title('Test #{}'.format(index[1]))
-    fig.legend((predict[0], true[0]),('Predict','True'),loc='center left')
+    predict_plot, true_plot = replot()
+    fig.legend((predict_plot[0], true_plot[0]),('Predict','True'),loc='center left')
     
     axcolor = 'lightgoldenrodyellow'
     axslider = plt.axes([0.15, 0.1, 0.75, 0.03], facecolor=axcolor)
@@ -278,33 +282,13 @@ def plot_prediction_on_pktlen(predict_train, true_train, predict_test, true_test
 
     def update(val):
         epoch = int(s.val)
-        for i, index in enumerate(zip(train_random,test_random)):
-            ax[0,i].clear()
-            ax[1,i].clear()
-            ax[0,i].set_ylim([0,1])
-            ax[1,i].set_ylim([0,1])
-            ax[0,i].plot(predict_train[epoch-1][index[0],:,0])
-            ax[0,i].plot(true_train[index[0],:,0], alpha=0.8)
-            ax[0,i].set_title('Train #{}'.format(index[0]))
-            ax[1,i].plot(predict_test[epoch-1][index[1],:,0])
-            ax[1,i].plot(true_test[index[1],:,0], alpha=0.8)
-            ax[1,i].set_title('Test #{}'.format(index[1]))
+        replot()
         fig.canvas.draw_idle()
 
     def manual_update(epoch):
-        for i, index in enumerate(zip(train_random,test_random)):
-            ax[0,i].clear()
-            ax[1,i].clear()
-            ax[0,i].set_ylim([0,1])
-            ax[1,i].set_ylim([0,1])
-            ax[0,i].plot(predict_train[epoch-1][index[0],:,0])
-            ax[0,i].plot(true_train[index[0],:,0], alpha=0.8)
-            ax[0,i].set_title('Train #{}'.format(index[0]))
-            ax[1,i].plot(predict_test[epoch-1][index[1],:,0])
-            ax[1,i].plot(true_test[index[1],:,0], alpha=0.8)
-            ax[1,i].set_title('Test #{}'.format(index[1]))
+        replot()
         fig.canvas.draw_idle()
-    
+
     s.on_changed(update)
 
     traffic_len = os.path.join(save_dir, 'traffic_len')
