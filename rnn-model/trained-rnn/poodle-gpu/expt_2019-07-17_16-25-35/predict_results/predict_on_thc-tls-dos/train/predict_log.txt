@@ -1,5 +1,5 @@
 #####  TEST 1: OVERALL MEAN COSINE SIMILARITY  #####
-Overall Mean Accuracy:                                                             0.662771
+Overall Mean Accuracy:                                                             0.676766
 
 #####  TEST 2: MEAN SQUARED ERROR FOR EACH DIMENSION  #####
 Mean Squared Error for (ClientHello)Cipher suites MODE NULL norm freq:               0.000000
@@ -7,107 +7,107 @@ Mean Squared Error for (ClientHello)Supported groups-0:                         
 Mean Squared Error for (ClientHello)Encrypt then mac length:                         0.000000
 Mean Squared Error for (ClientHello)Cipher suites AUTH ECDSA norm freq:              0.000000
 Mean Squared Error for (ClientHello)Cipher suites HASH MD5 norm freq:                0.000000
+Mean Squared Error for (ClientHello)Supported group length:                          0.000000
 Mean Squared Error for (ClientHello)Cipher suites AUTH NULL norm freq:               0.000000
 Mean Squared Error for (ClientHello)Extended master secret:                          0.000001
-Mean Squared Error for (ClientHello)Supported group length:                          0.000001
-Mean Squared Error for (ClientHello)Supported groups-29:                             0.000001
 Mean Squared Error for Flag-ECE:                                                     0.000001
+Mean Squared Error for (ClientHello)Supported groups-29:                             0.000002
 Mean Squared Error for (ClientHello)Cipher suites AUTH SRP_SHA norm freq:            0.000003
+Mean Squared Error for (ClientHello)Cipher suites KEA DH norm freq:                  0.000003
 Mean Squared Error for (ClientHello)Cipher suites ENC DES norm freq:                 0.000004
-Mean Squared Error for (ClientHello)Cipher suites ENC RC2_40 norm freq:              0.000005
-Mean Squared Error for (ClientHello)Cipher suites KEA DH norm freq:                  0.000005
-Mean Squared Error for (ClientHello)Cipher suites MODE CCM norm freq:                0.000005
+Mean Squared Error for (ClientHello)Cipher suites MODE GCM norm freq:                0.000004
+Mean Squared Error for (Server Hello Done)Length:                                    0.000004
 Mean Squared Error for (ClientHello)Cipher suites KEA PSK norm freq:                 0.000006
-Mean Squared Error for (ClientHello)Cipher suites MODE GCM norm freq:                0.000007
-Mean Squared Error for (Server Hello Done)Length:                                    0.000007
-Mean Squared Error for (ClientHello)Cipher suites KEA SRP_SHA norm freq:             0.000008
-Mean Squared Error for Interval:                                                     0.000012
-Mean Squared Error for (ClientHello)Cipher suites ENC DES40 norm freq:               0.000012
-Mean Squared Error for (ClientHello)Cipher suites HASH NULL norm freq:               0.000013
-Mean Squared Error for (Certificate)Signature algorithm-1.2.840.10045.4.3.2:         0.000014
-Mean Squared Error for (ClientHello)Cipher suites KEA NULL norm freq:                0.000015
+Mean Squared Error for (ClientHello)Cipher suites MODE CCM norm freq:                0.000006
+Mean Squared Error for Interval:                                                     0.000008
+Mean Squared Error for (Certificate)Signature algorithm-1.2.840.10045.4.3.2:         0.000009
+Mean Squared Error for (ClientHello)Cipher suites ENC RC2_40 norm freq:              0.000009
+Mean Squared Error for (ClientHello)Cipher suites HASH NULL norm freq:               0.000010
+Mean Squared Error for (ClientHello)Cipher suites KEA NULL norm freq:                0.000016
 Mean Squared Error for (ClientHello)Cipher suites ENC CHACHA20 norm freq:            0.000017
-Mean Squared Error for (ClientHello)Cipher suites AUTH KRB5 norm freq:               0.000019
-Mean Squared Error for (ClientHello)Cipher suites KEA ECDH norm freq:                0.000028
-Mean Squared Error for (ClientHello)Cipher suites ENC CAMELLIA_128 norm freq:        0.000033
-Mean Squared Error for (ClientHello)Cipher suites AUTH PSK norm freq:                0.000041
-Mean Squared Error for Flag-URG:                                                     0.000045
-Mean Squared Error for Flag-RST:                                                     0.000057
-Mean Squared Error for (Certificate)Signature algorithm-0:                           0.000071
-Mean Squared Error for (ClientHello)Cipher suites ENC SEED norm freq:                0.000072
-Mean Squared Error for (ClientHello)Cipher suites ENC RC4_128 norm freq:             0.000075
-Mean Squared Error for (ClientHello)Cipher suites ENC NULL norm freq:                0.000083
-Mean Squared Error for (ClientHello)Cipher suites KEA PSK_DHE norm freq:             0.000086
-Mean Squared Error for (ClientHello)Cipher suites ENC ARIA_128 norm freq:            0.000088
-Mean Squared Error for (ClientHello)Supported groups-25:                             0.000103
-Mean Squared Error for (ClientHello)Supported groups-23:                             0.000105
-Mean Squared Error for (Application Data Protocol)Length:                            0.000108
-Mean Squared Error for (ClientHello)Cipher suites ENC 3DES_EDE norm freq:            0.000110
-Mean Squared Error for Protocol-SSL2.0:                                              0.000117
+Mean Squared Error for (ClientHello)Cipher suites ENC DES40 norm freq:               0.000017
+Mean Squared Error for (ClientHello)Cipher suites KEA SRP_SHA norm freq:             0.000018
+Mean Squared Error for Flag-RST:                                                     0.000020
+Mean Squared Error for (ClientHello)Cipher suites KEA ECDH norm freq:                0.000022
+Mean Squared Error for (ClientHello)Cipher suites ENC 3DES_EDE norm freq:            0.000024
+Mean Squared Error for (ClientHello)Cipher suites AUTH KRB5 norm freq:               0.000024
+Mean Squared Error for Flag-URG:                                                     0.000035
+Mean Squared Error for (ClientHello)Cipher suites KEA PSK_DHE norm freq:             0.000041
+Mean Squared Error for (ClientHello)Cipher suites ENC CAMELLIA_128 norm freq:        0.000072
+Mean Squared Error for (ClientHello)Cipher suites ENC RC4_128 norm freq:             0.000073
+Mean Squared Error for (ClientHello)Cipher suites ENC SEED norm freq:                0.000075
+Mean Squared Error for (Certificate)Signature algorithm-0:                           0.000077
+Mean Squared Error for (ClientHello)Cipher suites ENC IDEA norm freq:                0.000089
+Mean Squared Error for (Application Data Protocol)Length:                            0.000114
 Mean Squared Error for (ClientHello)Cipher suites KEA KRB5 norm freq:                0.000117
-Mean Squared Error for (ClientHello)Cipher suites ENC IDEA norm freq:                0.000118
-Mean Squared Error for (ClientHello)Cipher suites ENC CAMELIA_256 norm freq:         0.000133
-Mean Squared Error for Windows Size:                                                 0.000143
-Mean Squared Error for (ClientHello)Cipher suites AUTH DSS norm freq:                0.000165
-Mean Squared Error for (ClientHello)Cipher suites length:                            0.000302
-Mean Squared Error for (Certificate)Signature algorithm-1.2.840.113549.1.1.13:       0.000354
-Mean Squared Error for Length:                                                       0.000575
-Mean Squared Error for (Certificate)Maximum certificate length:                      0.000620
-Mean Squared Error for (Encrypted Handshake Message)Length:                          0.000709
-Mean Squared Error for (ClientHello)Compression method-0:                            0.000786
-Mean Squared Error for (ClientHello)Cipher suites HASH SHA384 norm freq:             0.000797
-Mean Squared Error for (ClientHello)Length:                                          0.000799
-Mean Squared Error for (ClientHello)Cipher suites KEA DHE norm freq:                 0.000837
-Mean Squared Error for (ClientHello)Signature hash algorithm-0:                      0.000845
-Mean Squared Error for (ClientHello)Supported groups-24:                             0.000887
-Mean Squared Error for Flag-CWR:                                                     0.000934
-Mean Squared Error for (Certificate)Average certificate length:                      0.000949
-Mean Squared Error for Protocol-TLS1.1:                                              0.000985
-Mean Squared Error for (ClientHello)Cipher suites KEA ECDHE norm freq:               0.001000
-Mean Squared Error for (ClientHello)Cipher suites MODE POLY1305 norm freq:           0.001407
-Mean Squared Error for (Certificate)Signature algorithm-1.2.840.10045.4.3.3:         0.001464
-Mean Squared Error for (ClientHello)Cipher suites AUTH PSK_DHE norm freq:            0.002192
-Mean Squared Error for (Certificate)Number of Certificates:                          0.002769
-Mean Squared Error for (ClientHello)Cipher suites HASH SHA256 norm freq:             0.003716
-Mean Squared Error for (Certificate)Signature algorithm-1.2.840.113549.1.1.5:        0.004516
-Mean Squared Error for (ClientHello)Cipher suites ENC RC4_40 norm freq:              0.004658
-Mean Squared Error for (Certificate)Signature algorithm-1.2.840.113549.1.1.12:       0.005420
-Mean Squared Error for (Client Key Exchange)Length:                                  0.005915
-Mean Squared Error for (Client Key Exchange)Pubkey length:                           0.005993
-Mean Squared Error for (Certificate)Minimum certificate length:                      0.006154
-Mean Squared Error for (ClientHello)Cipher suites ENC AES_128 norm freq:             0.007476
-Mean Squared Error for Flag-FIN:                                                     0.009865
-Mean Squared Error for (ServerHello)Length:                                          0.012896
-Mean Squared Error for Flag-NS:                                                      0.013490
-Mean Squared Error for (ClientHello)Cipher suites MODE CBC norm freq:                0.017519
-Mean Squared Error for (ClientHello)Compression method-0:                            0.017972
-Mean Squared Error for (ClientHello)Cipher suites AUTH RSA norm freq:                0.018857
-Mean Squared Error for (ClientHello)Cipher suites HASH SHA norm freq:                0.020322
-Mean Squared Error for (ClientHello)Cipher suites KEA RSA norm freq:                 0.022966
-Mean Squared Error for (Certificate)Signature algorithm-1.2.840.113549.1.1.11:       0.024480
-Mean Squared Error for (ClientHello)Signature hash algorithm-1282:                   0.025459
-Mean Squared Error for (ClientHello)Signature hash algorithm-769:                    0.025675
-Mean Squared Error for (ClientHello)Signature hash algorithm-513:                    0.025743
-Mean Squared Error for (ClientHello)Signature hash algorithm-1025:                   0.025755
-Mean Squared Error for (ClientHello)Signature hash algorithm-1538:                   0.025759
-Mean Squared Error for (ClientHello)Signature hash algorithm-1283:                   0.025760
-Mean Squared Error for (ClientHello)Signature hash algorithm-1027:                   0.025760
-Mean Squared Error for (ClientHello)Signature hash algorithm-515:                    0.025760
-Mean Squared Error for (ClientHello)Signature hash algorithm-514:                    0.025760
-Mean Squared Error for (ClientHello)Cipher suites ENC AES_256 norm freq:             0.025760
-Mean Squared Error for (ClientHello)Signature hash algorithm-1537:                   0.025761
-Mean Squared Error for (ClientHello)Signature hash algorithm-771:                    0.025762
-Mean Squared Error for (ClientHello)Signature hash algorithm-1026:                   0.025762
-Mean Squared Error for (ClientHello)Signature hash algorithm-1281:                   0.025788
-Mean Squared Error for (ClientHello)Signature hash algorithm-770:                    0.025937
-Mean Squared Error for (ClientHello)Signature hash algorithm-1539:                   0.025968
-Mean Squared Error for Flag-ACK:                                                     0.027726
-Mean Squared Error for Protocol-TLS1.0:                                              0.033882
-Mean Squared Error for (ServerHello)Renegotiation info length:                       0.036617
-Mean Squared Error for Flag-SYN:                                                     0.061234
-Mean Squared Error for (Change Cipher Spec)Length:                                   0.159848
-Mean Squared Error for Flag-PSH:                                                     0.273212
-Mean Squared Error for Protocol-TCP:                                                 0.279677
-Mean Squared Error for Protocol-SSL3.0:                                              0.303019
-Mean Squared Error for Come/Leave:                                                   0.323836
-Mean Squared Error for Protocol-TLS1.2:                                              0.453305
+Mean Squared Error for (ClientHello)Cipher suites ENC CAMELIA_256 norm freq:         0.000125
+Mean Squared Error for Windows Size:                                                 0.000126
+Mean Squared Error for Protocol-SSL2.0:                                              0.000132
+Mean Squared Error for (ClientHello)Cipher suites AUTH PSK norm freq:                0.000137
+Mean Squared Error for (ClientHello)Supported groups-23:                             0.000141
+Mean Squared Error for (ClientHello)Supported groups-25:                             0.000142
+Mean Squared Error for (ClientHello)Cipher suites ENC ARIA_128 norm freq:            0.000165
+Mean Squared Error for Protocol-TLS1.1:                                              0.000253
+Mean Squared Error for (ClientHello)Cipher suites AUTH DSS norm freq:                0.000269
+Mean Squared Error for (ClientHello)Cipher suites HASH SHA384 norm freq:             0.000299
+Mean Squared Error for (ClientHello)Cipher suites ENC NULL norm freq:                0.000308
+Mean Squared Error for (Certificate)Signature algorithm-1.2.840.113549.1.1.13:       0.000417
+Mean Squared Error for (ClientHello)Supported groups-24:                             0.000451
+Mean Squared Error for (Certificate)Signature algorithm-1.2.840.10045.4.3.3:         0.000466
+Mean Squared Error for (ClientHello)Cipher suites length:                            0.000477
+Mean Squared Error for (ClientHello)Signature hash algorithm-0:                      0.000491
+Mean Squared Error for Length:                                                       0.000540
+Mean Squared Error for (Certificate)Maximum certificate length:                      0.000614
+Mean Squared Error for (ClientHello)Cipher suites KEA DHE norm freq:                 0.000727
+Mean Squared Error for (ClientHello)Compression method-0:                            0.000748
+Mean Squared Error for (ClientHello)Length:                                          0.000839
+Mean Squared Error for (Encrypted Handshake Message)Length:                          0.000867
+Mean Squared Error for (ClientHello)Cipher suites KEA ECDHE norm freq:               0.000877
+Mean Squared Error for (Certificate)Average certificate length:                      0.000893
+Mean Squared Error for Flag-CWR:                                                     0.001184
+Mean Squared Error for (ClientHello)Cipher suites MODE POLY1305 norm freq:           0.001508
+Mean Squared Error for (ClientHello)Cipher suites AUTH PSK_DHE norm freq:            0.001762
+Mean Squared Error for (Certificate)Number of Certificates:                          0.002747
+Mean Squared Error for (ClientHello)Cipher suites HASH SHA256 norm freq:             0.004083
+Mean Squared Error for (Certificate)Signature algorithm-1.2.840.113549.1.1.5:        0.004218
+Mean Squared Error for (Certificate)Signature algorithm-1.2.840.113549.1.1.12:       0.004977
+Mean Squared Error for (ClientHello)Cipher suites ENC RC4_40 norm freq:              0.005656
+Mean Squared Error for (Client Key Exchange)Length:                                  0.005767
+Mean Squared Error for (Client Key Exchange)Pubkey length:                           0.005842
+Mean Squared Error for (Certificate)Minimum certificate length:                      0.005924
+Mean Squared Error for (ClientHello)Cipher suites ENC AES_128 norm freq:             0.006722
+Mean Squared Error for Flag-NS:                                                      0.007209
+Mean Squared Error for Flag-FIN:                                                     0.011637
+Mean Squared Error for (ServerHello)Length:                                          0.012565
+Mean Squared Error for (ClientHello)Cipher suites MODE CBC norm freq:                0.018279
+Mean Squared Error for (ClientHello)Compression method-0:                            0.018908
+Mean Squared Error for (ClientHello)Cipher suites AUTH RSA norm freq:                0.019356
+Mean Squared Error for (ClientHello)Cipher suites HASH SHA norm freq:                0.020294
+Mean Squared Error for (Certificate)Signature algorithm-1.2.840.113549.1.1.11:       0.023874
+Mean Squared Error for (ClientHello)Cipher suites KEA RSA norm freq:                 0.024105
+Mean Squared Error for (ClientHello)Signature hash algorithm-1282:                   0.024390
+Mean Squared Error for (ClientHello)Signature hash algorithm-769:                    0.024401
+Mean Squared Error for (ClientHello)Signature hash algorithm-1025:                   0.024451
+Mean Squared Error for (ClientHello)Signature hash algorithm-1538:                   0.024452
+Mean Squared Error for (ClientHello)Signature hash algorithm-513:                    0.024454
+Mean Squared Error for (ClientHello)Signature hash algorithm-1283:                   0.024454
+Mean Squared Error for (ClientHello)Cipher suites ENC AES_256 norm freq:             0.024455
+Mean Squared Error for (ClientHello)Signature hash algorithm-515:                    0.024455
+Mean Squared Error for (ClientHello)Signature hash algorithm-514:                    0.024455
+Mean Squared Error for (ClientHello)Signature hash algorithm-1027:                   0.024456
+Mean Squared Error for (ClientHello)Signature hash algorithm-1026:                   0.024456
+Mean Squared Error for (ClientHello)Signature hash algorithm-771:                    0.024458
+Mean Squared Error for (ClientHello)Signature hash algorithm-1537:                   0.024461
+Mean Squared Error for (ClientHello)Signature hash algorithm-1281:                   0.024503
+Mean Squared Error for (ClientHello)Signature hash algorithm-770:                    0.024604
+Mean Squared Error for (ClientHello)Signature hash algorithm-1539:                   0.024648
+Mean Squared Error for Flag-ACK:                                                     0.026709
+Mean Squared Error for Protocol-TLS1.0:                                              0.028859
+Mean Squared Error for (ServerHello)Renegotiation info length:                       0.034438
+Mean Squared Error for Flag-SYN:                                                     0.059097
+Mean Squared Error for (Change Cipher Spec)Length:                                   0.173388
+Mean Squared Error for Protocol-TLS1.2:                                              0.242663
+Mean Squared Error for Flag-PSH:                                                     0.289883
+Mean Squared Error for Protocol-TCP:                                                 0.299506
+Mean Squared Error for Protocol-SSL3.0:                                              0.307101
+Mean Squared Error for Come/Leave:                                                   0.331611
