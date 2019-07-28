@@ -79,6 +79,12 @@ def normalize(option, min_max_feature=None):
             print("Error: min-max range for feature is not provided")
             return
 
+def denormalize(batch_norm_data, min_feature, max_feature):
+    # TODO: Denormalize the data based on a user-specified option in future
+    # Expects min_feature and max_feature to be scalar values
+    batch_data = (batch_norm_data * (max_feature - min_feature)) + min_feature
+    return batch_data
+
 def get_feature_vector(selected_idx, mmap_data, byte_offset, sequence_len, norm_fn):
     selected_byte_offset = [byte_offset[i] for i in selected_idx]
     selected_data = []
@@ -195,3 +201,4 @@ def restricted_float(x):
     if x < 0.0 or x > 1.0:
         raise argparse.ArgumentTypeError('{} not in range [0.0, 1.0]'.format(x))
     return x
+

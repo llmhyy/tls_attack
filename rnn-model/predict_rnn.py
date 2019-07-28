@@ -17,8 +17,10 @@ parser.add_argument('-r', '--rootdir', help='Input the directory path of the fol
 parser.add_argument('-s', '--savedir', help='Input the directory path to save the prediction results', required=True)  # e.g foo/bar/trained-rnn/normal/expt_2019-03-15_21-52-20/predict_results/predict_on_normal/
 parser.add_argument('-q', '--tstep', help='Input the number of time steps used in this model', default=1000, type=int)
 parser.add_argument('-o', '--mode', help='Input the combination of test for evaluation of the model', default=0, type=int, choices=[0,1,2])
-parser.add_argument('-l', '--lower', help='Input the lower bound for sampling traffic', default=0, type=utilsDatagen.restricted_float)
-parser.add_argument('-u', '--upper', help='Input upper bound for sampling traffic', default=1, type=utilsDatagen.restricted_float)
+parser.add_argument('-l', '--lower', help='Input the lower bound for sampling traffic', default=0.0, type=utilsDatagen.restricted_float)
+parser.add_argument('-u', '--upper', help='Input upper bound for sampling traffic', default=1.0, type=utilsDatagen.restricted_float)
+# parser.add_argument('-tl', '--templower', help='Input the lower bound for sampling traffic', default=0.0, type=utilsDatagen.restricted_float)
+# parser.add_argument('-tu', '--tempupper', help='Input upper bound for sampling traffic', default=1.0, type=utilsDatagen.restricted_float)
 parser.add_argument('-g', '--gpu', help='Flag for using GPU in model training', action='store_true')
 args = parser.parse_args()
 
@@ -62,11 +64,16 @@ SEED = 2019
 
 if args.gpu:
     import tensorflow as tf
+
+    # Use gradient checkpointing to reduce GPU memory
+    import memory_saving_gradients as gc
+    from tensorflow.python.ops import gradients as tf_gradients
+    tf_gradients.gradients = gc.gradients_speed
+
     from keras.backend.tensorflow_backend import set_session
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
     config.log_device_placement = True  # to log device placement (on which device the operation ran)
-                                        # (nothing gets printed in Jupyter, only if you run it standalone)
     sess = tf.Session(config=config)
     set_session(sess)  # set this TensorFlow session as the default session for Keras
 
@@ -93,10 +100,6 @@ train_idx,test_idx = utilsDatagen.split_train_test(dataset_size=len(byte_offset)
 # Initialize the normalization function
 norm_fn = utilsDatagen.normalize(2, min_max_feature)
 # Initialize the batch generator
-# train_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, train_idx, BATCH_SIZE, SEQUENCE_LEN, norm_fn,
-#                                                 return_batch_info=True)
-# test_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, test_idx, BATCH_SIZE, SEQUENCE_LEN, norm_fn,
-#                                                 return_batch_info=True)
 train_generator = partial(utilsDatagen.BatchGenerator, mmap_data=mmap_data,byte_offset=byte_offset,selected_idx=train_idx,
                                                         batch_size=BATCH_SIZE, sequence_len=SEQUENCE_LEN, norm_fn=norm_fn,
                                                         return_batch_info=True)
@@ -141,7 +144,7 @@ def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapn
         # Tried to store all the batches of metrics in a list but encountered memory issues
         batch_acc = batch_metrics['acc']
         batch_pktlen = batch_metrics[7][0]
-        batch_pktlen = (batch_pktlen * (pktlen_max - pktlen_min)) + pktlen_min
+        batch_pktlen = utilsDatagen.denormalize(batch_pktlen, pktlen_min, pktlen_max)
         mask = batch_pktlen <= upper_bound_pkt_len
         masked_batch_acc = np.ma.array(batch_acc)
         masked_batch_acc.mask = mask
@@ -221,20 +224,27 @@ def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapn
         if os.path.exists(save_sampled_dir):
             shutil.rmtree(save_sampled_dir)
         os.makedirs(save_sampled_dir)
-        bounded_acc_idx = [(i,mean_acc) for i,mean_acc in enumerate(selective_mean_acc_for_all_traffic) if mean_acc >= args.lower and mean_acc <= args.upper]
-        if len(bounded_acc_idx)>0:
-            print("{} traffic found within bound of {}-{}".format(len(bounded_acc_idx), args.lower, args.upper))
-            print('Total traffic: {}   Outlier traffic: {}   Outlier %: {:.5f}'.format(len(idx_for_all_traffic),
-                                                                                         len(bounded_acc_idx),
-                                                                                         len(bounded_acc_idx)/len(idx_for_all_traffic)))
+        bounded_selective_mean_acc_idx = [(i,mean_acc) for i,mean_acc in enumerate(selective_mean_acc_for_all_traffic) if mean_acc >= args.lower and mean_acc <= args.upper]
+        # bounded_mean_acc_idx = [(i,mean_acc) for i,mean_acc in enumerate(mean_acc_for_all_traffic) if mean_acc >= args.templower and mean_acc <= args.tempupper]
+        # print('###  Outlier Summary with Mean Acc  ###')
+        # print('Total traffic: {}   Outlier traffic: {}   Outlier %: {:.5f}'.format(len(idx_for_all_traffic),
+        #                                                                            len(bounded_mean_acc_idx),
+        #                                                                            len(bounded_mean_acc_idx) / len(idx_for_all_traffic)))
+        print('###  Outlier Summary with Selective Mean Acc')
+        print('Total traffic: {}   Outlier traffic: {}   Outlier %: {:.5f}'.format(len(idx_for_all_traffic),
+                                                                                   len(bounded_selective_mean_acc_idx),
+                                                                                   len(bounded_selective_mean_acc_idx)/len(idx_for_all_traffic)))
+
+        if len(bounded_selective_mean_acc_idx)>0:
+            print("{} traffic found within bound of {}-{}".format(len(bounded_selective_mean_acc_idx), args.lower, args.upper))
             try:
                 random.seed(2018)
-                sampled_acc_idx = random.sample(bounded_acc_idx, 10)
+                sampled_acc_idx = random.sample(bounded_selective_mean_acc_idx, 10)
             except ValueError:
-                sampled_acc_idx = bounded_acc_idx
+                sampled_acc_idx = bounded_selective_mean_acc_idx
 
             print("Sampling {} traffic".format(len(sampled_acc_idx)))
-            sampled_idx,_ = [list(t) for t in zip(*sampled_acc_idx)]
+            sampled_idx,sampled_mean_acc = [list(t) for t in zip(*sampled_acc_idx)]
             # Get the index used in the original mmap object and byte offset
             sampled_idx_mmap = np.array([idx_for_all_traffic[idx] for idx in sampled_idx])
             # Initialize the batch generator with original index
@@ -247,8 +257,7 @@ def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapn
             # General summary of sampled traffic
             sampled_acc = [batch_metrics['acc'] for batch_metrics in metrics_for_sampled]
             sampled_acc = np.concatenate(sampled_acc, axis=0)
-            sampled_mean_acc = [batch_metrics['mean_acc'] for batch_metrics in metrics_for_sampled]
-            sampled_mean_acc = np.concatenate(sampled_mean_acc, axis=0)
+            sampled_mean_acc = np.array(sampled_mean_acc)
             sampled_sqerr = [batch_metrics['squared_error'] for batch_metrics in metrics_for_sampled]
             sampled_sqerr = np.concatenate(sampled_sqerr, axis=0)
             sampled_mean_sqerr = [batch_metrics['mean_squared_error'] for batch_metrics in metrics_for_sampled]
@@ -272,7 +281,7 @@ def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapn
                                                            sampled_predict[:, :, bottom5dim][i, :sampled_seq_len[i]],
                                                            sampled_true[:, :, bottom5dim][i, :sampled_seq_len[i]],
                                                            bottom5dim,
-                                                           save_dir, trough_marker=True)
+                                                           save_sampled_dir, trough_marker=True)
 
             # Interactive plot for sampled traffic
             utilsPlot.plot_interactive_summary_for_sampled_traffic(sampled_acc, sampled_mean_acc, sampled_sqerr,
@@ -286,7 +295,7 @@ def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapn
 
     # Record the prediction accuracy into file
     RESULTS_FILENAME = 'results.csv'
-    zipped = zip(idx_for_all_traffic, mean_acc_for_all_traffic)
+    zipped = zip(idx_for_all_traffic, selective_mean_acc_for_all_traffic)
     sorted_acc = [x for _, x in sorted(zipped)]
     with open(os.path.join(save_dir, RESULTS_FILENAME), 'w') as f:
         for x in sorted_acc:
