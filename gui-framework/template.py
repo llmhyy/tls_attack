@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import fnmatch
-import json
 # Form implementation generated from reading ui file 'template.ui'
 #
 # Created by: PyQt5 UI code generator 5.11.2
@@ -9,14 +7,17 @@ import json
 # WARNING! All changes made in this file will be lost!
 import os
 import re
-import subprocess
 import sys
+import json
+import math
 import time
+import fnmatch
 import traceback
+import subprocess
 from functools import partial
 
 import numpy as np
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 from keras.models import load_model
 from matplotlib.backends.backend_qt5agg import (FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
 from matplotlib.figure import Figure
@@ -24,6 +25,12 @@ from ruamel.yaml import YAML
 
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
+tf_config = tf.ConfigProto()
+tf_config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
+tf_config.log_device_placement = True  # to log device placement (on which device the operation ran)
+# (nothing gets printed in Jupyter, only if you run it standalone)
+sess = tf.Session(config=tf_config)
+set_session(sess)  # set this TensorFlow session as the default session for Keras
 
 sys.path.append(os.path.join('..','rnn-model'))
 import utils_datagen as utilsDatagen
@@ -67,7 +74,7 @@ class DimCanvas(FigureCanvas):
         self.dim_ax = self.dim_fig.subplots()
         self.dim_ax2 = self.dim_ax.twinx()
 
-    def plot(self, event, data):
+    def plot(self, packet_num, data):
         self.dim_ax.clear()
         self.dim_ax2.clear()
 
@@ -77,7 +84,6 @@ class DimCanvas(FigureCanvas):
         dim_names = data['dim_names']
         ndim = len(dim_names)
         index = [i for i in range(ndim)]
-        packet_num = int(round(event.mouseevent.ydata))-1
 
         self.dim_ax.bar(index, predict[packet_num,:], self.bar_width,
                             alpha=self.opacity, color='b', label='Predict')
@@ -111,7 +117,6 @@ class DimCanvas(FigureCanvas):
 
         self.dim_ax2.plot(index, sqerr[packet_num], color='#000000', linewidth=0.7)
         self.dim_ax2.set_ylabel('Sq err')
-
         self.dim_ax.set_title('Packet No. {}'.format(packet_num+1))
 
         self.draw()
@@ -124,6 +129,11 @@ class AccCanvas(FigureCanvas):
         self.acc_fig = self.figure
         self.acc_ax = self.acc_fig.subplots()
         self.dimcanvas = dimcanvas
+        self.maxpackettoshow = 50
+        self.currentpage = 0
+        self.line = None
+        self.reddot = None
+        self.greydot = None
 
     def plot(self, data):
         self.dimcanvas.dim_ax.clear()
@@ -131,23 +141,60 @@ class AccCanvas(FigureCanvas):
         self.dimcanvas.draw()
         self.acc_ax.clear()
 
+        # Save data into class's attribute first
         self.data = data
-        acc = self.data['acc']
-        mean_acc = self.data['mean_acc']
-        self.line, = self.acc_ax.plot(acc, [i+1 for i in range(len(acc))])
-        for i,pkt_acc in enumerate(acc):
-            self.acc_ax.plot(pkt_acc, i+1, 'ro', picker=2, markersize=3)
+        self.acc = self.data['acc']
+        self.mean_acc = self.data['mean_acc']
+        self.pktlen_mask = self.data['pktlen_mask']
+        self.maxpage = math.ceil(self.acc.count()/self.maxpackettoshow) - 1
+
+
+        self._plot()
+
+    def _plot(self):
+        self.acc_ax.clear()
+
+        # Setup matplotlib axes and fig
         self.acc_ax.invert_yaxis()
-        self.acc_ax.set_title('Mean Acc: {}'.format(mean_acc))
+        self.acc_ax.set_title('Mean Acc: {}'.format(self.mean_acc))
         self.acc_ax.set_xlabel('Acc')
+        self.acc_ax.set_xlim(0.0, 1.0)
         self.annot = self.acc_ax.annotate('', xy=(0.5,0.5), xytext=(-1, 5), textcoords='offset points', horizontalalignment='center')
         self.annot.set_visible(False)
         self.acc_fig.canvas.mpl_connect('pick_event', self.on_pick)
         self.acc_fig.canvas.mpl_connect('motion_notify_event', self.hover)
+
+        pkt_num = []
+        acc = []
+        pktlen_mask = []
+        try:
+            for i in range(self.currentpage*self.maxpackettoshow, (self.currentpage+1)*self.maxpackettoshow):
+                pkt_num.append(i+1)
+                acc.append(self.acc[i])
+                pktlen_mask.append(self.pktlen_mask[i])
+        except IndexError:
+            # Reached end of array
+            pass
+
+        self.line, = self.acc_ax.plot(acc, pkt_num)
+        for i,pkt_acc in enumerate(acc):
+            if pktlen_mask[i]:
+                self.greydot = self.acc_ax.plot(pkt_acc, pkt_num[i], 'o', picker=2.0, markersize=3, color='grey')
+            else:
+                self.reddot = self.acc_ax.plot(pkt_acc, pkt_num[i], 'ro', picker=2.0, markersize=3)
         self.draw()
 
+    def _plot_next(self):
+        self.currentpage = min(self.currentpage+1, self.maxpage)
+        self._plot()
+
+    def _plot_previous(self):
+        self.currentpage = max(self.currentpage-1, 0)
+        self._plot()
+
     def on_pick(self, event):
-        self.dimcanvas.plot(event, self.data)
+        packet_num = int(round(event.mouseevent.ydata)) - 1
+        self.dimcanvas.plot(packet_num, self.data)
 
     def update_annot(self, idx):
         x,y = self.line.get_data()
@@ -238,15 +285,8 @@ class Ui_MainWindow(object):
 
         self.lowerboundLineEdit = QtWidgets.QLineEdit()
         self.lowerboundLineEdit.setObjectName('lowerBound')
-        # print('HERE',self.lowerboundLineEdit.frameGeometry().width())
-        # print('HERE', self.lowerboundLineEdit.frameGeometry().height())
-        # self.lowerboundLineEdit.resize(1000,400)
-        # self.lowerboundLineEdit.resize((100,32))
         self.lowerboundLineEdit.setPlaceholderText('enter btw 0.0-1.0')
         self.lowerboundLineEdit.setText('0.0')
-        # print(self.lowerboundLineEdit.minimumSizeHint())
-        # self.lowerboundLineEdit.setMinimumWidth(64)
-        # print(self.lowerboundLineEdit.minimumSizeHint())
 
         self.andLabel = QtWidgets.QLabel()
         self.andLabel.setAlignment(QtCore.Qt.AlignCenter)
@@ -274,7 +314,6 @@ class Ui_MainWindow(object):
         self.hbox1.addStretch(1)
         self.hbox1.addWidget(self.searchCriteriaLabel)
         self.hbox1.addWidget(self.lowerboundLineEdit)
-        # self.hbox1.addWidget(self.chooseSearchCriteria)
         self.hbox1.addWidget(self.andLabel)
         self.hbox1.addWidget(self.upperboundLineEdit)
         self.hbox1.addWidget(self.searchButton)
@@ -308,15 +347,40 @@ class Ui_MainWindow(object):
         self.tableWidget.setColumnCount(0)
         self.tableWidget.setRowCount(0)
         self.tableWidget.verticalHeader().setVisible(True)
-        
+        # Override QtTableWidget's cellClicked
+        def plotDimGraphOnClickTable(row, column):
+            self.dimGraph.plot(row, self.data)
+        self.tableWidget.cellClicked.connect(plotDimGraphOnClickTable)
+
         self.accGraph = AccCanvas(self.dimGraph)
         self.accGraphWidget = PlotWidget()
         self.accGraphWidget.add_canvas(self.accGraph)
         self.accGraph.setParent(self.accGraphWidget)
 
+        self.leftButtonForAccGraph = QtWidgets.QPushButton()
+        self.leftButtonForAccGraph.setObjectName('leftButtonAccGraph')
+        self.leftButtonForAccGraph.setIcon(QtGui.QIcon(os.path.join('icons','leftarrow.png')))
+        self.leftButtonForAccGraph.clicked.connect(self.accGraph._plot_previous)
+
+        self.rightButtonForAccGraph = QtWidgets.QPushButton()
+        self.rightButtonForAccGraph.setObjectName('rightButtonAccGraph')
+        self.rightButtonForAccGraph.setIcon(QtGui.QIcon(os.path.join('icons', 'rightarrow.png')))
+        self.rightButtonForAccGraph.clicked.connect(self.accGraph._plot_next)
+
+        self.hbox2 = QtWidgets.QHBoxLayout()
+        self.hbox2.addWidget(self.leftButtonForAccGraph)
+        self.hbox2.addWidget(self.rightButtonForAccGraph)
+
+        self.vbox4 = QtWidgets.QVBoxLayout()
+        self.vbox4.addWidget(self.accGraphWidget, 9)
+        self.vbox4.addLayout(self.hbox2, 1)
+
         self.hsplitter1 = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         self.hsplitter1.addWidget(self.tableWidget)
-        self.hsplitter1.addWidget(self.accGraphWidget)
+        # self.hsplitter1.addWidget(self.accGraphWidget)
+        self.vbox4_widget = QtWidgets.QWidget()
+        self.vbox4_widget.setLayout(self.vbox4)
+        self.hsplitter1.addWidget(self.vbox4_widget)
         self.hsplitter1.setStretchFactor(0, 7)
         self.hsplitter1.setStretchFactor(1, 3)
 
@@ -327,9 +391,9 @@ class Ui_MainWindow(object):
         self.vsplitter1.setStretchFactor(1, 5.5)
 
         self.hsplitter2 = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
-        self.hbox2_widget = QtWidgets.QWidget()
-        self.hbox2_widget.setLayout(self.vbox3)
-        self.hsplitter2.addWidget(self.hbox2_widget)
+        self.vbox3_widget = QtWidgets.QWidget()
+        self.vbox3_widget.setLayout(self.vbox3)
+        self.hsplitter2.addWidget(self.vbox3_widget)
         self.hsplitter2.addWidget(self.vsplitter1)
         self.hsplitter2.setStretchFactor(0, 2.5)
         self.hsplitter2.setStretchFactor(1, 7.5)
@@ -356,13 +420,6 @@ class Ui_MainWindow(object):
             self.model_name = str(self.chooseModel.currentText()).lower().replace(" model", "")
             model_dir = os.path.join(self.model_dirs, config.model[self.model_name])
             print('Using model from {}'.format(model_dir))
-
-            tf_config = tf.ConfigProto()
-            tf_config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
-            tf_config.log_device_placement = True  # to log device placement (on which device the operation ran)
-                                                # (nothing gets printed in Jupyter, only if you run it standalone)
-            sess = tf.Session(config=tf_config)
-            set_session(sess)  # set this TensorFlow session as the default session for Keras 
             self.model = load_model(model_dir)
         except FileNotFoundError:
             QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Model {} not found in directory path {}. Check config.py'.format(self.model_name))
@@ -540,7 +597,6 @@ class Ui_MainWindow(object):
             return
 
     def onClickTraffic(self, item):
-        print('CURRENT ROW', self.listWidget.currentRow())
         # Load pcap table
         self.selected_pcapfile = self.full_path_list[self.listWidget.currentRow()]
         if self.selected_pcapfile == 0:
@@ -552,8 +608,8 @@ class Ui_MainWindow(object):
         with open(os.path.join(self.feature_dirs, '..', ENUMS_FILENAME)) as f:
             enums = yaml.load(f)
         try:
-            tcp_features = utilsFeatureExtract.extract_tcp_features(self.selected_pcapfile, limit=200)
-            tls_features = utilsFeatureExtract.extract_tslssl_features(self.selected_pcapfile, enums, limit=200)
+            tcp_features = utilsFeatureExtract.extract_tcp_features(self.selected_pcapfile, limit=1000)
+            tls_features = utilsFeatureExtract.extract_tslssl_features(self.selected_pcapfile, enums, limit=1000)
         except (KeyError, AttributeError, TypeError):
             QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Feature extraction failed. Choose another traffic')
             return
@@ -571,35 +627,48 @@ class Ui_MainWindow(object):
             print('Error: min-max feature file cannot be found in the extracted-features directory of the selected database')
             return
         norm_fn = utilsDatagen.normalize(2, min_max_feature)
-        selected_seq_len = len(traffic_features[0])
+        selected_seqlen = len(traffic_features[0])
         selected_input, selected_target = utilsDatagen.preprocess_data(traffic_features, pad_len=SEQUENCE_LEN, norm_fn=norm_fn)
 
         # Compute metrics for GUI 
-        data = {}
+        self.data = {}
         selected_predict = self.model.predict_on_batch(selected_input)
+        # Calculate metrics with batchified data
         selected_acc_padded = utilsMetric.calculate_acc_of_traffic(selected_predict, selected_target)
-        selected_acc_padded = np.squeeze(selected_acc_padded)  # De-batchify the data
-        selected_acc_masked = np.ma.array(selected_acc_padded)
-        selected_acc_masked[selected_seq_len:] = np.ma.masked
-        selected_mean_acc = np.mean(selected_acc_masked)
         selected_sqerr_padded = utilsMetric.calculate_squared_error_of_traffic(selected_predict, selected_target)
-        selected_sqerr_padded = np.squeeze(selected_sqerr_padded)  # De-batchify the data
-        selected_sqerr_masked = np.ma.array(selected_sqerr_padded)
-        selected_sqerr_masked[selected_seq_len:] = np.ma.masked
 
         # De-batchify the data
         selected_predict = np.squeeze(selected_predict)
         selected_target = np.squeeze(selected_target)
 
-        data['predict'] = selected_predict
-        data['true'] = selected_target
-        data['acc'] = selected_acc_masked
-        data['mean_acc'] = selected_mean_acc
-        data['squared_error'] = selected_sqerr_masked
-        data['dim_names'] = self.dim_names
+        upper_bound_pktlen = 100
+        selected_acc_padded = np.squeeze(selected_acc_padded)  # De-batchify the data
+        # Mask with true sequence length
+        selected_acc_masked_by_seqlen = np.ma.array(selected_acc_padded)
+        selected_acc_masked_by_seqlen[selected_seqlen:] = np.ma.masked
+        # Mask with packet length smaller than upper bound
+        pktlen_min, pktlen_max = min_max_feature[0][7], min_max_feature[1][7]
+        selected_pktlen = selected_target[:,7]
+        selected_pktlen = utilsDatagen.denormalize(selected_pktlen, pktlen_min, pktlen_max)
+        selected_pktlen_mask = selected_pktlen <= upper_bound_pktlen
+        selected_acc_masked_by_seqlen_and_pktlen = np.ma.array(selected_acc_masked_by_seqlen, copy=True)
+        selected_acc_masked_by_seqlen_and_pktlen.mask = selected_pktlen_mask
+        selected_mean_acc = np.mean(selected_acc_masked_by_seqlen_and_pktlen)
+
+        selected_sqerr_padded = np.squeeze(selected_sqerr_padded)  # De-batchify the data
+        selected_sqerr_masked = np.ma.array(selected_sqerr_padded)
+        selected_sqerr_masked[selected_seqlen:] = np.ma.masked
+
+        self.data['predict'] = selected_predict
+        self.data['true'] = selected_target
+        self.data['acc'] = selected_acc_masked_by_seqlen
+        self.data['mean_acc'] = selected_mean_acc
+        self.data['squared_error'] = selected_sqerr_masked
+        self.data['dim_names'] = self.dim_names
+        self.data['pktlen_mask'] = selected_pktlen_mask
 
         # Load accuracy graph
-        self.loadAccuracyGraph(data)
+        self.loadAccuracyGraph(self.data)
 
     def findPcapFile(self):
         # Search for the pcap file from the directory
