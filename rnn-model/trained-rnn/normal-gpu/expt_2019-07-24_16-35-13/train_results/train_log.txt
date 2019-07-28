@@ -1,0 +1,178 @@
+####################################
+Training Start Date: 2019-07-24
+Training Start Time: 16-35-13
+Batch Size: 64
+Epoch: 100
+Feature file used: features_tls_2019-07-15_11-06-58.csv
+Existing model used: None
+Split Ratio: 0.05
+Seed: 2019
+####################################
+
+_________________________________________________________________
+
+Layer (type)                 Output Shape              Param #   
+
+=================================================================
+
+cu_dnnlstm_1 (CuDNNLSTM)     (None, 1000, 109)         95920     
+
+_________________________________________________________________
+
+activation_1 (Activation)    (None, 1000, 109)         0         
+
+=================================================================
+
+Total params: 95,920
+
+Trainable params: 95,920
+
+Non-trainable params: 0
+
+_________________________________________________________________
+
+#####  TRAIN/VAL LOSS  #####
+Epoch  #1	Train Loss: 0.000511	Val Loss: 0.000393
+Epoch  #2	Train Loss: 0.000338	Val Loss: 0.000322
+Epoch  #3	Train Loss: 0.000302	Val Loss: 0.000306
+Epoch  #4	Train Loss: 0.000290	Val Loss: 0.000294
+Epoch  #5	Train Loss: 0.000281	Val Loss: 0.000284
+Epoch  #6	Train Loss: 0.000273	Val Loss: 0.000279
+Epoch  #7	Train Loss: 0.000266	Val Loss: 0.000270
+Epoch  #8	Train Loss: 0.000259	Val Loss: 0.000266
+Epoch  #9	Train Loss: 0.000256	Val Loss: 0.000264
+Epoch  #10	Train Loss: 0.000254	Val Loss: 0.000261
+Epoch  #11	Train Loss: 0.000252	Val Loss: 0.000260
+Epoch  #12	Train Loss: 0.000250	Val Loss: 0.000258
+Epoch  #13	Train Loss: 0.000246	Val Loss: 0.000250
+Epoch  #14	Train Loss: 0.000241	Val Loss: 0.000249
+Epoch  #15	Train Loss: 0.000240	Val Loss: 0.000247
+Epoch  #16	Train Loss: 0.000232	Val Loss: 0.000240
+Epoch  #17	Train Loss: 0.000231	Val Loss: 0.000239
+Epoch  #18	Train Loss: 0.000225	Val Loss: 0.000233
+Epoch  #19	Train Loss: 0.000222	Val Loss: 0.000231
+Epoch  #20	Train Loss: 0.000221	Val Loss: 0.000229
+Epoch  #21	Train Loss: 0.000220	Val Loss: 0.000231
+Epoch  #22	Train Loss: 0.000214	Val Loss: 0.000222
+Epoch  #23	Train Loss: 0.000211	Val Loss: 0.000221
+Epoch  #24	Train Loss: 0.000210	Val Loss: 0.000223
+Epoch  #25	Train Loss: 0.000209	Val Loss: 0.000221
+Epoch  #26	Train Loss: 0.000209	Val Loss: 0.000217
+Epoch  #27	Train Loss: 0.000208	Val Loss: 0.000218
+Epoch  #28	Train Loss: 0.000207	Val Loss: 0.000216
+Epoch  #29	Train Loss: 0.000207	Val Loss: 0.000216
+Epoch  #30	Train Loss: 0.000206	Val Loss: 0.000214
+Epoch  #31	Train Loss: 0.000206	Val Loss: 0.000214
+Epoch  #32	Train Loss: 0.000206	Val Loss: 0.000214
+Epoch  #33	Train Loss: 0.000205	Val Loss: 0.000213
+Epoch  #34	Train Loss: 0.000204	Val Loss: 0.000213
+Epoch  #35	Train Loss: 0.000204	Val Loss: 0.000213
+Epoch  #36	Train Loss: 0.000203	Val Loss: 0.000219
+Epoch  #37	Train Loss: 0.000202	Val Loss: 0.000210
+Epoch  #38	Train Loss: 0.000198	Val Loss: 0.000204
+Epoch  #39	Train Loss: 0.000195	Val Loss: 0.000206
+Epoch  #40	Train Loss: 0.000196	Val Loss: 0.000205
+Epoch  #41	Train Loss: 0.000195	Val Loss: 0.000203
+Epoch  #42	Train Loss: 0.000194	Val Loss: 0.000202
+Epoch  #43	Train Loss: 0.000194	Val Loss: 0.000202
+Epoch  #44	Train Loss: 0.000193	Val Loss: 0.000202
+Epoch  #45	Train Loss: 0.000193	Val Loss: 0.000202
+Epoch  #46	Train Loss: 0.000193	Val Loss: 0.000203
+Epoch  #47	Train Loss: 0.000193	Val Loss: 0.000202
+Epoch  #48	Train Loss: 0.000192	Val Loss: 0.000201
+Epoch  #49	Train Loss: 0.000192	Val Loss: 0.000203
+Epoch  #50	Train Loss: 0.000192	Val Loss: 0.000206
+Epoch  #51	Train Loss: 0.000191	Val Loss: 0.000203
+Epoch  #52	Train Loss: 0.000191	Val Loss: 0.000201
+Epoch  #53	Train Loss: 0.000191	Val Loss: 0.000200
+Epoch  #54	Train Loss: 0.000191	Val Loss: 0.000201
+Epoch  #55	Train Loss: 0.000190	Val Loss: 0.000200
+Epoch  #56	Train Loss: 0.000190	Val Loss: 0.000198
+Epoch  #57	Train Loss: 0.000190	Val Loss: 0.000201
+Epoch  #58	Train Loss: 0.000190	Val Loss: 0.000200
+Epoch  #59	Train Loss: 0.000190	Val Loss: 0.000202
+Epoch  #60	Train Loss: 0.000189	Val Loss: 0.000200
+Epoch  #61	Train Loss: 0.000189	Val Loss: 0.000199
+Epoch  #62	Train Loss: 0.000189	Val Loss: 0.000200
+Epoch  #63	Train Loss: 0.000189	Val Loss: 0.000199
+Epoch  #64	Train Loss: 0.000189	Val Loss: 0.000198
+Epoch  #65	Train Loss: 0.000188	Val Loss: 0.000198
+Epoch  #66	Train Loss: 0.000188	Val Loss: 0.000198
+Epoch  #67	Train Loss: 0.000188	Val Loss: 0.000197
+Epoch  #68	Train Loss: 0.000188	Val Loss: 0.000198
+Epoch  #69	Train Loss: 0.000188	Val Loss: 0.000197
+Epoch  #70	Train Loss: 0.000187	Val Loss: 0.000197
+Epoch  #71	Train Loss: 0.000187	Val Loss: 0.000197
+Epoch  #72	Train Loss: 0.000187	Val Loss: 0.000197
+Epoch  #73	Train Loss: 0.000187	Val Loss: 0.000200
+Epoch  #74	Train Loss: 0.000187	Val Loss: 0.000202
+Epoch  #75	Train Loss: 0.000186	Val Loss: 0.000197
+Epoch  #76	Train Loss: 0.000186	Val Loss: 0.000196
+Epoch  #77	Train Loss: 0.000186	Val Loss: 0.000198
+Epoch  #78	Train Loss: 0.000186	Val Loss: 0.000197
+Epoch  #79	Train Loss: 0.000186	Val Loss: 0.000196
+Epoch  #80	Train Loss: 0.000186	Val Loss: 0.000195
+Epoch  #81	Train Loss: 0.000186	Val Loss: 0.000196
+Epoch  #82	Train Loss: 0.000186	Val Loss: 0.000197
+Epoch  #83	Train Loss: 0.000186	Val Loss: 0.000196
+Epoch  #84	Train Loss: 0.000185	Val Loss: 0.000195
+Epoch  #85	Train Loss: 0.000185	Val Loss: 0.000196
+Epoch  #86	Train Loss: 0.000185	Val Loss: 0.000195
+Epoch  #87	Train Loss: 0.000185	Val Loss: 0.000195
+Epoch  #88	Train Loss: 0.000185	Val Loss: 0.000195
+Epoch  #89	Train Loss: 0.000184	Val Loss: 0.000195
+Epoch  #90	Train Loss: 0.000184	Val Loss: 0.000195
+Epoch  #91	Train Loss: 0.000184	Val Loss: 0.000197
+Epoch  #92	Train Loss: 0.000184	Val Loss: 0.000195
+Epoch  #93	Train Loss: 0.000184	Val Loss: 0.000194
+Epoch  #94	Train Loss: 0.000184	Val Loss: 0.000194
+Epoch  #95	Train Loss: 0.000184	Val Loss: 0.000194
+Epoch  #96	Train Loss: 0.000183	Val Loss: 0.000194
+Epoch  #97	Train Loss: 0.000183	Val Loss: 0.000195
+Epoch  #98	Train Loss: 0.000183	Val Loss: 0.000194
+Epoch  #99	Train Loss: 0.000183	Val Loss: 0.000195
+Epoch  #100	Train Loss: 0.000183	Val Loss: 0.000194
+
+#####  TRAIN/VAL MEAN ACCURACY  #####
+Epoch  #5	Train Mean Accuracy: 0.911570	Val Mean Accuracy: 0.912439
+Epoch  #10	Train Mean Accuracy: 0.916734	Val Mean Accuracy: 0.917616
+Epoch  #15	Train Mean Accuracy: 0.919639	Val Mean Accuracy: 0.920704
+Epoch  #20	Train Mean Accuracy: 0.920926	Val Mean Accuracy: 0.921928
+Epoch  #25	Train Mean Accuracy: 0.921849	Val Mean Accuracy: 0.922786
+Epoch  #30	Train Mean Accuracy: 0.924527	Val Mean Accuracy: 0.925648
+Epoch  #35	Train Mean Accuracy: 0.924737	Val Mean Accuracy: 0.925793
+Epoch  #40	Train Mean Accuracy: 0.924831	Val Mean Accuracy: 0.925850
+Epoch  #45	Train Mean Accuracy: 0.926794	Val Mean Accuracy: 0.927913
+Epoch  #50	Train Mean Accuracy: 0.926202	Val Mean Accuracy: 0.927068
+Epoch  #55	Train Mean Accuracy: 0.927322	Val Mean Accuracy: 0.928486
+Epoch  #60	Train Mean Accuracy: 0.927618	Val Mean Accuracy: 0.928628
+Epoch  #65	Train Mean Accuracy: 0.928359	Val Mean Accuracy: 0.929408
+Epoch  #70	Train Mean Accuracy: 0.928875	Val Mean Accuracy: 0.930051
+Epoch  #75	Train Mean Accuracy: 0.928032	Val Mean Accuracy: 0.929175
+Epoch  #80	Train Mean Accuracy: 0.928827	Val Mean Accuracy: 0.929938
+Epoch  #85	Train Mean Accuracy: 0.929103	Val Mean Accuracy: 0.930152
+Epoch  #90	Train Mean Accuracy: 0.928702	Val Mean Accuracy: 0.929638
+Epoch  #95	Train Mean Accuracy: 0.929214	Val Mean Accuracy: 0.930212
+Epoch  #100	Train Mean Accuracy: 0.928905	Val Mean Accuracy: 0.929837
+
+#####  TRAIN/VAL MEDIAN ACCURACY  #####
+Epoch  #5	Train Median Accuracy: 0.000755	Val Median Accuracy: 0.001494
+Epoch  #10	Train Median Accuracy: 0.000776	Val Median Accuracy: 0.001510
+Epoch  #15	Train Median Accuracy: 0.000785	Val Median Accuracy: 0.001509
+Epoch  #20	Train Median Accuracy: 0.000794	Val Median Accuracy: 0.001530
+Epoch  #25	Train Median Accuracy: 0.000804	Val Median Accuracy: 0.001542
+Epoch  #30	Train Median Accuracy: 0.000812	Val Median Accuracy: 0.001552
+Epoch  #35	Train Median Accuracy: 0.000806	Val Median Accuracy: 0.001562
+Epoch  #40	Train Median Accuracy: 0.000818	Val Median Accuracy: 0.001542
+Epoch  #45	Train Median Accuracy: 0.000824	Val Median Accuracy: 0.001548
+Epoch  #50	Train Median Accuracy: 0.000806	Val Median Accuracy: 0.001526
+Epoch  #55	Train Median Accuracy: 0.000822	Val Median Accuracy: 0.001556
+Epoch  #60	Train Median Accuracy: 0.000821	Val Median Accuracy: 0.001553
+Epoch  #65	Train Median Accuracy: 0.000835	Val Median Accuracy: 0.001562
+Epoch  #70	Train Median Accuracy: 0.000828	Val Median Accuracy: 0.001558
+Epoch  #75	Train Median Accuracy: 0.000831	Val Median Accuracy: 0.001541
+Epoch  #80	Train Median Accuracy: 0.000832	Val Median Accuracy: 0.001570
+Epoch  #85	Train Median Accuracy: 0.000835	Val Median Accuracy: 0.001580
+Epoch  #90	Train Median Accuracy: 0.000837	Val Median Accuracy: 0.001561
+Epoch  #95	Train Median Accuracy: 0.000838	Val Median Accuracy: 0.001574
+Epoch  #100	Train Median Accuracy: 0.000834	Val Median Accuracy: 0.001592
