@@ -6,7 +6,7 @@ chardet==3.0.4
 cycler==0.10.0
 gast==0.2.2
 google==2.0.2
-grpcio==1.22.0
+grpcio==1.21.1
 h5py==2.9.0
 idna==2.8
 ipaddress==1.0.22
@@ -19,7 +19,7 @@ lxml==4.3.4
 Markdown==3.1.1
 matplotlib==3.1.0
 mock==3.0.5
-networkx==2.3
+networkx==2.3;sys_platform=='win64' or sys_platform=='linux'
 nose==1.3.7
 numpy==1.16.4
 pandas==0.24.2
@@ -27,9 +27,9 @@ protobuf==3.8.0
 py==1.8.0
 pyparsing==2.4.0
 PyQt5==5.12.1
-PyQt5==5.12.1
+PyQt5-sip==4.19.15
 pyshark==0.3.7.11
-pytest==5.0.1
+pytest==5.0.1;sys_platform=='win64' or sys_platform=='linux'
 python-dateutil==2.8.0
 pytz==2019.1
 PyYAML==5.1.1
@@ -41,15 +41,17 @@ scikit-learn==0.20.3
 scipy==1.2.1
 six==1.12.0
 sklearn==0
+sklearn==0
+sklearn==0
 soupsieve==1.9.1
 tensorboard==1.14.0
 tensorflow==1.14.0
 tensorflow-estimator==1.14.0
-tensorflow-gpu==1.14.0
+tensorflow-gpu==1.14.0;sys_platform=='win64' or sys_platform=='linux'
 termcolor==1.1.0
-tf-estimator-nightly==1.14.0.dev2019072601
-tf-nightly-gpu==1.15.0.dev20190726
-toposort==1.5
-trollius==1.0.4
+tf-estimator-nightly==1.14.0.dev2019072601;sys_platform=='win64' or sys_platform=='linux'
+tf-nightly-gpu==1.15.0.dev20190726;sys_platform=='win64' or sys_platform=='linux'
+toposort==1.5;sys_platform=='win64' or sys_platform=='linux'
+trollius==2.1.post2
 urllib3==1.25.3
 Werkzeug==0.15.4
