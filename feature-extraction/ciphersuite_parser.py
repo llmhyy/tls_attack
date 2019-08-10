@@ -84,8 +84,11 @@ def getVecAndAggregateAndNormalize(dec_ciphersuites):
             countCiphersuites += 1
         except KeyError:
             # Unseen decimal representation of cipher suite. Append a zero-filled list instead
-            vec_ciphersuites.append([0]*len(dec2Vec[list(dec2Vec.keys())[0]]))
+            num_dim = len(dec2Vec[list(dec2Vec.keys())[0]])  # Get the num of dim in a vector of an existing ciphersuite
+            empty_vec = [0] * num_dim
+            vec_ciphersuites.append(empty_vec)
     aggregatedCiphersuites = list(map(sum, zip(*vec_ciphersuites)))
+    # Exclude unseen ciphersuite in the count to ensure that the ratio adds up to 1
     normalizedCiphersuites = [aggregatedCiphersuite/countCiphersuites for aggregatedCiphersuite in aggregatedCiphersuites]
     return normalizedCiphersuites
 
