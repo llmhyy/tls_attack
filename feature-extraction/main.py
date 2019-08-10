@@ -28,6 +28,8 @@ yaml.indent(mapping=4, sequence=4)
 # Initialize current datetime into a variable
 datetime_now = datetime.now()
 # Configure logging
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
 logging.basicConfig(filename=os.path.join(args.savedir,'output.log'), level=logging.INFO,format='%(asctime)s-%(levelname)s-%(message)s')
 
 def search_and_extract(pcap_dir, features_dir, pcapname_dir, enums):
