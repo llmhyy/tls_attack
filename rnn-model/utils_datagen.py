@@ -43,6 +43,9 @@ def get_min_max(mmap_data, byte_offset):
             dataline = np.vstack((max_feature, dataline))
         min_feature = np.min(dataline, axis=0)
         max_feature = np.max(dataline, axis=0)
+    # Dimension 20~62 of ciphersuite are frequency values and should not be normalized like other features
+    min_feature[20:63] = 0
+    max_feature[20:63] = 1
     return (min_feature, max_feature)
 
 def split_train_test(dataset_size, split_ratio, seed):
