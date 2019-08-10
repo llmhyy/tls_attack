@@ -3,6 +3,8 @@
 import math
 from utils import *
 
+logging.basicConfig(level=logging.ERROR)
+
 print('Loading packets...')
 sample = 'sample-pcap/tls/www.stripes.com_2018-12-21_16-20-12.pcap'
 packets = [packet for packet in pyshark.FileCapture(sample, use_json=True)]
@@ -175,24 +177,17 @@ assert output == expected
 print('Done testing function extractClienthelloLength()')
 
 # Test function extractClienthelloCiphersuiteAndEncode()
-# output = extractClienthelloCiphersuite(sample1_clienthello)
-# expected = [1, 1, 1, 0, 1]
-# assert output == expected_dim
+output = extractClienthelloCiphersuite(sample1_clienthello)
+# Check KEA only. Assume other components of cipheruites are extracted identically
+expected_ECDHE = 18/45
+expected_DHE = 17/45
+expected_RSA = 10/45
+assert math.isclose(output[7], expected_ECDHE)
+assert math.isclose(output[3], expected_DHE)
+assert math.isclose(output[1], expected_RSA)
 output = extractClienthelloCiphersuite(sample1_normal)
 expected = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 assert output == expected
-# output = extractClienthelloCiphersuite(sample2_clienthello)
-# expected = [1, 1, 1, 0, 1]
-# assert output == expected
-# output = extractClienthelloCiphersuite(sample3_clienthello)
-# expected = [1, 1, 1, 0, 1]
-# assert output == expected
-# output = extractClienthelloCiphersuite(sample4_clienthello)
-# expected = [1, 1, 1, 0, 1]
-# assert output == expected
-# output = extractClienthelloCiphersuite(sampledos_clienthello)
-# expected = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0]
-# assert all([math.isclose(output[i], expected[i]) for i in range(len(expected))])
 print('Done testing function extractClienthelloCiphersuiteAndEncode()')
 
 # Test function extractClienthelloCiphersuiteLength
