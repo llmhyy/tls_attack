@@ -13,7 +13,7 @@ import utils_datagen as utilsDatagen
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model', help='Input directory path of existing model to be used for prediction', required=True)
-parser.add_argument('-r', '--rootdir', help='Input the directory path of the folder containing the feature file and other supporting files')
+parser.add_argument('-r', '--rootdir', help='Input the directory path of the folder containing the feature file and other supporting files', required=True)
 parser.add_argument('-s', '--savedir', help='Input the directory path to save the prediction results', required=True)  # e.g foo/bar/trained-rnn/normal/expt_2019-03-15_21-52-20/predict_results/predict_on_normal/
 parser.add_argument('-q', '--tstep', help='Input the number of time steps used in this model', default=1000, type=int)
 parser.add_argument('-o', '--mode', help='Input the combination of test for evaluation of the model', default=0, type=int, choices=[0,1,2])
