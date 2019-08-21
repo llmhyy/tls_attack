@@ -63,8 +63,12 @@ def search_and_extract(pcap_dir, features_dir, pcapname_dir, enums):
 
                     # Skip this pcap file 
                     except (KeyError, AttributeError, TypeError, utils.ZeroPacketError):
-                        logging.exception('Serious error in file {}. Traffic is skipped'.format(f))
+                        logging.exception('Known error in file {}. Traffic is skipped'.format(f))
                         failed+=1
+                        continue
+                    except Exception:
+                        logging.exception('Unknown error in file {}. Traffic is skipped')
+                        failed += 1
                         continue
 
     print("Extracted features from pcap files: {} success, {} failure".format(success, failed))
