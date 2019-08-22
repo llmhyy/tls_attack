@@ -32,7 +32,8 @@ def searchEnums(rootdir, limit):
                 try:
                     logging.info("Processing {}".format(f))
                     # Might need to close FileCapture somehow to prevent the another loop running
-                    packets_json = pyshark.FileCapture(os.path.join(root, f), use_json=True)
+                    pcapfile_capture = pyshark.FileCapture(os.path.join(root, f), use_json=True, debug=True)
+                    packets_json = [packet for packet in pcapfile_capture]
 
                     starttime_traffic = time.time()
                     found_clienthello = False # Variable for ending the packet loop if ClientHello is found
@@ -44,13 +45,13 @@ def searchEnums(rootdir, limit):
                         traffic_compressionmethods = extractClienthelloCompressionmethod(packet_json)
                         compressionmethods.extend(traffic_compressionmethods)
                         # Supported Groups
-                        traffic_supportedgroups = extractClienthelloSupportedgroup(packet_json)
-                        supportedgroups.extend(traffic_supportedgroups)
+                        # traffic_supportedgroups = extractClienthelloSupportedgroup(packet_json)
+                        # supportedgroups.extend(traffic_supportedgroups)
                         # Clienthello - Signature Hash Algorithm
                         traffic_sighashalgorithms_client = extractClienthelloSignaturehash(packet_json)
                         sighashalgorithms_client.extend(traffic_sighashalgorithms_client)
 
-                        if traffic_compressionmethods or traffic_supportedgroups or traffic_sighashalgorithms_client:
+                        if traffic_compressionmethods or traffic_sighashalgorithms_client:
                             found_clienthello = True
 
                         # Certificate - Signature Hash Algorithm
@@ -86,8 +87,13 @@ def searchEnums(rootdir, limit):
 
                 # Skip this pcap file
                 except (KeyError, AttributeError, TypeError):
-                    logging.exception('Serious error in file {}. Traffic is skipped'.format(f))
+                    logging.exception('Known error in file {}. Traffic is skipped'.format(f))
                     failed+=1
+                    continue
+
+                except Exception:
+                    logging.exception('Unknown error in file {}. Traffic is skipped')
+                    failed += 1
                     continue
 
         if success>=limit:
@@ -107,7 +113,8 @@ def searchEnums(rootdir, limit):
 def extract_tcp_features(pcapfile, limit):
     traffic_features = []
     traffic_appdata_segments_data = []
-    packets = [packet for packet in pyshark.FileCapture(pcapfile, use_json=True)]
+    pcapfile_capture = pyshark.FileCapture(pcapfile, use_json=True)
+    packets = [packet for packet in pcapfile_capture]
     for i, packet in enumerate(packets):
         if i >= limit:
             break
@@ -218,7 +225,8 @@ def extract_tslssl_features(pcapfile, enums, limit):
 
     # Traffic features for storing features of packets
     traffic_features = []
-    packets_json = [packet for packet in pyshark.FileCapture(pcapfile, use_json=True)]
+    pcapfile_capture = pyshark.FileCapture(pcapfile, use_json=True)
+    packets_json = [packet for packet in pcapfile_capture]
     traffic_appdata_segments_idx = []
     for i, packet_json in enumerate(packets_json):
         # Break the loop when limit is reached
@@ -247,20 +255,20 @@ def extract_tslssl_features(pcapfile, enums, limit):
         packet_features.extend(clienthelloCompressionMethodFeature)
 
         # 5: ClientHello - SUPPORTED GROUP LENGTH
-        clienthelloSupportedgroupLengthFeature = extractClienthelloSupportedgroupLength(packet_json)
-        packet_features.extend(clienthelloSupportedgroupLengthFeature)
+        # clienthelloSupportedgroupLengthFeature = extractClienthelloSupportedgroupLength(packet_json)
+        # packet_features.extend(clienthelloSupportedgroupLengthFeature)
 
         # 6: ClientHello - SUPPORTED GROUPS
-        clienthelloSupportedgroupFeature = extractClienthelloSupportedgroupAndEncode(packet_json, enumSupportedGroups)
-        packet_features.extend(clienthelloSupportedgroupFeature)
+        # clienthelloSupportedgroupFeature = extractClienthelloSupportedgroupAndEncode(packet_json, enumSupportedGroups)
+        # packet_features.extend(clienthelloSupportedgroupFeature)
 
         # 7: ClientHello - ENCRYPT THEN MAC LENGTH
-        clienthelloEncryptthenmacLengthFeature = extractClienthelloEncryptthenmacLength(packet_json)
-        packet_features.extend(clienthelloEncryptthenmacLengthFeature)
+        # clienthelloEncryptthenmacLengthFeature = extractClienthelloEncryptthenmacLength(packet_json)
+        # packet_features.extend(clienthelloEncryptthenmacLengthFeature)
 
         # 8: ClientHello - EXTENDED MASTER SECRET
-        clienthelloExtendedmastersecretLengthFeature = extractClienthelloExtendedmastersecretLength(packet_json)
-        packet_features.extend(clienthelloExtendedmastersecretLengthFeature)
+        # clienthelloExtendedmastersecretLengthFeature = extractClienthelloExtendedmastersecretLength(packet_json)
+        # packet_features.extend(clienthelloExtendedmastersecretLengthFeature)
 
         # 9: ClientHello - SIGNATURE HASH ALGORITHM
         clienthelloSignaturehashFeature = extractClienthelloSignaturehashAndEncode(packet_json, enumSignatureHashClient)
@@ -450,10 +458,11 @@ def extractClienthelloSignaturehash(packet):
     try:
         handshake = find_handshake(packet.ssl, target_type=1)
         if handshake:
-            contains_signature_algorithms = [v for k, v in handshake._all_fields.items() if 'signature_algorithms' in k]
-            feature = [int(signature_hash, 16) for signature_hash in contains_signature_algorithms[0]
-                                                                                ['ssl.handshake.sig_hash_algs']
-                                                                                ['ssl.handshake.sig_hash_alg']]
+            # contains_signature_algorithms = [v for k, v in handshake._all_fields.items() if 'signature_algorithms' in k]
+            # feature = [int(signature_hash, 16) for signature_hash in contains_signature_algorithms[0]
+            #                                                                     ['ssl.handshake.sig_hash_algs']
+            #                                                                     ['ssl.handshake.sig_hash_alg']]
+            feature = [int(signature_hash, 16) for signature_hash in handshake.extension.sig_hash_algs.sig_hash_alg]
     except (AttributeError, KeyError, IndexError):
         pass
     return feature
@@ -472,8 +481,9 @@ def extractServerhelloRenegoLength(packet):
     feature = [0]
     try:
         handshake = find_handshake(packet.ssl, target_type=2)
-        contains_renego_info = [v for k,v in handshake._all_fields.items() if 'renegotiation_info' in k]
-        feature = [int(contains_renego_info[0]['ssl.handshake.extension.len'])]
+        # contains_renego_info = [v for k,v in handshake._all_fields.items() if 'renegotiation_info' in k]
+        # feature = [int(contains_renego_info[0]['ssl.handshake.extension.len'])]
+        feature = [int(handshake.extension._all_fields['Renegotiation Info extension']['ssl.handshake.extensions_reneg_info_len'])]
     except (AttributeError, KeyError, IndexError):
         pass
     return feature
@@ -711,4 +721,14 @@ if __name__ == '__main__':
     # enums = searchEnums(rootdir, limit=100)
     # for k,v in enums.items():
     #     print(k, v)
+    pcapfile = 'sample-pcap/tls/ari.nus.edu.sg_2018-12-24_14-30-02.pcap'
+    pcapfile2 = 'sample-pcap/tls/australianmuseum.net.au_2018-12-21_16-15-59.pcap'
+    packets = pyshark.FileCapture(pcapfile, use_json=True)
+    packets2 = pyshark.FileCapture(pcapfile2, use_json=True)
+    packets_list = [packet for packet in packets]
+    print('whot')
+    packets2_list = [packet for packet in packets2]
+
+    # for packet in packets:
+    #     print(packet)
 
