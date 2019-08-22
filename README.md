@@ -65,6 +65,22 @@ python file_splitter.py -i {feature file to be split}
 Output:
 * `features_tls_{date}_{time}`: folder containing all the feature files smaller than 100MB which are indexed accordingly.
 
+## Bugs
+__RuntimeError: dictionary changed size during iteration__
+During feature extraction, this error happens due to modification of the dictionary during runtime iteration. To resolve it, find pyshark's `layer.py` module in your Python site-packages (typically, if you are using a virtual env, `venv/lib/python3.6/site-packages/pyshark/packet/layer.py`) and make the following modification:
+
+From:
+```
+for field_name in list(self._all_fields):
+```
+To:
+```
+for field_name in self._all_fields:
+```
+
+__RuntimeError: Event Loop is already running__
+No fixes for this currently. However, it does not seem to affect the integrity of the result.
+
 # 2. Model Training
 
 The module trains RNN model with the features extracted from the network traffic. Model training can be done with/without GPU
