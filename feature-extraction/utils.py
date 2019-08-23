@@ -4,6 +4,7 @@ import pyshark
 from pyshark.packet.layer import JsonLayer
 import logging
 import ipaddress
+import traceback
 
 import ciphersuite_parser
 
@@ -32,7 +33,7 @@ def searchEnums(rootdir, limit):
                 try:
                     logging.info("Processing {}".format(f))
                     # Might need to close FileCapture somehow to prevent the another loop running
-                    pcapfile_capture = pyshark.FileCapture(os.path.join(root, f), use_json=True, debug=True)
+                    pcapfile_capture = pyshark.FileCapture(os.path.join(root, f))
                     packets_json = [packet for packet in pcapfile_capture]
 
                     starttime_traffic = time.time()
@@ -45,8 +46,8 @@ def searchEnums(rootdir, limit):
                         traffic_compressionmethods = extractClienthelloCompressionmethod(packet_json)
                         compressionmethods.extend(traffic_compressionmethods)
                         # Supported Groups
-                        # traffic_supportedgroups = extractClienthelloSupportedgroup(packet_json)
-                        # supportedgroups.extend(traffic_supportedgroups)
+                        traffic_supportedgroups = extractClienthelloSupportedgroup(packet_json)
+                        supportedgroups.extend(traffic_supportedgroups)
                         # Clienthello - Signature Hash Algorithm
                         traffic_sighashalgorithms_client = extractClienthelloSignaturehash(packet_json)
                         sighashalgorithms_client.extend(traffic_sighashalgorithms_client)
@@ -113,7 +114,7 @@ def searchEnums(rootdir, limit):
 def extract_tcp_features(pcapfile, limit):
     traffic_features = []
     traffic_appdata_segments_data = []
-    pcapfile_capture = pyshark.FileCapture(pcapfile, use_json=True)
+    pcapfile_capture = pyshark.FileCapture(pcapfile)
     packets = [packet for packet in pcapfile_capture]
     for i, packet in enumerate(packets):
         if i >= limit:
@@ -176,10 +177,11 @@ def extractProtocolFromPacket(packet):
     feature = [0] * len(protcol_ver)
     try:
         if hasattr(packet, 'ssl'):
-            if hasattr(packet.ssl, 'value') and type(packet.ssl.value) != str:
-                protocol = int(packet.ssl.value[0]['ssl.record']['ssl.record.version'],16)
-            else:
-                protocol = int(packet.ssl.record.version, 16)
+            protocol = int(packet.ssl.record_version.show, 16)
+            # if hasattr(packet.ssl, 'value') and type(packet.ssl.value) != str:
+            #     protocol = int(packet.ssl.value[0]['ssl.record']['ssl.record.version'],16)
+            # else:
+            #     protocol = int(packet.ssl.record.version, 16)
             protocol_id = protcol_ver.index(protocol)
             feature[protocol_id] = 1
         elif hasattr(packet, 'tcp'):
@@ -225,7 +227,7 @@ def extract_tslssl_features(pcapfile, enums, limit):
 
     # Traffic features for storing features of packets
     traffic_features = []
-    pcapfile_capture = pyshark.FileCapture(pcapfile, use_json=True)
+    pcapfile_capture = pyshark.FileCapture(pcapfile)
     packets_json = [packet for packet in pcapfile_capture]
     traffic_appdata_segments_idx = []
     for i, packet_json in enumerate(packets_json):
@@ -255,20 +257,20 @@ def extract_tslssl_features(pcapfile, enums, limit):
         packet_features.extend(clienthelloCompressionMethodFeature)
 
         # 5: ClientHello - SUPPORTED GROUP LENGTH
-        # clienthelloSupportedgroupLengthFeature = extractClienthelloSupportedgroupLength(packet_json)
-        # packet_features.extend(clienthelloSupportedgroupLengthFeature)
+        clienthelloSupportedgroupLengthFeature = extractClienthelloSupportedgroupLength(packet_json)
+        packet_features.extend(clienthelloSupportedgroupLengthFeature)
 
         # 6: ClientHello - SUPPORTED GROUPS
-        # clienthelloSupportedgroupFeature = extractClienthelloSupportedgroupAndEncode(packet_json, enumSupportedGroups)
-        # packet_features.extend(clienthelloSupportedgroupFeature)
+        clienthelloSupportedgroupFeature = extractClienthelloSupportedgroupAndEncode(packet_json, enumSupportedGroups)
+        packet_features.extend(clienthelloSupportedgroupFeature)
 
         # 7: ClientHello - ENCRYPT THEN MAC LENGTH
-        # clienthelloEncryptthenmacLengthFeature = extractClienthelloEncryptthenmacLength(packet_json)
-        # packet_features.extend(clienthelloEncryptthenmacLengthFeature)
+        clienthelloEncryptthenmacLengthFeature = extractClienthelloEncryptthenmacLength(packet_json)
+        packet_features.extend(clienthelloEncryptthenmacLengthFeature)
 
         # 8: ClientHello - EXTENDED MASTER SECRET
-        # clienthelloExtendedmastersecretLengthFeature = extractClienthelloExtendedmastersecretLength(packet_json)
-        # packet_features.extend(clienthelloExtendedmastersecretLengthFeature)
+        clienthelloExtendedmastersecretLengthFeature = extractClienthelloExtendedmastersecretLength(packet_json)
+        packet_features.extend(clienthelloExtendedmastersecretLengthFeature)
 
         # 9: ClientHello - SIGNATURE HASH ALGORITHM
         clienthelloSignaturehashFeature = extractClienthelloSignaturehashAndEncode(packet_json, enumSignatureHashClient)
@@ -346,10 +348,16 @@ def extract_tslssl_features(pcapfile, enums, limit):
 def extractClienthelloLength(packet):
     feature = [0]
     try:
-        handshake = find_handshake(packet.ssl, target_type=1)
-        if handshake:
-            feature = [int(handshake.length)]
-    except AttributeError:
+        clienthello_type = '1'
+        handshake_type = [field.show for field in packet.ssl.handshake_type.all_fields]
+        handshake_len = [field.show for field in packet.ssl.handshake_length.all_fields]
+        clienthello_idx = handshake_type.index(clienthello_type)
+        feature = [int(handshake_len[clienthello_idx])]
+
+        # handshake = find_handshake(packet.ssl, target_type=1)
+        # if handshake:
+        #     feature = [int(handshake.length)]
+    except (AttributeError, ValueError):
         pass
     return feature
 
@@ -357,10 +365,13 @@ def extractClienthelloCiphersuite(packet):
     feature_len = sum(map(len, [getattr(ciphersuite_parser, component) for component in ciphersuite_parser.components]))
     feature = [0] * feature_len
     try:
-        handshake = find_handshake(packet.ssl, target_type=1)
-        if handshake:
-            dec_ciphersuites = [int(ciphersuite) for ciphersuite in handshake.ciphersuites.ciphersuite]
-            feature = ciphersuite_parser.getVecAndAggregateAndNormalize(dec_ciphersuites)
+        raw_fields = [field.show for field in packet.ssl.handshake_ciphersuite.all_fields]
+        dec_ciphersuites = [int(field) for field in raw_fields]
+        feature = ciphersuite_parser.getVecAndAggregateAndNormalize(dec_ciphersuites)
+        # handshake = find_handshake(packet.ssl, target_type=1)
+        # if handshake:
+        #     dec_ciphersuites = [int(ciphersuite) for ciphersuite in handshake.ciphersuites.ciphersuite]
+        #     feature = ciphersuite_parser.getVecAndAggregateAndNormalize(dec_ciphersuites)
     except (AttributeError,ZeroDivisionError):
         pass
     return feature
@@ -368,9 +379,10 @@ def extractClienthelloCiphersuite(packet):
 def extractClienthelloCiphersuiteLength(packet):
     feature = [0]
     try:
-        handshake = find_handshake(packet.ssl, target_type=1)
-        if handshake:
-            feature = [int(handshake.cipher_suites_length)]
+        feature = [int(packet.ssl.handshake_cipher_suites_length)]
+        # handshake = find_handshake(packet.ssl, target_type=1)
+        # if handshake:
+        #     feature = [int(handshake.cipher_suites_length)]
     except AttributeError:
         pass
     return feature
@@ -385,10 +397,12 @@ def extractClienthelloCompressionmethodAndEncode(packet, enum):
 def extractClienthelloCompressionmethod(packet):
     feature = []
     try:
-        handshake = find_handshake(packet.ssl, target_type=1)
-        if handshake:
-            feature = [int(compressionmethod, 16) for compressionmethod in
-                       handshake._all_fields['ssl.handshake.comp_methods']['ssl.handshake.comp_method']]
+        raw_fields = [field.show for field in packet.ssl.handshake_comp_method.all_fields]
+        feature = [int(field, 16) for field in raw_fields]
+        # handshake = find_handshake(packet.ssl, target_type=1)
+        # if handshake:
+        #     feature = [int(compressionmethod, 16) for compressionmethod in
+        #                handshake._all_fields['ssl.handshake.comp_methods']['ssl.handshake.comp_method']]
     except (AttributeError, KeyError):
         pass
     return feature
@@ -396,10 +410,11 @@ def extractClienthelloCompressionmethod(packet):
 def extractClienthelloSupportedgroupLength(packet):
     feature = [0]
     try:
-        handshake = find_handshake(packet.ssl, target_type=1)
-        if handshake:
-            contains_supported_groups = [v for k,v in handshake._all_fields.items() if 'supported_groups' in k]
-            feature = [int(contains_supported_groups[0]['ssl.handshake.extension.len'])] # Choose the first object
+        feature = [int(packet.ssl.handshake_extensions_supported_groups_length)]
+        # handshake = find_handshake(packet.ssl, target_type=1)
+        # if handshake:
+        #     contains_supported_groups = [v for k,v in handshake._all_fields.items() if 'supported_groups' in k]
+        #     feature = [int(contains_supported_groups[0]['ssl.handshake.extension.len'])] # Choose the first object
     except (AttributeError, KeyError, IndexError):
         pass
     return feature
@@ -414,12 +429,14 @@ def extractClienthelloSupportedgroupAndEncode(packet, enum):
 def extractClienthelloSupportedgroup(packet):
     feature = []
     try:
-        handshake = find_handshake(packet.ssl, target_type=1)
-        if handshake:
-            contains_supported_groups = [v for k, v in handshake._all_fields.items() if 'supported_groups' in k]
-            feature = [int(supported_group, 16) for supported_group in contains_supported_groups[0]  # Choose the first object
-                                                                        ['ssl.handshake.extensions_supported_groups']
-                                                                        ['ssl.handshake.extensions_supported_group']]
+        raw_fields = [field.show for field in packet.ssl.handshake_extensions_supported_group.all_fields]
+        feature = [int(field, 16) for field in raw_fields]
+        # handshake = find_handshake(packet.ssl, target_type=1)
+        # if handshake:
+        #     contains_supported_groups = [v for k, v in handshake._all_fields.items() if 'supported_groups' in k]
+        #     feature = [int(supported_group, 16) for supported_group in contains_supported_groups[0]  # Choose the first object
+        #                                                                 ['ssl.handshake.extensions_supported_groups']
+        #                                                                 ['ssl.handshake.extensions_supported_group']]
     except (AttributeError, KeyError, IndexError):
         pass
     return feature
@@ -427,22 +444,32 @@ def extractClienthelloSupportedgroup(packet):
 def extractClienthelloEncryptthenmacLength(packet):
     feature = [0]
     try:
-        handshake = find_handshake(packet.ssl, target_type=1)
-        if handshake:
-            contains_encrypt_then_mac = [v for k, v in handshake._all_fields.items() if 'encrypt_then_mac' in k]
-            feature = [int(contains_encrypt_then_mac[0]['ssl.handshake.extension.len'])] # Choose the first object
-    except (AttributeError, KeyError, IndexError):
+        encryptthenmac_type = '22'
+        handshake_extension_type = [field.show for field in packet.ssl.handshake_extension_type.all_fields]
+        handshake_extension_len = [field.show for field in packet.ssl.handshake_extension_len.all_fields]
+        encryptthenmac_idx = handshake_extension_type.index(encryptthenmac_type)
+        feature = [int(handshake_extension_len[encryptthenmac_idx])]
+        # handshake = find_handshake(packet.ssl, target_type=1)
+        # if handshake:
+        #     contains_encrypt_then_mac = [v for k, v in handshake._all_fields.items() if 'encrypt_then_mac' in k]
+        #     feature = [int(contains_encrypt_then_mac[0]['ssl.handshake.extension.len'])] # Choose the first object
+    except (AttributeError, KeyError, IndexError, ValueError):
         pass
     return feature
 
 def extractClienthelloExtendedmastersecretLength(packet):
     feature = [0]
     try:
-        handshake = find_handshake(packet.ssl, target_type=1)
-        if handshake:
-            contains_extended_master_secret = [v for k, v in handshake._all_fields.items() if 'extended_master_secret' in k]
-            feature = [int(contains_extended_master_secret[0]['ssl.handshake.extension.len'])] # Choose the first object
-    except (AttributeError, KeyError, IndexError):
+        extendedmastersecret_type = '23'
+        handshake_extension_type = [field.show for field in packet.ssl.handshake_extension_type.all_fields]
+        handshake_extension_len = [field.show for field in packet.ssl.handshake_extension_len.all_fields]
+        extendedmastersecret_idx = handshake_extension_type.index(extendedmastersecret_type)
+        feature = [int(handshake_extension_len[extendedmastersecret_idx])]
+        # handshake = find_handshake(packet.ssl, target_type=1)
+        # if handshake:
+        #     contains_extended_master_secret = [v for k, v in handshake._all_fields.items() if 'extended_master_secret' in k]
+        #     feature = [int(contains_extended_master_secret[0]['ssl.handshake.extension.len'])] # Choose the first object
+    except (AttributeError, KeyError, IndexError, ValueError):
         pass
     return feature
 
@@ -456,13 +483,15 @@ def extractClienthelloSignaturehashAndEncode(packet, enum):
 def extractClienthelloSignaturehash(packet):
     feature = []
     try:
-        handshake = find_handshake(packet.ssl, target_type=1)
-        if handshake:
+        raw_fields = [field.show for field in packet.ssl.handshake_sig_hash_alg.all_fields]
+        feature = [int(field, 16) for field in raw_fields]
+        # handshake = find_handshake(packet.ssl, target_type=1)
+        # if handshake:
             # contains_signature_algorithms = [v for k, v in handshake._all_fields.items() if 'signature_algorithms' in k]
             # feature = [int(signature_hash, 16) for signature_hash in contains_signature_algorithms[0]
             #                                                                     ['ssl.handshake.sig_hash_algs']
             #                                                                     ['ssl.handshake.sig_hash_alg']]
-            feature = [int(signature_hash, 16) for signature_hash in handshake.extension.sig_hash_algs.sig_hash_alg]
+            # feature = [int(signature_hash, 16) for signature_hash in handshake.extension.sig_hash_algs.sig_hash_alg]
     except (AttributeError, KeyError, IndexError):
         pass
     return feature
@@ -470,20 +499,27 @@ def extractClienthelloSignaturehash(packet):
 def extractServerhelloLength(packet):
     feature = [0]
     try:
-        handshake = find_handshake(packet.ssl, target_type=2)
-        if handshake:
-            feature = [int(handshake.length)]
-    except (AttributeError):
+        serverhello_type = '2'
+        handshake_type = [field.show for field in packet.ssl.handshake_type.all_fields]
+        handshake_len = [field.show for field in packet.ssl.handshake_length.all_fields]
+        serverhello_idx = handshake_type.index(serverhello_type)
+        feature = [int(handshake_len[serverhello_idx])]
+
+        # handshake = find_handshake(packet.ssl, target_type=2)
+        # if handshake:
+        #     feature = [int(handshake.length)]
+    except (AttributeError, ValueError):
         pass
     return feature
 
 def extractServerhelloRenegoLength(packet):
     feature = [0]
     try:
-        handshake = find_handshake(packet.ssl, target_type=2)
+        feature = [int(packet.ssl.handshake_extensions_reneg_info_len)]
+        # handshake = find_handshake(packet.ssl, target_type=2)
         # contains_renego_info = [v for k,v in handshake._all_fields.items() if 'renegotiation_info' in k]
         # feature = [int(contains_renego_info[0]['ssl.handshake.extension.len'])]
-        feature = [int(handshake.extension._all_fields['Renegotiation Info extension']['ssl.handshake.extensions_reneg_info_len'])]
+        # feature = [int(handshake.extension._all_fields['Renegotiation Info extension']['ssl.handshake.extensions_reneg_info_len'])]
     except (AttributeError, KeyError, IndexError):
         pass
     return feature
@@ -491,24 +527,32 @@ def extractServerhelloRenegoLength(packet):
 def extractCertificateLengthInfo(packet):
     feature = [0,0,0,0]
     try:
-        if hasattr(packet.ssl, 'value'):
-            handshake = find_handshake(packet.ssl.value, target_type=11)
-        else:
-            handshake = find_handshake(packet.ssl, target_type=11)
+        raw_fields = [field.show for field in packet.ssl.handshake_certificate_length.all_fields]
+        cert_len = [int(field) for field in raw_fields]
+        num_cert = len(cert_len)
+        mean_cert_len = sum(cert_len) / float(num_cert)
+        max_cert_len = max(cert_len)
+        min_cert_len = min(cert_len)
+        feature = [num_cert, mean_cert_len, max_cert_len, min_cert_len]
 
-        if handshake:
-            cert_len = None
-            if type(handshake) == JsonLayer:
-                cert_len = [int(i) for i in handshake.certificates.certificate_length]
-            elif type(handshake) == dict:
-                cert_len = [int(i) for i in handshake['ssl.handshake.certificates']['ssl.handshake.certificate_length']]
-
-            if cert_len:
-                num_cert = len(cert_len)
-                mean_cert_len = sum(cert_len)/float(num_cert)
-                max_cert_len = max(cert_len)
-                min_cert_len = min(cert_len)
-                feature = [num_cert, mean_cert_len, max_cert_len, min_cert_len]
+        # if hasattr(packet.ssl, 'value'):
+        #     handshake = find_handshake(packet.ssl.value, target_type=11)
+        # else:
+        #     handshake = find_handshake(packet.ssl, target_type=11)
+        #
+        # if handshake:
+        #     cert_len = None
+        #     if type(handshake) == JsonLayer:
+        #         cert_len = [int(i) for i in handshake.certificates.certificate_length]
+        #     elif type(handshake) == dict:
+        #         cert_len = [int(i) for i in handshake['ssl.handshake.certificates']['ssl.handshake.certificate_length']]
+        #
+        #     if cert_len:
+        #         num_cert = len(cert_len)
+        #         mean_cert_len = sum(cert_len)/float(num_cert)
+        #         max_cert_len = max(cert_len)
+        #         min_cert_len = min(cert_len)
+        #         feature = [num_cert, mean_cert_len, max_cert_len, min_cert_len]
     except (AttributeError, KeyError):
         pass
     return feature
@@ -523,64 +567,90 @@ def extractCertificateAndEncode(packet, enum):
 def extractCertificate(packet):
     feature = []
     try:
-        if hasattr(packet.ssl, 'value'):
-            handshake = find_handshake(packet.ssl.value, target_type=11)
-        else:
-            handshake = find_handshake(packet.ssl, target_type=11)
-        if handshake:
-            if type(handshake) == JsonLayer:
-                temp = handshake.certificates.certificate_tree
-                if type(temp) != list:
-                    temp = [temp]
-                feature = [str(i_temp.algorithmIdentifier_element.id) for i_temp in temp]
-            elif type(handshake) == dict:
-                temp = handshake['ssl.handshake.certificates']['ssl.handshake.certificate_tree']
-                if type(temp) != list:
-                    temp = [temp]
-                contains_algoidentifier_element = [v for i_temp in temp for k,v in i_temp.items() if 'algorithmIdentifier_element' in k]
-                contains_algo_id = [v for i in contains_algoidentifier_element for k,v in i.items() if 'algorithm.id' in k]
-                feature = [str(cert) for cert in contains_algo_id]
+        # Need to scan through layers attribute instead of access ssl attribute directly
+        # because pyshark cant extract inner attributes for duplicate ssl layers
+        raw_fields = []
+        for layer in packet.layers:
+            if layer.layer_name == 'ssl' and hasattr(layer, 'x509af_algorithm_id'):
+                raw_fields.extend([field.show for field in layer.x509af_algorithm_id.all_fields])
+        # raw_fields = [field.show for field in packet.ssl.x509af_algorithm_id.all_fields]
+        feature = [str(field) for field in set(raw_fields)]
 
-    except (AttributeError, KeyError, IndexError):
+        # if hasattr(packet.ssl, 'value'):
+        #     handshake = find_handshake(packet.ssl.value, target_type=11)
+        # else:
+        #     handshake = find_handshake(packet.ssl, target_type=11)
+        # if handshake:
+        #     if type(handshake) == JsonLayer:
+        #         temp = handshake.certificates.certificate_tree
+        #         if type(temp) != list:
+        #             temp = [temp]
+        #         feature = [str(i_temp.algorithmIdentifier_element.id) for i_temp in temp]
+        #     elif type(handshake) == dict:
+        #         temp = handshake['ssl.handshake.certificates']['ssl.handshake.certificate_tree']
+        #         if type(temp) != list:
+        #             temp = [temp]
+        #         contains_algoidentifier_element = [v for i_temp in temp for k,v in i_temp.items() if 'algorithmIdentifier_element' in k]
+        #         contains_algo_id = [v for i in contains_algoidentifier_element for k,v in i.items() if 'algorithm.id' in k]
+        #         feature = [str(cert) for cert in contains_algo_id]
+
+    except (AttributeError, KeyError, IndexError, ValueError):
         pass
     return feature
 
 def extractServerhellodoneLength(packet):
     feature = [0]
     try:
-        handshake = find_handshake(packet.ssl, target_type=14)
-        if handshake:
-            feature = [int(handshake.length)]
-    except AttributeError:
+        serverhellodone_type = '14'
+        handshake_type = []
+        handshake_len = []
+        # Need to scan through layers attribute instead of accessing ssl attribute directly
+        # because pyshark cant extract inner attributes for duplicate ssl layers
+        for layer in packet.layers:
+            if layer.layer_name == 'ssl' and hasattr(layer, 'handshake_type') and hasattr(layer, 'handshake_length'):
+                handshake_type.extend([field.show for field in layer.handshake_type.all_fields])
+                handshake_len.extend([field.show for field in layer.handshake_length.all_fields])
+        serverhellodone_idx = handshake_type.index(serverhellodone_type)
+        feature = [int(handshake_len[serverhellodone_idx])]
+
+    except (AttributeError,ValueError):
         pass
     return feature
 
 def extractClientkeyexchangeLength(packet):
     feature = [0]
     try:
-        handshake = find_handshake(packet.ssl, target_type=16)
-        if handshake:
-            feature = [int(handshake.length)]
-    except AttributeError:
+        clientkeyexchange_type = '16'
+        handshake_type = [field.show for field in packet.ssl.handshake_type.all_fields]
+        handshake_len = [field.show for field in packet.ssl.handshake_length.all_fields]
+        clientkeyexchange_idx = handshake_type.index(clientkeyexchange_type)
+        feature = [int(handshake_len[clientkeyexchange_idx])]
+
+        # handshake = find_handshake(packet.ssl, target_type=16)
+        # if handshake:
+        #     feature = [int(handshake.length)]
+    except (AttributeError, ValueError):
         pass
     return feature
 
 def extractClientkeyexchangePubkeyLength(packet):
     feature = [0]
     try:
-        handshake = find_handshake(packet.ssl, target_type=16)
-        if handshake:
-            if 'EC Diffie-Hellman Client Params' in handshake._all_fields:
-                feature = handshake._all_fields['EC Diffie-Hellman Client Params']['ssl.handshake.client_point_len']
-            elif 'RSA Encrypted PreMaster Secret' in handshake._all_fields:
-                feature = handshake._all_fields['RSA Encrypted PreMaster Secret']['ssl.handshake.epms_len']
-            elif 'Diffie-Hellman Client Params' in handshake._all_fields:
-                feature = handshake._all_fields['Diffie-Hellman Client Params']['ssl.handshake.yc_len']
-            elif 'ssl.handshake.length' in handshake._all_fields:
-                feature = handshake._all_fields['ssl.handshake.length']
+        feature = [int(packet.ssl.handshake_client_point_len)]
 
-            if feature != [0]: # check if feature was modified
-                feature = [int(feature)]
+        # handshake = find_handshake(packet.ssl, target_type=16)
+        # if handshake:
+        #     if 'EC Diffie-Hellman Client Params' in handshake._all_fields:
+        #         feature = handshake._all_fields['EC Diffie-Hellman Client Params']['ssl.handshake.client_point_len']
+        #     elif 'RSA Encrypted PreMaster Secret' in handshake._all_fields:
+        #         feature = handshake._all_fields['RSA Encrypted PreMaster Secret']['ssl.handshake.epms_len']
+        #     elif 'Diffie-Hellman Client Params' in handshake._all_fields:
+        #         feature = handshake._all_fields['Diffie-Hellman Client Params']['ssl.handshake.yc_len']
+        #     elif 'ssl.handshake.length' in handshake._all_fields:
+        #         feature = handshake._all_fields['ssl.handshake.length']
+        #
+        #     if feature != [0]: # check if feature was modified
+        #         feature = [int(feature)]
     except (AttributeError, KeyError):
         pass
     return feature
@@ -588,20 +658,44 @@ def extractClientkeyexchangePubkeyLength(packet):
 def extractEncryptedhandshakemsgLength(packet):
     feature = [0]
     try:
-        handshake = find_handshake(packet.ssl, target_type=99)
-        if handshake:
-            feature = [int(handshake.length)]
-    except AttributeError:
+        encryptedhandshakemsg_record_name = 'Encrypted Handshake Message'
+        record_names = [field.showname for field in packet.ssl.record.all_fields]
+        record_lengths = [field.show for field in packet.ssl.record_length.all_fields]
+        in_record_names = [encryptedhandshakemsg_record_name in record_name for record_name in record_names]
+        tmp = [int(record_length) for i, record_length in enumerate(record_lengths) if in_record_names[i] == True]
+        if tmp:
+            if len(tmp) > 1:
+                feature = [tmp[0]] # Ensure only 1 element in list in case of duplicate encrypted handshake msg
+            else:
+                feature = tmp
+            feature = tmp
+
+        # handshake = find_handshake(packet.ssl, target_type=99)
+        # if handshake:
+        #     feature = [int(handshake.length)]
+    except (AttributeError, ValueError):
         pass
     return feature
 
 def extractChangeCipherSpecLength(packet):
     feature = [0]
     try:
-        changecipher = find_changecipher(packet.ssl)
-        if changecipher:
-            feature = [int(changecipher.length)]
-    except AttributeError:
+        # changecipherspec_record_name = 'Change Cipher Spec'
+        # record_names = [field.showname for field in packet.ssl.record.all_fields]
+        # record_lengths = [field.show for field in packet.ssl.record_length.all_fields]
+        # in_record_names = [changecipherspec_record_name in record_name for record_name in record_names]
+        # feature = [int(record_length) for i, record_length in enumerate(record_lengths) if in_record_names[i] == True]
+
+        changecipherspec_type = '20'
+        record_type = [field.show for field in packet.ssl.record_content_type.all_fields]
+        record_len = [field.show for field in packet.ssl.record_length.all_fields]
+        changecipherspec_idx = record_type.index(changecipherspec_type)
+        feature = [int(record_len[changecipherspec_idx])]
+
+        # changecipher = find_changecipher(packet.ssl)
+        # if changecipher:
+        #     feature = [int(changecipher.length)]
+    except (AttributeError, ValueError):
         pass
     return feature
 
@@ -609,14 +703,20 @@ def extractChangeCipherSpecLength(packet):
 def extractAppDataLength(packet):
     feature = [0]
     try:
-        appdata = []
-        if hasattr(packet.ssl, 'value'):
-            find_appdata(packet.ssl.value, appdata)
-        else:
-            find_appdata(packet.ssl, appdata)
-
-        if appdata:
+        # Check if it is an application data packet and extract the len of tcp payload only
+        appdata_type = '23'
+        record_type = [field.show for field in packet.ssl.record_content_type.all_fields]
+        if appdata_type in record_type:
             feature = [int(packet.tcp.len)]
+
+        # appdata = []
+        # if hasattr(packet.ssl, 'value'):
+        #     find_appdata(packet.ssl.value, appdata)
+        # else:
+        #     find_appdata(packet.ssl, appdata)
+        #
+        # if appdata:
+        #     feature = [int(packet.tcp.len)]
     except (AttributeError, KeyError):
         pass
     return feature
@@ -624,15 +724,19 @@ def extractAppDataLength(packet):
 def findIdxOfAppDataSegments(packet):
     appdata_segments_idx = []
     try:
-        appdata = []
-        if hasattr(packet.ssl, 'value'):
-            find_appdata(packet.ssl.value, appdata)
-        else:
-            find_appdata(packet.ssl, appdata)
-
-        if appdata:
-            if hasattr(packet, 'tcp.segments'):
-                appdata_segments_idx.extend(list(map(lambda x: int(x)-1, getattr(packet, 'tcp.segments').segment)))
+        # Verify that it is a app data ssl packet and
+        # that it has a data layer containing info about reassembled tcp pkt
+        if hasattr(packet, 'ssl') and hasattr(packet.ssl, 'app_data') and hasattr(packet, 'data'):
+            raw_fields = [field.show for field in packet.data.tcp_segment.all_fields]
+            appdata_segments_idx.extend(list(map(lambda x:int(str(x))-1, raw_fields)))
+        # appdata = []
+        # if hasattr(packet.ssl, 'value'):
+        #     find_appdata(packet.ssl.value, appdata)
+        # else:
+        #     find_appdata(packet.ssl, appdata)
+        # if appdata:
+        #     if hasattr(packet, 'tcp.segments'):
+        #         appdata_segments_idx.extend(list(map(lambda x: int(x)-1, getattr(packet, 'tcp.segments').segment)))
     except (AttributeError, KeyError):
         pass
     return appdata_segments_idx
@@ -721,13 +825,26 @@ if __name__ == '__main__':
     # enums = searchEnums(rootdir, limit=100)
     # for k,v in enums.items():
     #     print(k, v)
-    pcapfile = 'sample-pcap/tls/ari.nus.edu.sg_2018-12-24_14-30-02.pcap'
-    pcapfile2 = 'sample-pcap/tls/australianmuseum.net.au_2018-12-21_16-15-59.pcap'
-    packets = pyshark.FileCapture(pcapfile, use_json=True)
-    packets2 = pyshark.FileCapture(pcapfile2, use_json=True)
+    pcapfile = 'sample-pcap/tls/www.stripes.com_2018-12-21_16-20-12.pcap'
+    # pcapfile2 = 'sample-pcap/tls/australianmuseum.net.au_2018-12-21_16-15-59.pcap'
+    packets = pyshark.FileCapture(pcapfile)
+    # packets2 = pyshark.FileCapture(pcapfile2, use_json=True)
     packets_list = [packet for packet in packets]
+
+    clienthello = packets_list[3]
+    supportedgroups = clienthello.ssl.handshake_extensions_supported_group
+    print(dir(supportedgroups))
+    print(supportedgroups.all_fields)
+    print(supportedgroups.all_fields)
+    for i in supportedgroups.all_fields:
+        print(dir(i))
+        print(i.show)
+        print(i.showname)
+        print(i.showname_key)
+        print(i.showname_value)
+        print(i.hex_value)
     print('whot')
-    packets2_list = [packet for packet in packets2]
+    # packets2_list = [packet for packet in packets2]
 
     # for packet in packets:
     #     print(packet)
