@@ -600,11 +600,7 @@ def extractEncryptedhandshakemsgLength(packet):
         in_record_names = [encryptedhandshakemsg_record_name in record_name for record_name in record_names]
         tmp = [int(record_length) for i, record_length in enumerate(record_lengths) if in_record_names[i] == True]
         if tmp:
-            if len(tmp) > 1:
-                feature = [tmp[0]] # Ensure only 1 element in list in case of duplicate encrypted handshake msg
-            else:
-                feature = tmp
-            feature = tmp
+            feature = [sum(tmp)]
 
     except AttributeError:
         pass

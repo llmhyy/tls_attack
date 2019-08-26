@@ -122,7 +122,11 @@ sample9_filecapture = pyshark.FileCapture(sample9, debug=True)
 sample10 = 'sample-pcap/tls/www.tmr.qld.gov.au_2018-12-24_17-20-56.pcap'
 sample10_filecapture = pyshark.FileCapture(sample10, debug=True)
 sample_dos = 'sample-pcap/tls/actorsaccess.com_2019-02-26_00-09-45_0.pcap'
-sample_dos_filecapture = pyshark.FileCapture(sample_dos, use_json=True, debug=True)
+sample_dos_filecapture = pyshark.FileCapture(sample_dos, debug=True)
+sample11 = 'sample-pcap/sslv3/www.vermonttimberworks.com_2019-01-31_21-09-06_0.pcap'
+sample11_filecapture = pyshark.FileCapture(sample11, debug=True)
+sample12 = 'sample-pcap/sslv3/www.anc1912.org.za_2019-01-31_21-25-40_0.pcap'
+sample12_filecapture = pyshark.FileCapture(sample12, debug=True)
 
 sample1_packets = [packet for packet in sample1_filecapture]
 sample2_packets = [packet for packet in sample2_filecapture]
@@ -135,19 +139,8 @@ sample8_packets = [packet for packet in sample8_filecapture]
 sample9_packets = [packet for packet in sample9_filecapture]
 sample10_packets = [packet for packet in sample10_filecapture]
 sampledos_packets = [packet for packet in sample_dos_filecapture]
-
-sample1_filecapture.close()
-sample2_filecapture.close()
-sample3_filecapture.close()
-sample4_filecapture.close()
-sample5_filecapture.close()
-sample6_filecapture.close()
-sample7_filecapture.close()
-sample8_filecapture.close()
-sample9_filecapture.close()
-sample10_filecapture.close()
-sample_dos_filecapture.close()
-
+sample11_packet = [packet for packet in sample11_filecapture]
+sample12_packet = [packet for packet in sample12_filecapture]
 
 sample1_clienthello = sample1_packets[3]
 sample1_serverhello_cert_serverhellodone = sample1_packets[7]
@@ -180,6 +173,10 @@ sample4_changecipherspec_encryptedhandshakemsg = sample4_packets[12]
 sample4_appdata_pure = sample4_packets[13]
 sample4_appdata_segment = sample4_packets[27]
 sample4_appdata_double = sample4_packets[15]
+
+sample11_encryptedhandshakemsg_duplicate = sample11_filecapture[13]
+
+sample12_appdata_triple = sample12_filecapture[531]
 
 # sample5_cert = sample5_packets[16]  # double ssl layer
 # sample6_cert = sample6_packets[8]  # double ssl layer
@@ -488,6 +485,9 @@ assert output == expected
 output = extractEncryptedhandshakemsgLength(sample4_clientkeyexchange_changecipherspec_encryptedhandshakemsg)
 expected = [40]
 assert output == expected
+output =  extractEncryptedhandshakemsgLength(sample11_encryptedhandshakemsg_duplicate)
+expected = [1296]
+assert output == expected
 print('Done testing function extractEncryptedhandshakemsgLength()')
 
 # Test function extractChangeCipherSpecLength
@@ -539,7 +539,16 @@ assert output == expected
 output = extractAppDataLength(sample4_appdata_double)
 expected = [1460]
 assert output == expected
+output = extractAppDataLength(sample12_appdata_triple)
+expected = [1460]
+assert output == expected
 print('Done testing function extractAppDataLength()')
+
+# Test function findIdxOfAppDataSegments
+output = findIdxOfAppDataSegments(sample12_appdata_triple)
+expected = [525, 526, 527, 528, 529, 530, 531]
+assert output == expected
+print('Done testing function findIdxOfAppDataSegments')
 
 # Test encoding of app data length
 enums = {'ciphersuites': [], 'compressionmethods': [], 'supportedgroups': [], 'sighashalgorithms_client': [],
@@ -579,3 +588,17 @@ print('Done testing encoding of app data length for TCP segments of a reassembed
 # print(pkt)
 
 print('TEST PASSED!')
+
+sample1_filecapture.close()
+sample2_filecapture.close()
+sample3_filecapture.close()
+sample4_filecapture.close()
+sample5_filecapture.close()
+sample6_filecapture.close()
+sample7_filecapture.close()
+sample8_filecapture.close()
+sample9_filecapture.close()
+sample10_filecapture.close()
+sample_dos_filecapture.close()
+sample11_filecapture.close()
+sample12_filecapture.close()
