@@ -4,7 +4,6 @@ import pyshark
 from pyshark.packet.layer import JsonLayer
 import logging
 import ipaddress
-import traceback
 
 import ciphersuite_parser
 
@@ -34,29 +33,30 @@ def searchEnums(rootdir, limit):
                     logging.info("Processing {}".format(f))
                     # Might need to close FileCapture somehow to prevent the another loop running
                     pcapfile_capture = pyshark.FileCapture(os.path.join(root, f))
-                    packets_json = [packet for packet in pcapfile_capture]
+                    packets = [packet for packet in pcapfile_capture]
+                    pcapfile_capture.close()
 
                     starttime_traffic = time.time()
                     found_clienthello = False # Variable for ending the packet loop if ClientHello is found
                     found_certificate = False # Variable for ending the packet loop if Certificate is found
 
-                    for packet_json in packets_json:
+                    for packet in packets:
                         starttime_packet = time.time()
                         # Compression Methods
-                        traffic_compressionmethods = extractClienthelloCompressionmethod(packet_json)
+                        traffic_compressionmethods = extractClienthelloCompressionmethod(packet)
                         compressionmethods.extend(traffic_compressionmethods)
                         # Supported Groups
-                        traffic_supportedgroups = extractClienthelloSupportedgroup(packet_json)
+                        traffic_supportedgroups = extractClienthelloSupportedgroup(packet)
                         supportedgroups.extend(traffic_supportedgroups)
                         # Clienthello - Signature Hash Algorithm
-                        traffic_sighashalgorithms_client = extractClienthelloSignaturehash(packet_json)
+                        traffic_sighashalgorithms_client = extractClienthelloSignaturehash(packet)
                         sighashalgorithms_client.extend(traffic_sighashalgorithms_client)
 
                         if traffic_compressionmethods or traffic_sighashalgorithms_client:
                             found_clienthello = True
 
                         # Certificate - Signature Hash Algorithm
-                        traffic_sighashalgorithms_cert = extractCertificate(packet_json)
+                        traffic_sighashalgorithms_cert = extractCertificate(packet)
                         sighashalgorithms_cert.extend(traffic_sighashalgorithms_cert)
 
                         if traffic_sighashalgorithms_cert:
@@ -108,14 +108,17 @@ def searchEnums(rootdir, limit):
     enum['supportedgroups'] = supportedgroups
     enum['sighashalgorithms_client'] = sighashalgorithms_client
     enum['sighashalgorithms_cert'] = sighashalgorithms_cert
-    # return (ciphersuites, compressionmethods, supportedgroups, sighashalgorithms_client, sighashalgorithms_cert)
     return enum
 
 def extract_tcp_features(pcapfile, limit):
-    traffic_features = []
-    traffic_appdata_segments_data = []
     pcapfile_capture = pyshark.FileCapture(pcapfile)
     packets = [packet for packet in pcapfile_capture]
+    pcapfile_capture.close()  # Closing the filecapture to fix 'Eventloop is already running' error
+
+    # Traffic features for storing features of packets
+    traffic_features = []
+    traffic_appdata_segments_data = []
+
     for i, packet in enumerate(packets):
         if i >= limit:
             break
@@ -168,6 +171,7 @@ def extractComeLeaveFromPacket(packet):
         feature.append(1)
     else:
         feature.append(0)
+
     return feature
 
 def extractProtocolFromPacket(packet):
@@ -203,16 +207,20 @@ def extractFlagFromPacket(packet):
         # Convert hex into binary and pad left with 0 to fill 9 flags
         feature = list(bin(int(packet.tcp.flags, 16))[2:].zfill(num_of_flags))
         feature = list(map(int, feature))
+
     except AttributeError:
         feature = [0] * num_of_flags
+
     return feature
 
 def extractWindowSizeFromPacket(packet):
     try:
         # Window size = window size value * scaling factor
         feature = [int(packet.tcp.window_size)]
+
     except AttributeError:
         feature = [0]
+
     return feature
 
 def extract_tslssl_features(pcapfile, enums, limit):
@@ -221,16 +229,18 @@ def extract_tslssl_features(pcapfile, enums, limit):
     enumSignatureHashClient = enums['sighashalgorithms_client']
     enumSignatureHashCert = enums['sighashalgorithms_cert']
 
+    pcapfile_capture = pyshark.FileCapture(pcapfile)
+    packets = [packet for packet in pcapfile_capture]
+    pcapfile_capture.close()  # Closing the filecapture to fix 'Eventloop is already running' error
+
     # Traffic features for storing features of packets
     traffic_features = []
-    pcapfile_capture = pyshark.FileCapture(pcapfile)
-    packets_json = [packet for packet in pcapfile_capture]
     traffic_appdata_segments_idx = []
-    for i, packet_json in enumerate(packets_json):
+    for i, packet_json in enumerate(packets):
         # Break the loop when limit is reached
         if i>=limit:
             break
-        
+
         packet_features = []
 
         # HANDSHAKE PROTOCOL
@@ -332,7 +342,7 @@ def extract_tslssl_features(pcapfile, enums, limit):
     for idx in traffic_appdata_segments_idx:
         try:
             # Use tcp.len as the application data length
-            traffic_features[idx][-1] = float(packets_json[idx].tcp.len)
+            traffic_features[idx][-1] = float(packets[idx].tcp.len)
         except AttributeError:
             pass
 
@@ -349,8 +359,10 @@ def extractClienthelloLength(packet):
         handshake_len = [field.show for field in packet.ssl.handshake_length.all_fields]
         clienthello_idx = handshake_type.index(clienthello_type)
         feature = [int(handshake_len[clienthello_idx])]
+
     except (AttributeError, ValueError):
         pass
+
     return feature
 
 def extractClienthelloCiphersuite(packet):
@@ -360,16 +372,20 @@ def extractClienthelloCiphersuite(packet):
         raw_fields = [field.show for field in packet.ssl.handshake_ciphersuite.all_fields]
         dec_ciphersuites = [int(field) for field in raw_fields]
         feature = ciphersuite_parser.getVecAndAggregateAndNormalize(dec_ciphersuites)
-    except (AttributeError,ZeroDivisionError):
+
+    except (AttributeError, ZeroDivisionError):
         pass
+
     return feature
 
 def extractClienthelloCiphersuiteLength(packet):
     feature = [0]
     try:
         feature = [int(packet.ssl.handshake_cipher_suites_length)]
+
     except AttributeError:
         pass
+
     return feature
 
 def extractClienthelloCompressionmethodAndEncode(packet, enum):
@@ -377,6 +393,7 @@ def extractClienthelloCompressionmethodAndEncode(packet, enum):
     encoded_compressionmethods = encodeEnumIntoManyHotVec(compressionmethods, enum)
     if encoded_compressionmethods[-1] == 1:
         logging.warning('Compression methods contain unseen enums. Refer to above')
+
     return encoded_compressionmethods
 
 def extractClienthelloCompressionmethod(packet):
@@ -384,16 +401,20 @@ def extractClienthelloCompressionmethod(packet):
     try:
         raw_fields = [field.show for field in packet.ssl.handshake_comp_method.all_fields]
         feature = [int(field, 16) for field in raw_fields]
-    except (AttributeError, KeyError):
+
+    except AttributeError:
         pass
+
     return feature
 
 def extractClienthelloSupportedgroupLength(packet):
     feature = [0]
     try:
         feature = [int(packet.ssl.handshake_extensions_supported_groups_length)]
-    except (AttributeError, KeyError, IndexError):
+
+    except AttributeError:
         pass
+
     return feature
 
 def extractClienthelloSupportedgroupAndEncode(packet, enum):
@@ -401,6 +422,7 @@ def extractClienthelloSupportedgroupAndEncode(packet, enum):
     encoded_supportedgroups = encodeEnumIntoManyHotVec(supportedgroups, enum)
     if encoded_supportedgroups[-1] == 1:
         logging.warning('Supported groups contain unseen enums. Refer to above')
+
     return encoded_supportedgroups
 
 def extractClienthelloSupportedgroup(packet):
@@ -408,8 +430,10 @@ def extractClienthelloSupportedgroup(packet):
     try:
         raw_fields = [field.show for field in packet.ssl.handshake_extensions_supported_group.all_fields]
         feature = [int(field, 16) for field in raw_fields]
-    except (AttributeError, KeyError, IndexError):
+
+    except AttributeError:
         pass
+
     return feature
 
 def extractClienthelloEncryptthenmacLength(packet):
@@ -420,8 +444,10 @@ def extractClienthelloEncryptthenmacLength(packet):
         handshake_extension_len = [field.show for field in packet.ssl.handshake_extension_len.all_fields]
         encryptthenmac_idx = handshake_extension_type.index(encryptthenmac_type)
         feature = [int(handshake_extension_len[encryptthenmac_idx])]
-    except (AttributeError, KeyError, IndexError, ValueError):
+
+    except (AttributeError, ValueError):
         pass
+
     return feature
 
 def extractClienthelloExtendedmastersecretLength(packet):
@@ -432,8 +458,10 @@ def extractClienthelloExtendedmastersecretLength(packet):
         handshake_extension_len = [field.show for field in packet.ssl.handshake_extension_len.all_fields]
         extendedmastersecret_idx = handshake_extension_type.index(extendedmastersecret_type)
         feature = [int(handshake_extension_len[extendedmastersecret_idx])]
-    except (AttributeError, KeyError, IndexError, ValueError):
+
+    except (AttributeError, ValueError):
         pass
+
     return feature
 
 def extractClienthelloSignaturehashAndEncode(packet, enum):
@@ -441,6 +469,7 @@ def extractClienthelloSignaturehashAndEncode(packet, enum):
     encoded_signaturehashes = encodeEnumIntoManyHotVec(signaturehashes, enum)
     if encoded_signaturehashes[-1] == 1:
         logging.warning('Signature hash contains unseen enums. Refer to above')
+
     return encoded_signaturehashes
 
 def extractClienthelloSignaturehash(packet):
@@ -448,8 +477,10 @@ def extractClienthelloSignaturehash(packet):
     try:
         raw_fields = [field.show for field in packet.ssl.handshake_sig_hash_alg.all_fields]
         feature = [int(field, 16) for field in raw_fields]
-    except (AttributeError, KeyError, IndexError):
+
+    except AttributeError:
         pass
+
     return feature
 
 def extractServerhelloLength(packet):
@@ -460,16 +491,20 @@ def extractServerhelloLength(packet):
         handshake_len = [field.show for field in packet.ssl.handshake_length.all_fields]
         serverhello_idx = handshake_type.index(serverhello_type)
         feature = [int(handshake_len[serverhello_idx])]
+
     except (AttributeError, ValueError):
         pass
+
     return feature
 
 def extractServerhelloRenegoLength(packet):
     feature = [0]
     try:
         feature = [int(packet.ssl.handshake_extensions_reneg_info_len)]
-    except (AttributeError, KeyError, IndexError):
+
+    except AttributeError:
         pass
+
     return feature
 
 def extractCertificateLengthInfo(packet):
@@ -482,8 +517,10 @@ def extractCertificateLengthInfo(packet):
         max_cert_len = max(cert_len)
         min_cert_len = min(cert_len)
         feature = [num_cert, mean_cert_len, max_cert_len, min_cert_len]
-    except (AttributeError, KeyError):
+
+    except AttributeError:
         pass
+
     return feature
 
 def extractCertificateAndEncode(packet, enum):
@@ -491,6 +528,7 @@ def extractCertificateAndEncode(packet, enum):
     encoded_certs = encodeEnumIntoManyHotVec(certs, enum)
     if encoded_certs[-1] == 1:
         logging.warning('Certificates contains unseen enums. Refer to above')
+
     return encoded_certs
 
 def extractCertificate(packet):
@@ -502,10 +540,11 @@ def extractCertificate(packet):
         for layer in packet.layers:
             if layer.layer_name == 'ssl' and hasattr(layer, 'x509af_algorithm_id'):
                 raw_fields.extend([field.show for field in layer.x509af_algorithm_id.all_fields])
-        # raw_fields = [field.show for field in packet.ssl.x509af_algorithm_id.all_fields]
         feature = [str(field) for field in set(raw_fields)]
-    except (AttributeError, KeyError, IndexError, ValueError):
+
+    except AttributeError:
         pass
+
     return feature
 
 def extractServerhellodoneLength(packet):
@@ -522,8 +561,10 @@ def extractServerhellodoneLength(packet):
                 handshake_len.extend([field.show for field in layer.handshake_length.all_fields])
         serverhellodone_idx = handshake_type.index(serverhellodone_type)
         feature = [int(handshake_len[serverhellodone_idx])]
+
     except (AttributeError,ValueError):
         pass
+
     return feature
 
 def extractClientkeyexchangeLength(packet):
@@ -534,16 +575,20 @@ def extractClientkeyexchangeLength(packet):
         handshake_len = [field.show for field in packet.ssl.handshake_length.all_fields]
         clientkeyexchange_idx = handshake_type.index(clientkeyexchange_type)
         feature = [int(handshake_len[clientkeyexchange_idx])]
+
     except (AttributeError, ValueError):
         pass
+
     return feature
 
 def extractClientkeyexchangePubkeyLength(packet):
     feature = [0]
     try:
         feature = [int(packet.ssl.handshake_client_point_len)]
-    except (AttributeError, KeyError):
+
+    except AttributeError:
         pass
+
     return feature
 
 def extractEncryptedhandshakemsgLength(packet):
@@ -560,8 +605,10 @@ def extractEncryptedhandshakemsgLength(packet):
             else:
                 feature = tmp
             feature = tmp
-    except (AttributeError, ValueError):
+
+    except AttributeError:
         pass
+
     return feature
 
 def extractChangeCipherSpecLength(packet):
@@ -572,8 +619,10 @@ def extractChangeCipherSpecLength(packet):
         record_len = [field.show for field in packet.ssl.record_length.all_fields]
         changecipherspec_idx = record_type.index(changecipherspec_type)
         feature = [int(record_len[changecipherspec_idx])]
+
     except (AttributeError, ValueError):
         pass
+
     return feature
 
 # If there are more than 1 app data record layer in the same packet, it will extract the latest app data record layer
@@ -585,8 +634,10 @@ def extractAppDataLength(packet):
         record_type = [field.show for field in packet.ssl.record_content_type.all_fields]
         if appdata_type in record_type:
             feature = [int(packet.tcp.len)]
-    except (AttributeError, KeyError):
+
+    except AttributeError:
         pass
+
     return feature
 
 def findIdxOfAppDataSegments(packet):
@@ -597,8 +648,10 @@ def findIdxOfAppDataSegments(packet):
         if hasattr(packet, 'ssl') and hasattr(packet.ssl, 'app_data') and hasattr(packet, 'data'):
             raw_fields = [field.show for field in packet.data.tcp_segment.all_fields]
             appdata_segments_idx.extend(list(map(lambda x:int(str(x))-1, raw_fields)))
+
     except (AttributeError, KeyError):
         pass
+
     return appdata_segments_idx
 
 def find_handshake(obj, target_type):
@@ -682,20 +735,12 @@ if __name__ == '__main__':
     enums = {'ciphersuites': [], 'compressionmethods': [], 'supportedgroups': [], 'sighashalgorithms_client': [],
              'sighashalgorithms_cert': []}
 
-    # enums = searchEnums(rootdir, limit=100)
-    # for k,v in enums.items():
-    #     print(k, v)
+    # Find attributes of a packet in pyshark.FileCapture
     pcapfile = 'sample-pcap/tls/www.stripes.com_2018-12-21_16-20-12.pcap'
-    # pcapfile2 = 'sample-pcap/tls/australianmuseum.net.au_2018-12-21_16-15-59.pcap'
     packets = pyshark.FileCapture(pcapfile)
-    # packets2 = pyshark.FileCapture(pcapfile2, use_json=True)
     packets_list = [packet for packet in packets]
-
     clienthello = packets_list[3]
     supportedgroups = clienthello.ssl.handshake_extensions_supported_group
-    print(dir(supportedgroups))
-    print(supportedgroups.all_fields)
-    print(supportedgroups.all_fields)
     for i in supportedgroups.all_fields:
         print(dir(i))
         print(i.show)
@@ -703,9 +748,4 @@ if __name__ == '__main__':
         print(i.showname_key)
         print(i.showname_value)
         print(i.hex_value)
-    print('whot')
-    # packets2_list = [packet for packet in packets2]
-
-    # for packet in packets:
-    #     print(packet)
 

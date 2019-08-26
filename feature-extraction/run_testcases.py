@@ -7,8 +7,10 @@ logging.basicConfig(level=logging.ERROR)
 
 print('Loading packets...')
 sample = 'sample-pcap/tls/www.stripes.com_2018-12-21_16-20-12.pcap'
+
 sample_filecapture = pyshark.FileCapture(sample, debug=True)
 packets = [packet for packet in sample_filecapture]
+sample_filecapture.close()
 packet1 = packets[0]
 packet4 = packets[3]
 packet5 = packets[4]
@@ -119,8 +121,8 @@ sample9 = 'sample-pcap/tls/www.orkin.com_2018-12-24_17-10-27.pcap'
 sample9_filecapture = pyshark.FileCapture(sample9, debug=True)
 sample10 = 'sample-pcap/tls/www.tmr.qld.gov.au_2018-12-24_17-20-56.pcap'
 sample10_filecapture = pyshark.FileCapture(sample10, debug=True)
-# sample_dos = 'sample-pcap/tls/actorsaccess.com_2019-02-26_00-09-45_0.pcap'
-# sample_dos_filecapture = pyshark.FileCapture(sample_dos, use_json=True, debug=True)
+sample_dos = 'sample-pcap/tls/actorsaccess.com_2019-02-26_00-09-45_0.pcap'
+sample_dos_filecapture = pyshark.FileCapture(sample_dos, use_json=True, debug=True)
 
 sample1_packets = [packet for packet in sample1_filecapture]
 sample2_packets = [packet for packet in sample2_filecapture]
@@ -132,7 +134,20 @@ sample7_packets = [packet for packet in sample7_filecapture]
 sample8_packets = [packet for packet in sample8_filecapture]
 sample9_packets = [packet for packet in sample9_filecapture]
 sample10_packets = [packet for packet in sample10_filecapture]
-# sampledos_packets = [packet for packet in sample_dos_filecapture]
+sampledos_packets = [packet for packet in sample_dos_filecapture]
+
+sample1_filecapture.close()
+sample2_filecapture.close()
+sample3_filecapture.close()
+sample4_filecapture.close()
+sample5_filecapture.close()
+sample6_filecapture.close()
+sample7_filecapture.close()
+sample8_filecapture.close()
+sample9_filecapture.close()
+sample10_filecapture.close()
+sample_dos_filecapture.close()
+
 
 sample1_clienthello = sample1_packets[3]
 sample1_serverhello_cert_serverhellodone = sample1_packets[7]
