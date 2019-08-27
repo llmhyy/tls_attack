@@ -1,6 +1,7 @@
 import os
 import time
 import pyshark
+import itertools
 from pyshark.packet.layer import JsonLayer
 import logging
 import ipaddress
@@ -29,18 +30,14 @@ def searchEnums(rootdir, limit):
     for root, dirs, files in os.walk(rootdir):
         for f in files:
             if f.endswith(".pcap"):
+                pcapfile_capture = pyshark.FileCapture(os.path.join(root, f))
                 try:
                     logging.info("Processing {}".format(f))
-                    # Might need to close FileCapture somehow to prevent the another loop running
-                    pcapfile_capture = pyshark.FileCapture(os.path.join(root, f))
-                    packets = [packet for packet in pcapfile_capture]
-                    pcapfile_capture.close()
-
                     starttime_traffic = time.time()
                     found_clienthello = False # Variable for ending the packet loop if ClientHello is found
                     found_certificate = False # Variable for ending the packet loop if Certificate is found
 
-                    for packet in packets:
+                    for packet in pcapfile_capture:
                         starttime_packet = time.time()
                         # Compression Methods
                         traffic_compressionmethods = extractClienthelloCompressionmethod(packet)
@@ -90,12 +87,13 @@ def searchEnums(rootdir, limit):
                 except (KeyError, AttributeError, TypeError):
                     logging.exception('Known error in file {}. Traffic is skipped'.format(f))
                     failed+=1
-                    continue
 
                 except Exception:
                     logging.exception('Unknown error in file {}. Traffic is skipped')
                     failed += 1
-                    continue
+
+                finally:
+                    pcapfile_capture.close()
 
         if success>=limit:
             break
@@ -112,58 +110,65 @@ def searchEnums(rootdir, limit):
 
 def extract_tcp_features(pcapfile, limit):
     pcapfile_capture = pyshark.FileCapture(pcapfile)
-    packets = [packet for packet in pcapfile_capture]
-    pcapfile_capture.close()  # Closing the filecapture to fix 'Eventloop is already running' error
 
-    # Traffic features for storing features of packets
-    traffic_features = []
-    traffic_appdata_segments_data = []
+    try:
+        # Traffic features for storing features of packets
+        traffic_features = []
+        traffic_appdata_segments_data = []
+        packets = [i for i in itertools.islice(pcapfile_capture, limit)]
 
-    for i, packet in enumerate(packets):
-        if i >= limit:
-            break
+        for i, packet in enumerate(packets):
+            if i >= limit:
+                break
 
-        packet_features = []
+            packet_features = []
 
-        # 1: COME/LEAVE
-        comeLeaveFeature = extractComeLeaveFromPacket(packet)
-        packet_features.extend(comeLeaveFeature)
+            # 1: COME/LEAVE
+            comeLeaveFeature = extractComeLeaveFromPacket(packet)
+            packet_features.extend(comeLeaveFeature)
 
-        # 2: PROTOCOL
-        protocolFeature = extractProtocolFromPacket(packet)
-        packet_features.extend(protocolFeature)
+            # 2: PROTOCOL
+            protocolFeature = extractProtocolFromPacket(packet)
+            packet_features.extend(protocolFeature)
 
-        # 3: PACKET LENGTH
-        lengthFeature = extractLengthFromPacket(packet)
-        packet_features.extend(lengthFeature)
+            # 3: PACKET LENGTH
+            lengthFeature = extractLengthFromPacket(packet)
+            packet_features.extend(lengthFeature)
 
-        # 4: INTERVAL
-        intervalFeature = extractIntervalFromPacket(packet)
-        packet_features.extend(intervalFeature)
+            # 4: INTERVAL
+            intervalFeature = extractIntervalFromPacket(packet)
+            packet_features.extend(intervalFeature)
 
-        # 5: FLAG
-        flagFeature = extractFlagFromPacket(packet)
-        packet_features.extend(flagFeature)
+            # 5: FLAG
+            flagFeature = extractFlagFromPacket(packet)
+            packet_features.extend(flagFeature)
 
-        # 6: WINDOW SIZE
-        windowSizeFeature = extractWindowSizeFromPacket(packet)
-        packet_features.extend(windowSizeFeature)
+            # 6: WINDOW SIZE
+            windowSizeFeature = extractWindowSizeFromPacket(packet)
+            packet_features.extend(windowSizeFeature)
 
-        traffic_features.append(packet_features)
+            traffic_features.append(packet_features)
 
-        packet_appdata_segments_idx = findIdxOfAppDataSegments(packets[i])
-        if packet_appdata_segments_idx:
-            traffic_appdata_segments_data.append((packet_appdata_segments_idx, protocolFeature))
+            packet_appdata_segments_idx = findIdxOfAppDataSegments(packets[i])
+            if packet_appdata_segments_idx:
+                traffic_appdata_segments_data.append((packet_appdata_segments_idx, protocolFeature))
 
-    prot_start_idx = 1
-    num_prot = 6
-    for idx_list, flag in traffic_appdata_segments_data:
-        for idx in idx_list:
-            traffic_features[idx][prot_start_idx:prot_start_idx + num_prot] = flag
-    if len(traffic_features) == 0:
-        raise ZeroPacketError('Pcap file contains no packet')
+        prot_start_idx = 1
+        num_prot = 6
+        for idx_list, flag in traffic_appdata_segments_data:
+            for idx in idx_list:
+                traffic_features[idx][prot_start_idx:prot_start_idx + num_prot] = flag
 
-    return traffic_features
+        if len(traffic_features) == 0:
+            raise ZeroPacketError('Pcap file contains no packet')
+
+        return traffic_features
+
+    except:
+        raise
+
+    finally:
+        pcapfile_capture.close()
 
 def extractComeLeaveFromPacket(packet):
     feature = []
@@ -230,126 +235,133 @@ def extract_tslssl_features(pcapfile, enums, limit):
     enumSignatureHashCert = enums['sighashalgorithms_cert']
 
     pcapfile_capture = pyshark.FileCapture(pcapfile)
-    packets = [packet for packet in pcapfile_capture]
-    pcapfile_capture.close()  # Closing the filecapture to fix 'Eventloop is already running' error
 
-    # Traffic features for storing features of packets
-    traffic_features = []
-    traffic_appdata_segments_idx = []
-    for i, packet_json in enumerate(packets):
-        # Break the loop when limit is reached
-        if i>=limit:
-            break
+    try:
+        # Traffic features for storing features of packets
+        traffic_features = []
+        traffic_appdata_segments_idx = []
+        packets = [i for i in itertools.islice(pcapfile_capture, limit)]
 
-        packet_features = []
+        for i, packet_json in enumerate(packets):
+            # Break the loop when limit is reached
+            if i>=limit:
+                break
 
-        # HANDSHAKE PROTOCOL
-        ##################################################################
-        # 1: ClientHello - LENGTH
-        clienthelloLengthFeature = extractClienthelloLength(packet_json)
-        packet_features.extend(clienthelloLengthFeature)
+            packet_features = []
 
-        # 2: ClientHello - CIPHER SUITE
-        clienthelloCiphersuiteFeature = extractClienthelloCiphersuite(packet_json)
-        packet_features.extend(clienthelloCiphersuiteFeature)
+            # HANDSHAKE PROTOCOL
+            ##################################################################
+            # 1: ClientHello - LENGTH
+            clienthelloLengthFeature = extractClienthelloLength(packet_json)
+            packet_features.extend(clienthelloLengthFeature)
 
-        # 3: ClientHello - CIPHER SUITE LENGTH
-        clienthelloCiphersuiteLengthFeature = extractClienthelloCiphersuiteLength(packet_json)
-        packet_features.extend(clienthelloCiphersuiteLengthFeature)
+            # 2: ClientHello - CIPHER SUITE
+            clienthelloCiphersuiteFeature = extractClienthelloCiphersuite(packet_json)
+            packet_features.extend(clienthelloCiphersuiteFeature)
 
-        # 4: ClientHello - COMPRESSION METHOD
-        clienthelloCompressionMethodFeature = extractClienthelloCompressionmethodAndEncode(packet_json,
-                                                                                           enumCompressionMethods)
-        packet_features.extend(clienthelloCompressionMethodFeature)
+            # 3: ClientHello - CIPHER SUITE LENGTH
+            clienthelloCiphersuiteLengthFeature = extractClienthelloCiphersuiteLength(packet_json)
+            packet_features.extend(clienthelloCiphersuiteLengthFeature)
 
-        # 5: ClientHello - SUPPORTED GROUP LENGTH
-        clienthelloSupportedgroupLengthFeature = extractClienthelloSupportedgroupLength(packet_json)
-        packet_features.extend(clienthelloSupportedgroupLengthFeature)
+            # 4: ClientHello - COMPRESSION METHOD
+            clienthelloCompressionMethodFeature = extractClienthelloCompressionmethodAndEncode(packet_json,
+                                                                                               enumCompressionMethods)
+            packet_features.extend(clienthelloCompressionMethodFeature)
 
-        # 6: ClientHello - SUPPORTED GROUPS
-        clienthelloSupportedgroupFeature = extractClienthelloSupportedgroupAndEncode(packet_json, enumSupportedGroups)
-        packet_features.extend(clienthelloSupportedgroupFeature)
+            # 5: ClientHello - SUPPORTED GROUP LENGTH
+            clienthelloSupportedgroupLengthFeature = extractClienthelloSupportedgroupLength(packet_json)
+            packet_features.extend(clienthelloSupportedgroupLengthFeature)
 
-        # 7: ClientHello - ENCRYPT THEN MAC LENGTH
-        clienthelloEncryptthenmacLengthFeature = extractClienthelloEncryptthenmacLength(packet_json)
-        packet_features.extend(clienthelloEncryptthenmacLengthFeature)
+            # 6: ClientHello - SUPPORTED GROUPS
+            clienthelloSupportedgroupFeature = extractClienthelloSupportedgroupAndEncode(packet_json, enumSupportedGroups)
+            packet_features.extend(clienthelloSupportedgroupFeature)
 
-        # 8: ClientHello - EXTENDED MASTER SECRET
-        clienthelloExtendedmastersecretLengthFeature = extractClienthelloExtendedmastersecretLength(packet_json)
-        packet_features.extend(clienthelloExtendedmastersecretLengthFeature)
+            # 7: ClientHello - ENCRYPT THEN MAC LENGTH
+            clienthelloEncryptthenmacLengthFeature = extractClienthelloEncryptthenmacLength(packet_json)
+            packet_features.extend(clienthelloEncryptthenmacLengthFeature)
 
-        # 9: ClientHello - SIGNATURE HASH ALGORITHM
-        clienthelloSignaturehashFeature = extractClienthelloSignaturehashAndEncode(packet_json, enumSignatureHashClient)
-        packet_features.extend(clienthelloSignaturehashFeature)
+            # 8: ClientHello - EXTENDED MASTER SECRET
+            clienthelloExtendedmastersecretLengthFeature = extractClienthelloExtendedmastersecretLength(packet_json)
+            packet_features.extend(clienthelloExtendedmastersecretLengthFeature)
 
-        # 10: ServerHello - LENGTH
-        serverhelloLengthFeature = extractServerhelloLength(packet_json)
-        packet_features.extend(serverhelloLengthFeature)
+            # 9: ClientHello - SIGNATURE HASH ALGORITHM
+            clienthelloSignaturehashFeature = extractClienthelloSignaturehashAndEncode(packet_json, enumSignatureHashClient)
+            packet_features.extend(clienthelloSignaturehashFeature)
 
-        # 11: ServerHello - EXTENDED MASTER SECRET
-        # Feature cannot be found in the packet
+            # 10: ServerHello - LENGTH
+            serverhelloLengthFeature = extractServerhelloLength(packet_json)
+            packet_features.extend(serverhelloLengthFeature)
 
-        # 12: ServerHello - RENEGOTIATION INFO LENGTH
-        serverhelloRenegoLengthFeature = extractServerhelloRenegoLength(packet_json)
-        packet_features.extend(serverhelloRenegoLengthFeature)
+            # 11: ServerHello - EXTENDED MASTER SECRET
+            # Feature cannot be found in the packet
 
-        # 13,14,15,16: Certificate - NUM_CERT, AVERAGE, MIN, MAX CERTIFICATE LENGTH
-        certificateLengthInfoFeature = extractCertificateLengthInfo(packet_json)
-        packet_features.extend(certificateLengthInfoFeature)
+            # 12: ServerHello - RENEGOTIATION INFO LENGTH
+            serverhelloRenegoLengthFeature = extractServerhelloRenegoLength(packet_json)
+            packet_features.extend(serverhelloRenegoLengthFeature)
 
-        # 17: Certificate - SIGNATURE ALGORITHM
-        certificateFeature = extractCertificateAndEncode(packet_json, enumSignatureHashCert)
-        packet_features.extend(certificateFeature)
+            # 13,14,15,16: Certificate - NUM_CERT, AVERAGE, MIN, MAX CERTIFICATE LENGTH
+            certificateLengthInfoFeature = extractCertificateLengthInfo(packet_json)
+            packet_features.extend(certificateLengthInfoFeature)
 
-        # 18: ServerHelloDone - LENGTH
-        serverhellodoneLengthFeature = extractServerhellodoneLength(packet_json)
-        packet_features.extend(serverhellodoneLengthFeature)
+            # 17: Certificate - SIGNATURE ALGORITHM
+            certificateFeature = extractCertificateAndEncode(packet_json, enumSignatureHashCert)
+            packet_features.extend(certificateFeature)
 
-        # 19: ClientKeyExchange - LENGTH
-        clientkeyexchangeLengthFeature = extractClientkeyexchangeLength(packet_json)
-        packet_features.extend(clientkeyexchangeLengthFeature)
+            # 18: ServerHelloDone - LENGTH
+            serverhellodoneLengthFeature = extractServerhellodoneLength(packet_json)
+            packet_features.extend(serverhellodoneLengthFeature)
 
-        # 20: ClientKeyExchange - PUBKEY LENGTH
-        clientkeyexchangePubkeyLengthFeature = extractClientkeyexchangePubkeyLength(packet_json)
-        packet_features.extend(clientkeyexchangePubkeyLengthFeature)
+            # 19: ClientKeyExchange - LENGTH
+            clientkeyexchangeLengthFeature = extractClientkeyexchangeLength(packet_json)
+            packet_features.extend(clientkeyexchangeLengthFeature)
 
-        # 21: EncryptedHandshakeMessage - LENGTH
-        encryptedhandshakemsgLengthFeature = extractEncryptedhandshakemsgLength(packet_json)
-        packet_features.extend(encryptedhandshakemsgLengthFeature)
+            # 20: ClientKeyExchange - PUBKEY LENGTH
+            clientkeyexchangePubkeyLengthFeature = extractClientkeyexchangePubkeyLength(packet_json)
+            packet_features.extend(clientkeyexchangePubkeyLengthFeature)
 
-        #  CHANGE CIPHER PROTOCOL
-        ##################################################################
-        # 22: ChangeCipherSpec - LENGTH
-        changecipherspecLengthFeature = extractChangeCipherSpecLength(packet_json)
-        packet_features.extend(changecipherspecLengthFeature)
+            # 21: EncryptedHandshakeMessage - LENGTH
+            encryptedhandshakemsgLengthFeature = extractEncryptedhandshakemsgLength(packet_json)
+            packet_features.extend(encryptedhandshakemsgLengthFeature)
 
-        #  APPLICATION DATA PROTOCOL
-        ##################################################################
-        # 23: ApplicationDataProtocol - LENGTH
-        # Set app data length for pure app data packets first, modify app data length for TCP segments
-        # for reassembled PDU later
-        appdataLengthFeature = extractAppDataLength(packet_json)
-        packet_features.extend(appdataLengthFeature)
-        # Finding all index of TCP segments for reassembed PDU
-        packet_appdata_segments_idx = findIdxOfAppDataSegments(packet_json)
-        traffic_appdata_segments_idx.extend(packet_appdata_segments_idx)
+            #  CHANGE CIPHER PROTOCOL
+            ##################################################################
+            # 22: ChangeCipherSpec - LENGTH
+            changecipherspecLengthFeature = extractChangeCipherSpecLength(packet_json)
+            packet_features.extend(changecipherspecLengthFeature)
 
-        # Convert to float for standardization
-        packet_features = [float(i) for i in packet_features]
-        traffic_features.append(packet_features)
+            #  APPLICATION DATA PROTOCOL
+            ##################################################################
+            # 23: ApplicationDataProtocol - LENGTH
+            # Set app data length for pure app data packets first, modify app data length for TCP segments
+            # for reassembled PDU later
+            appdataLengthFeature = extractAppDataLength(packet_json)
+            packet_features.extend(appdataLengthFeature)
+            # Finding all index of TCP segments for reassembed PDU
+            packet_appdata_segments_idx = findIdxOfAppDataSegments(packet_json)
+            traffic_appdata_segments_idx.extend(packet_appdata_segments_idx)
 
-    traffic_appdata_segments_idx = list(set(traffic_appdata_segments_idx)) # Remove duplicates from the list first
-    for idx in traffic_appdata_segments_idx:
-        try:
-            # Use tcp.len as the application data length
-            traffic_features[idx][-1] = float(packets[idx].tcp.len)
-        except AttributeError:
-            pass
+            # Convert to float for standardization
+            packet_features = [float(i) for i in packet_features]
+            traffic_features.append(packet_features)
 
-    if len(traffic_features) == 0:
-        raise ZeroPacketError('Pcap file contains no packet')
+        traffic_appdata_segments_idx = list(set(traffic_appdata_segments_idx)) # Remove duplicates from the list first
+        for idx in traffic_appdata_segments_idx:
+            try:
+                # Use tcp.len as the application data length
+                traffic_features[idx][-1] = float(packets[idx].tcp.len)
+            except AttributeError:
+                pass
 
-    return traffic_features
+        if len(traffic_features) == 0:
+            raise ZeroPacketError('Pcap file contains no packet')
+
+        return traffic_features
+
+    except:
+        raise
+
+    finally:
+        pcapfile_capture.close()  # Closing the filecapture to fix 'Eventloop is already running' error
 
 def extractClienthelloLength(packet):
     feature = [0]

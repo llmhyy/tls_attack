@@ -81,6 +81,7 @@ else:
     enums = {}
     # Iterate through sub-directories inside the root directory for alternate traffic. Dont over commit to 1 sub-directory
     pcapdirs = [os.path.join(args.pcapdir, o) for o in os.listdir(args.pcapdir) if os.path.isdir(os.path.join(args.pcapdir, o))]
+    pcapdirs.append(args.pcapdir)
     for dirname in pcapdirs:
         enums_in_a_file = utils.searchEnums(dirname, limit=5000)
         for k,v in enums_in_a_file.items():
