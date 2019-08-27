@@ -1,5 +1,7 @@
 # Encrypted Traffic Detection
 
+__Major update to Pyshark 0.4.2.9__ - This package no longer depends on Pyshark 0.3.7.11, which has dependencies for the deprecated Trollius library. The newer version of Pyshark is more stable and has been tested on Linux/Windows platform. Upgrade is __highly recommended__. You can upgrade with a `pip install pyshark==0.4.2.9`
+
 ## Getting Started
 * Linux/MacOS (for Windows, the commands need to be slightly modified)
 * Python 3 (preferrably 3.6.5 and on a virtual environment)
