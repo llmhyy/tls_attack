@@ -6,9 +6,11 @@ __Major update to Pyshark 0.4.2.9__ - This package no longer depends on Pyshark 
 * Linux/MacOS (for Windows, the commands need to be slightly modified)
 * Python 3 (preferrably 3.6.5 and on a virtual environment)
 
-Install the dependencies from `requirements.txt`
+Install the dependencies from either `requirements.txt` or `requirements-gpu.txt`
 ```
-pip install -r requirements.txt
+pip install -r requirements.txt  #  for non gpu-supported machine
+# OR 
+pip install -r requirements-gpu.txt  # for gpu-supported machine
 ```
 
 # 1. Feature Extraction
