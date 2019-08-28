@@ -5,8 +5,8 @@ import argparse
 import numpy as np
 from random import shuffle
 from functools import partial
-from keras.utils import Sequence
-from keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.utils import Sequence
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 import utils_metric as utilsMetric
 
@@ -43,9 +43,7 @@ def get_min_max(mmap_data, byte_offset):
             dataline = np.vstack((max_feature, dataline))
         min_feature = np.min(dataline, axis=0)
         max_feature = np.max(dataline, axis=0)
-    # Dimension 20~62 of ciphersuite are frequency values and should not be normalized like other features
-    min_feature[20:63] = 0
-    max_feature[20:63] = 1
+
     return (min_feature, max_feature)
 
 def split_train_test(dataset_size, split_ratio, seed):
@@ -66,6 +64,9 @@ def normalize(option, min_max_feature=None):
         return batch_data
     def min_max_norm(batch_data, min_max_feature):
         min_feature, max_feature = min_max_feature[0], min_max_feature[1]
+        # Dimension 20~62 of ciphersuite are frequency values and should not be normalized like other features
+        min_feature[20:63] = 0
+        max_feature[20:63] = 1
         num = batch_data-min_feature
         den = max_feature-min_feature
         batch_data = np.divide(num, den, out=np.zeros_like(num), where=den!=0.0)
