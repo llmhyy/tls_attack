@@ -4,9 +4,12 @@ import shutil
 import fnmatch
 import random
 import argparse
-import tracemalloc
 import numpy as np
 from functools import partial
+
+import tensorflow as tf
+from tensorflow.keras.models import load_model
+from tensorflow.keras.backend import set_session
 
 import utils_plot as utilsPlot
 import utils_datagen as utilsDatagen
@@ -24,12 +27,24 @@ parser.add_argument('-u', '--upper', help='Input upper bound for sampling traffi
 parser.add_argument('-g', '--gpu', help='Flag for using GPU in model training', action='store_true')
 args = parser.parse_args()
 
-# Force use of CPU before importing keras
-if not args.gpu:
-    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-from keras.models import load_model
+#####################################################
+# PRE-CONFIGURATION
+#####################################################
 
-tracemalloc.start()
+# Setting of CPU/GPU configuration for TF
+config = tf.ConfigProto()
+if args.gpu:
+    # Use gradient checkpointing to reduce GPU memory
+    import memory_saving_gradients as gc
+    from tensorflow.python.ops import gradients as tf_gradients
+    tf_gradients.gradients = gc.gradients_speed
+
+    config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
+    config.log_device_placement = True  # to log device placement (on which device the operation ran)
+else:
+    config.device_count = {'GPU':0}  # Force use of CPU
+sess = tf.Session(config=config)
+set_session(sess)  # set this TensorFlow session as the default session for Keras
 
 # Switches to run the test
 if args.mode == 0:
@@ -57,30 +72,15 @@ featureinfo_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, F
 pcapname_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, PCAPNAME_FILENAME)[0])
 minmax_dir = os.path.join(args.rootdir, '..', '..', MINMAX_FILENAME)
 
+# Configuration for model evaluation
 BATCH_SIZE = 64
 SEQUENCE_LEN = args.tstep
 SPLIT_RATIO = 0.05
 SEED = 2019
 
-if args.gpu:
-    import tensorflow as tf
-
-    # Use gradient checkpointing to reduce GPU memory
-    import memory_saving_gradients as gc
-    from tensorflow.python.ops import gradients as tf_gradients
-    tf_gradients.gradients = gc.gradients_speed
-
-    from keras.backend.tensorflow_backend import set_session
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
-    config.log_device_placement = True  # to log device placement (on which device the operation ran)
-    sess = tf.Session(config=config)
-    set_session(sess)  # set this TensorFlow session as the default session for Keras
-
-# Load the trained model
-print('Loading trained model...')
-model = load_model(args.model)
-model.summary()
+#####################################################
+# DATA LOADING AND RPEPROCESSING
+#####################################################
 
 # Load the mmap data and the byte offsets from the feature file
 print('\nLoading features into memory...')
@@ -106,6 +106,18 @@ train_generator = partial(utilsDatagen.BatchGenerator, mmap_data=mmap_data,byte_
 test_generator = partial(utilsDatagen.BatchGenerator, mmap_data=mmap_data,byte_offset=byte_offset,selected_idx=test_idx,
                                                         batch_size=BATCH_SIZE, sequence_len=SEQUENCE_LEN, norm_fn=norm_fn,
                                                         return_batch_info=True)
+
+#####################################################
+# MODEL LOADING
+#####################################################
+
+print('Loading trained model...')
+model = load_model(args.model)
+model.summary()
+
+#####################################################
+# MODEL EVALUATION
+#####################################################
 
 def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapname_dir, save_dir):
     if not os.path.exists(save_dir):
@@ -306,3 +318,5 @@ dataset_generator = [train_generator, test_generator]
 for i in range(len(dataset_name)):
     print('Evaluating model on {} dataset'.format(dataset_name[i]))
     evaluate_model_on_generator(model, dataset_generator[i], featureinfo_dir, pcapname_dir, os.path.join(args.savedir, dataset_name[i]))
+
+print('\nModel Evaluation Completed!')

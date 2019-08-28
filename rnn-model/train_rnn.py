@@ -6,9 +6,16 @@ import fnmatch
 import argparse
 import tracemalloc
 import numpy as np
-from functools import partial
 from datetime import datetime
 import matplotlib.pyplot as plt
+
+import tensorflow as tf
+from tensorflow.keras.layers import Activation
+from tensorflow.keras.layers import LSTM, CuDNNLSTM
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import load_model
+from tensorflow.keras.models import clone_model
+from tensorflow.keras.backend import set_session
 
 import utils_datagen as utilsDatagen
 import utils_plot as utilsPlot
@@ -24,15 +31,21 @@ parser.add_argument('-o', '--show', help='Flag for displaying plots', action='st
 parser.add_argument('-g', '--gpu', help='Flag for using GPU in model training', action='store_true')
 args = parser.parse_args()
 
-# Force use of CPU before importing keras
-if not args.gpu:
-    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-import keras
-from keras.layers import Activation
-from keras.layers import LSTM, CuDNNLSTM
-from keras.models import Sequential
-from keras.models import load_model
-from keras.models import clone_model
+#####################################################
+# PRE-CONFIGURATION
+#####################################################
+
+# Setting of CPU/GPU configuration for TF
+config = tf.ConfigProto()
+if args.gpu:
+    config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
+    config.log_device_placement = True  # to log device placement (on which device the operation ran)
+                                        # (nothing gets printed in Jupyter, only if you run it standalone)
+    # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppress Tensorflow debugging information for INFO level
+else:
+    config.device_count = {'GPU':0}  # Force use of CPU
+sess = tf.Session(config=config)
+set_session(sess)  # set this TensorFlow session as the default session for Keras
 
 # Define filenames from args.rootdir
 FEATURE_FILENAME = 'features_tls_*.csv'
@@ -45,7 +58,7 @@ except IndexError:
     exit()
 minmax_dir = os.path.join(args.rootdir, '..', '..', MINMAX_FILENAME)
 
-# Config info
+# Configuration for model training
 DATETIME_NOW = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 BATCH_SIZE = 64
 SEQUENCE_LEN = args.tstep
@@ -54,7 +67,7 @@ SAVE_EVERY_EPOCH = 5
 SPLIT_RATIO = args.split
 SEED = 2019
 
-# Start diagnostic analysis
+# Start diagnostic analysis for memory usage
 tracemalloc.start()
 
 #####################################################
@@ -93,18 +106,6 @@ test_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, test_idx, B
 # MODEL TRAINING
 #####################################################
 
-if args.gpu:
-    # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppress Tensorflow debugging information for INFO level
-    import tensorflow as tf
-    from keras.backend.tensorflow_backend import set_session
-
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
-    config.log_device_placement = True  # to log device placement (on which device the operation ran)
-                                        # (nothing gets printed in Jupyter, only if you run it standalone)
-    sess = tf.Session(config=config)
-    set_session(sess)  # set this TensorFlow session as the default session for Keras
-
 # Build RNN model or load existing RNN model
 if args.model:
     model = load_model(args.model)
@@ -119,7 +120,7 @@ else:
                     optimizer='rmsprop')
 model.summary()
 
-class TrainHistory(keras.callbacks.Callback):
+class TrainHistory(tf.keras.callbacks.Callback):
     def __init__(self, idx):
         super().__init__()
         self.idx = idx
@@ -298,3 +299,5 @@ for i in range(0,5):
     for line in stat.traceback.format():
         print(line)
 print('##################################################')
+
+print('\nModel Training Completed!')
