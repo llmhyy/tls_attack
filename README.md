@@ -6,6 +6,13 @@ __Major update to Pyshark 0.4.2.9__ - This package no longer depends on Pyshark 
 * Linux/MacOS (for Windows, the commands need to be slightly modified)
 * Python 3 (preferrably 3.6.5 and on a virtual environment)
 
+Install virtualenv using pip and create a new virtual environment in your preferred directory
+
+```
+pip install virutalenv
+virtualenv *name of your virtual env*
+```
+
 Install the dependencies from either `requirements.txt` or `requirements-gpu.txt`
 ```
 pip install -r requirements.txt  #  for non gpu-supported machine
