@@ -6,7 +6,6 @@ import argparse
 import numpy as np
 from datetime import datetime
 from ruamel.yaml import YAML
-
 import utils
 sys.path.append(os.path.join('..', 'rnn-model'))
 import utils_datagen as utilsDatagen
