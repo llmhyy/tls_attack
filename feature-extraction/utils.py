@@ -120,7 +120,7 @@ def extract_tcp_features(pcapfile, limit):
         for i in range(limit):
             packets.append(pcapfile_capture[i])
     except KeyError:
-        print('Limit exceeded number of packets')
+        pass
     pcapfile_capture.close()
 
     for packet in packets:
