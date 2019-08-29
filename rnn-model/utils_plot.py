@@ -227,20 +227,17 @@ def plot_accuracy_and_distribution(mean_acc_train, median_acc_train, mean_acc_te
 
     plt.subplot(312)
     plt.plot(final_acc_train,'|')
-    plt.title('Dist of mean cosine similarity (train)')
+    plt.title('Distribution of mean cosine similarity (train)')
     plt.ylabel('Mean Cosine Similarity')
     plt.xlabel('Traffic #')
 
     plt.subplot(313)
     plt.plot(final_acc_test,'|')
-    plt.title('Dist of mean cosine similarity (validation)')
+    plt.title('Distribution of mean cosine similarity (validation)')
     plt.ylabel('Mean Cosine Similarity')
     plt.xlabel('Traffic #')
 
-    acc_dist = os.path.join(save_dir, 'acc_dist')
-    if not os.path.exists(acc_dist):
-        os.mkdir(acc_dist)
-    plt.savefig(os.path.join(acc_dist,'acc_dist'))
+    plt.savefig(os.path.join(save_dir,'acc'))
     if show:
         plt.show()
     plt.clf()
@@ -261,10 +258,10 @@ def plot_prediction_on_pktlen(predict_train, true_train, predict_test, true_test
             ax[0, i].set_ylim([0, 1])
             ax[1, i].set_ylim([0, 1])
             predict_plot = ax[0, i].plot(predict_train[0][i, :, 0])
-            true_plot = ax[0, i].plot(true_train[i, :, 0], alpha=0.8)
+            true_plot = ax[0, i].plot(true_train[i, :, 0], alpha=0.5)
             ax[0, i].set_title('Train Sample #{}'.format(i))
             ax[1, i].plot(predict_test[0][i, :, 0])
-            ax[1, i].plot(true_test[i, :, 0], alpha=0.8)
+            ax[1, i].plot(true_test[i, :, 0], alpha=0.5)
             ax[1, i].set_title('Test Sample #{}'.format(i))
         return predict_plot, true_plot
 
@@ -291,13 +288,13 @@ def plot_prediction_on_pktlen(predict_train, true_train, predict_test, true_test
 
     s.on_changed(update)
 
-    traffic_len = os.path.join(save_dir, 'traffic_len')
-    if not os.path.exists(traffic_len):
-        os.mkdir(traffic_len)
+    pkt_len_dir = os.path.join(save_dir, 'predict_vs_true_on_pkt_len')
+    if not os.path.exists(pkt_len_dir):
+        os.mkdir(pkt_len_dir)
     epochs = len(predict_train)
     for epoch in range(0, epochs):
         manual_update(epoch)
-        plt.savefig(os.path.join(traffic_len, 'traffic_len_epoch{}'.format((epoch*save_every_epoch)+save_every_epoch)))
+        plt.savefig(os.path.join(pkt_len_dir, 'epoch{}'.format((epoch*save_every_epoch)+save_every_epoch)))
     if show:
         plt.show()
     plt.clf()
