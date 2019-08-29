@@ -36,14 +36,16 @@ args = parser.parse_args()
 #####################################################
 
 # Setting of CPU/GPU configuration for TF
-config = tf.ConfigProto()
 if args.gpu:
+    config = tf.ConfigProto()
     config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
     config.log_device_placement = True  # to log device placement (on which device the operation ran)
                                         # (nothing gets printed in Jupyter, only if you run it standalone)
     # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppress Tensorflow debugging information for INFO level
 else:
-    config.device_count = {'GPU':0}  # Force use of CPU
+    config = tf.ConfigProto(
+        device_count={'GPU': 0}
+    )
 sess = tf.Session(config=config)
 set_session(sess)  # set this TensorFlow session as the default session for Keras
 
