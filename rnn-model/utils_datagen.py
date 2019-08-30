@@ -85,7 +85,6 @@ def normalize(option, min_max_feature=None):
 
 def denormalize(min_max_feature):
     # TODO: Denormalize the data based on a user-specified option in future
-    # Expects min_feature and max_feature to be scalar values
     def min_max_denorm(batch_norm_data):
         min_feature, max_feature = min_max_feature
         batch_data = (batch_norm_data * (max_feature - min_feature)) + min_feature
@@ -156,7 +155,8 @@ def compute_metrics_for_batch(model, batch_data, metrics, denorm_fn):
     # Metric supported: 'seq_len', 'idx', 'acc', 'mean_acc'
     #                   'squared_error', 'mean_squared_error', 'true', 'predict', <an int value for the dim number>
 
-    PKT_LEN_THRESHOLD = 100  # for computation of mean over big packets. If -1, computation over all packets
+    PKT_LEN_THRESHOLD = 100 # <<< CHANGE THIS VALUE
+                            # for computation of mean over big packets. If -1, computation over all packets
 
     batch_inputs, batch_true, batch_info = batch_data
     output = {}
@@ -191,16 +191,6 @@ def compute_metrics_for_batch(model, batch_data, metrics, denorm_fn):
                     elif PKT_LEN_THRESHOLD == -1:
                         batch_mean_acc = np.mean(masked_batch_acc, axis=-1)
                         output[metric] = batch_mean_acc
-
-            # batch_acc = batch_metrics['acc']
-            # batch_pktlen = batch_metrics[7][0]
-            # batch_pktlen = utilsDatagen.denormalize(batch_pktlen, pktlen_min, pktlen_max)
-            # mask = batch_pktlen <= upper_bound_pkt_len
-            # masked_batch_acc = np.ma.array(batch_acc)
-            # masked_batch_acc.mask = mask
-            # batch_selective_mean_acc = np.mean(masked_batch_acc, axis=-1)
-            # selective_mean_acc_for_all_traffic = np.hstack(
-            # [selective_mean_acc_for_all_traffic, batch_selective_mean_acc])
 
             elif metric == 'squared_error' or metric == 'mean_squared_error':
                 padded_batch_squared_error = utilsMetric.calculate_squared_error_of_traffic(batch_predict, batch_true)
