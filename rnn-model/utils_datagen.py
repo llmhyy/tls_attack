@@ -151,12 +151,12 @@ class BatchGenerator(Sequence):
     def on_epoch_end(self):
         shuffle(self.selected_idx)
 
+PKT_LEN_THRESHOLD = 100 # <<< CHANGE THIS VALUE
+                        # for computation of mean over big packets. If -1, computation over all packets
+
 def compute_metrics_for_batch(model, batch_data, metrics, denorm_fn):
     # Metric supported: 'seq_len', 'idx', 'acc', 'mean_acc'
     #                   'squared_error', 'mean_squared_error', 'true', 'predict', <an int value for the dim number>
-
-    PKT_LEN_THRESHOLD = 100 # <<< CHANGE THIS VALUE
-                            # for computation of mean over big packets. If -1, computation over all packets
 
     batch_inputs, batch_true, batch_info = batch_data
     output = {}
@@ -182,8 +182,7 @@ def compute_metrics_for_batch(model, batch_data, metrics, denorm_fn):
                 elif metric == 'mean_acc':
                     if PKT_LEN_THRESHOLD > 0 and denorm_fn:
                         denorm_batch_true = denorm_fn(batch_true)
-                        batch_pktlen = denorm_batch_true[:,:,7]
-                        mask = batch_pktlen <= PKT_LEN_THRESHOLD
+                        mask = generate_mask_from_pkt_len(denorm_batch_true)
                         masked2_batch_acc = np.ma.array(masked_batch_acc)
                         masked2_batch_acc.mask = mask
                         batch_mean_acc_over_big_pkts = np.mean(masked2_batch_acc, axis=-1)
@@ -213,6 +212,11 @@ def compute_metrics_for_batch(model, batch_data, metrics, denorm_fn):
             elif metric == 'predict':
                 output[metric] = batch_predict
     return output
+
+def generate_mask_from_pkt_len(batch_data):
+    batch_pktlen = batch_data[:, :, 7]
+    mask = batch_pktlen <= PKT_LEN_THRESHOLD
+    return mask
 
 def compute_metrics_generator(model, data_generator, metrics, denorm_fn=None):
     for batch_data in data_generator:
