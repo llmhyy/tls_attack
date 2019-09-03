@@ -57,8 +57,6 @@ Output:
 * `features_minmax_{date}_{time}.csv`:file containing the min and max values for each dimension of the extracted features
 * `output.log`:                       file containing logging output
 
-__Note: If you see large chunks of error in the terminal output, it should be alright. This is largely due to trollius being a deprecated library in Python, hence it is not well maintained. However, we are still using it because it is a dependency of Pyshark.__
-
 ## Uploading into GitHub
 
 Because Github has a filesize limit of 100MB, the feature file, which can be  quite large, has be to be split into smaller files.
@@ -89,10 +87,6 @@ To:
 ```
 for field_name in list(self._all_fields):
 ```
-
-__RuntimeError: Event Loop is already running__
-
-No fixes for this currently. However, it does not seem to affect the integrity of the result.
 
 # 2. Model Training
 
@@ -157,12 +151,11 @@ cd rnn-model/
 
 ## Usage
 
-Usage: predict_rnn.py -m MODEL -r ROOTDIR -s SAVEDIR [-q TSTEP] [-o {0,1,2}] [-l LOWER] [-u UPPER] [-g]
+Usage: predict_rnn.py -m MODEL -r ROOTDIR [-q TSTEP] [-o {0,1,2}] [-l LOWER] [-u UPPER] [-g]
 
 Options: 
 * __-m/--model__: 		Input directory path of existing model to be used for prediction. Example: trained-rnn/normal-gpu/expt_2019-07-24_16-35-13/rnnmodel_2019-07-24_16-35-13.h5
 * __-r/--rootdir__: 	Input the directory path of the folder containing the feature file and other supporting files. Example: ../feature-extraction/extracted-features/normal/
-* __-s/--savedir__: 	Input the directory path to save the prediction results. Example trained-rnn/normal-gpu/expt_2019-07-24_16-35-13/predict_results/predict_on_normal/
 * __-q/--tstep__:		Input the number of time steps used in this model. Default 100
 * __-o/--mode__:		Input the combination of test for evaluation of the model (Choices: {0,1,2}) Default 0
 * __-l/--lower__:		Input the lower bound for sampling traffic. Default 0.0
@@ -173,12 +166,12 @@ Example:
 
 General evaluation of model (mode = 0)
 ```
-python predict_rnn.py -m {directory path of the model to be evaluated} -r {directory path of the folder containing the feature files to be evaluated against} -s {directory path to the save prediction results} -g
+python predict_rnn.py -m {directory path of the model to be evaluated} -r {directory path of the folder containing the feature files to be evaluated against} -g
 ```
 
 Sampling outliers between a lower and upper bound (mode = 1)
 ```
-python predict_rnn.py -m {directory path of the model to be evaluated} -r {directory path of the folder containing the feature files to be evaluated against} -s {directory path to the save prediction results} -o 1 -l {lower bound} -u {upper bound} -g
+python predict_rnn.py -m {directory path of the model to be evaluated} -r {directory path of the folder containing the feature files to be evaluated against} -o 1 -l {lower bound} -u {upper bound} -g
 ```
 
 _Note: mode = 2 executes both tasks abovementioned_
