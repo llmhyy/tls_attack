@@ -18,7 +18,6 @@ import utils_datagen as utilsDatagen
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model', help='Input directory path of existing model to be used for prediction', required=True)
 parser.add_argument('-r', '--rootdir', help='Input the directory path of the folder containing the feature file and other supporting files', required=True)
-parser.add_argument('-s', '--savedir', help='Input the directory path to save the prediction results', required=True)  # e.g foo/bar/trained-rnn/normal/expt_2019-03-15_21-52-20/predict_results/predict_on_normal/
 parser.add_argument('-q', '--tstep', help='Input the number of time steps used in this model', default=1000, type=int)
 parser.add_argument('-p', '--split', help='Input the split ratio for the validation set as a percentage of the dataset', default=0.05, type=float)
 parser.add_argument('-o', '--mode', help='Input the combination of test for evaluation of the model', default=0, type=int, choices=[0,1,2])
@@ -55,7 +54,7 @@ elif args.mode == 2:
     BASIC_TEST_SWITCH = True
     SAMPLE_TRAFFIC_SWITCH = True
 
-# Define filenames from args.rootdir
+# Define filenames based on args.rootdir
 FEATURE_FILENAME = 'features_tls_*.csv'
 FEATUREINFO_FILENAME = 'features_info_*.csv'
 PCAPNAME_FILENAME = 'pcapname_*.csv'
@@ -69,6 +68,11 @@ except IndexError:
 featureinfo_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, FEATUREINFO_FILENAME)[0])
 pcapname_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, PCAPNAME_FILENAME)[0])
 minmax_dir = os.path.join(args.rootdir, '..', '..', MINMAX_FILENAME)
+
+# Define directory to save files
+dataset_name = os.path.basename(os.path.normpath(args.rootdir))
+model_dirpath = os.path.dirname(os.path.normpath(args.model))
+save_dir = os.path.join(model_dirpath, 'predict_results', 'predict_on_{}'.format(dataset_name))
 
 # Configuration for model evaluation
 BATCH_SIZE = 64
@@ -239,6 +243,6 @@ dataset_generator = [train_generator, test_generator]
 for i in range(len(dataset_name)):
     print('\n##################################################')
     print('Evaluating model on {} dataset'.format(dataset_name[i]))
-    evaluate_model_on_generator(model, dataset_generator[i], featureinfo_dir, pcapname_dir, os.path.join(args.savedir, dataset_name[i]))
+    evaluate_model_on_generator(model, dataset_generator[i], featureinfo_dir, pcapname_dir, os.path.join(save_dir, dataset_name[i]))
 
 print('\nModel Evaluation Completed!')
