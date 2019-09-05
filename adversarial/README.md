@@ -42,9 +42,12 @@ method=1
 2. using preprocess.packet function to extract features from that package,and write result into temp file
 3. using preprocess.extract_x function to get input x from temp file,do some dataprocess for x and aquire target
 4. generate adversarial sample for x: 
+
 there are two method(you can choose via the parameter 'method'):
-first:calculate the derivative about loss to x, then use Gradient rise method to decrease the accuracy.
-second: make some small disturbances to the gradient.
+
+__first__:calculate the derivative about loss to x, then use Gradient rise method to decrease the accuracy.
+
+__second__: make some small disturbances to the gradient.
 5. using de_norm function to denormalize the result.
 
 ### attention：
