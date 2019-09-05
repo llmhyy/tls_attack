@@ -41,14 +41,11 @@ method=1
 1. locate one package
 2. using preprocess.packet function to extract features from that package,and write result into temp file
 3. using preprocess.extract_x function to get input x from temp file,do some dataprocess for x and aquire target
-4. generate adversarial sample for x: 
-
-there are two method(you can choose via the parameter 'method'):
-
-__first__:calculate the derivative about loss to x, then use Gradient rise method to decrease the accuracy.
-
-__second__: make some small disturbances to the gradient.
-5. using de_norm function to denormalize the result.
+4. <br/>generate adversarial sample for x: </br>  
+<br/>there are two method(you can choose via the parameter 'method'):</br>  
+<br/>__first__:calculate the derivative about loss to x, then use Gradient rise method to decrease the accuracy.  
+<br/>__second__: make some small disturbances to the gradient.  </br>
+<br/>5. using de_norm function to denormalize the result.</br>
 
 ### attention：
 * pacage dir: Each folder(eg. GA/sample_packect/1) can only contain one package；
