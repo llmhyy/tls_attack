@@ -6,7 +6,6 @@ Created on Thu Jul 18 10:11:01 2019
 """
 import numpy as np
 import copy 
-#全局变量
 tcp_end=18 #0~18
 tls_begin=19 #19~145
 tls_end=108
@@ -27,26 +26,26 @@ SCS_begin=90
 SCS_end=103
 APP_num=108
 sequence_length=109
-#判断形式为(109,)的vector
-#对tcp公共头部进行约束
+#a vector with a form of (109,)
+#Constrain the tcp common header
         
 def tcp_head(vector):
-    #0由外部直接约束，不得更改
+    #0 Directly bounded by the outside, cannot be changed
     #9~17
     for i in range(9,18,1):
         vector[i]=type_constrain(vector[i])
-    #1~6中仅一个1
+    #1~6 There is only one demension to be 1
     #与其他不同，直接比大小，不需要先约束到(0,1)
     vector_1_6=vector[1:7]
     maxmax=np.argmax(vector_1_6)
     vector_1_6=np.zeros(6)
-    vector_1_6[maxmax]=1 #将最大的置1
+    vector_1_6[maxmax]=1 #set the max be 1
     vector[1:7]=vector_1_6
     
     return vector
 
 #
-#hello_client类    
+#hello_client  
 def nonzero_ch(vector):   
     # 19~89 
     vector_copy=copy.copy(vector)
@@ -99,7 +98,7 @@ def zero_sh(vector):
 #certificate
 # 92~102
 def nonzero_cert(vector):
-    #92~95不变    
+    #92~95 be constant    
     for i in range(96,103,1):
         vector[i]=type_constrain(vector[i])
     return vector
@@ -118,7 +117,7 @@ def zero_shd(vector):
     vector[shd]=0
     return vector
 
-#client_key_exchange  !!!!! 105是一个随机生成的东西
+#client_key_exchange  !!!!! 105:something generated randomly
 def nonzero_cke(vector):
     return vector
 
@@ -150,7 +149,7 @@ def zero_app(vector):
     return  vector
 
      
-#将一个数约束成0/1
+#将一个数约束成0/1(Discrete)
 def type_constrain(value):
     if (value>0.5):
         value=1
