@@ -54,7 +54,8 @@ __second__: make some small disturbances to the gradient.
 ### attention：
 * pacage dir: Each folder(eg. GA/sample_packect/1) can only contain one package；
 * you have to empty the folder GA/temp before start running main.py
-* when you choose the second method, then you shouldn't stop it before run over. and if you do that, the next time you start running,there may be some error according to temsorflow graph(because ad_method2 create a new graph). To address this problem,you have to restart the IDE after you Suspended the program  halfway.
+* when you choose the second method, then you shouldn't stop it before run over. and if you do that, the next time you start running,there may be some error according to temsorflow graph(because ad_method2 create a new graph). To address this problem,you have to restart the IDE after you Suspended the program  halfway.  
+* the model loaded in this example should be retrained after updating minmax_ref.csv.
 
 ## 2. ad_method2.py
 in order to generate diverse adversarial sample for a same sample, we use this function to change gradient vector, the cos<> value between the new vector and the original one is within a random range(0.7,0.85). since vector has 109 demensions, it is difficult to control the vector by setting num randomly ,so we use GD method to find the value fastly. 
