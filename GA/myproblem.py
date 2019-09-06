@@ -108,7 +108,7 @@ class myproblem(ea.Problem):
             acc_array.append(acc_value)
             if (acc_value<0.75):  #record pacp for good result
                 file=str(acc_value)+'.pcap'
-                shutil.copy(os.path.join(pcapPath,'result.pcap'),os.path.join(current_dir,'select_packect',file)) # save the eligible package
+                shutil.copy(os.path.join(pcapPath,'result.pcap'),os.path.join(current_dir,'select_packet',file)) # save the eligible package
             shutil.rmtree(temp_dir) #delete csv file in this 
         
         acc_array=np.array(acc_array)
