@@ -58,6 +58,7 @@ import copy
 import keras.backend as K 
 import numpy as np
 import ad_method2
+import ad_method3
 model = load_model(os.path.join(current_dir,'..','rnn-model','trained-rnn','poodle','expt_2019-07-17_16-24-33','rnnmodel_2019-07-17_16-24-33.h5'))
 model.summary()
 
@@ -118,6 +119,8 @@ for num in range(packet_num):
         grads,losses=fn_grad([x,y_t]) 
         if (method==2):
             grads=ad_method2.grad_rotation(grads,valid_len)
+        if (method==3):
+            grads=ad_method3.generate_grad(grads,x_origin,type_list,valid_len)
         x += alpha*grads
         
 # =============================================================================
@@ -182,6 +185,8 @@ for num in range(packet_num):
     df=pd.DataFrame(data=x_write)
     if (method==2):
         filename='norm_{}'.format(num+1)+'_method_2'+'.csv'
+    if (method==3):
+        filename='norm_{}'.format(num+1)+'_method_3'+'.csv'
     else:    
         filename='norm_{}'.format(num+1)+'_method_1'+'.csv'
     df.to_csv(os.path.join(savedir,filename),header=None,index=None)
@@ -198,6 +203,8 @@ for num in range(packet_num):
     savedir=os.path.join(current_dir,'..','GA','sample_packet','denorm')
     if (method==2):
         filename='denorm_{}'.format(num+1)+'_method_2.csv'
+    if (method==3):
+        filename='denorm_{}'.format(num+1)+'_method_3.csv'
     else:    
         filename='denorm_{}'.format(num+1)+'_method_1.csv'
     df.to_csv(os.path.join(savedir,filename),header=None,index=None)
@@ -209,6 +216,8 @@ for num in range(packet_num):
 print(acc_list)
 if (method==2):
     filename_acc=os.path.join(current_dir,'..','GA','sample_packet','acc_2.txt')
+if (method==3):
+    filename_acc=os.path.join(current_dir,'..','GA','sample_packet','acc_3.txt')
 else:
     filename_acc=os.path.join(current_dir,'..','GA','sample_packet','acc_1.txt')
 f=open(filename_acc,'w')   
