@@ -62,14 +62,15 @@ in order to generate diverse adversarial sample for a same sample, we use this f
     
 * input: original gradeint in shape of (1,1000,109) ; valid length
 * output: generated new gradient
-
-## 3. judge.py
+## 3. ad_method3.py
+another method to Disturb gradient vector. because many dimension will be constrained to zero according to their type, so we can decrease the number of random dimension significant
+## 4. judge.py
 judge the type(eg. client hello,server hello……) for every step, and prepare for the latter constrains.
 
-## 4. constrains.py
+## 5. constrains.py
 constrains rule, Call the function every time a new input x is generated, to ensure that the answer is rational.
 
-## 5. BUGs
+## 6. BUGs
 * when you choose the second method, then you shouldn't stop it before the program runs over. if you do that, the next time you start running,there may be some error according to temsorflow graph(because ad_method2 create a new graph).  
 To address this problem, you have to restart the IDE after you Suspended the program  halfway.
 
