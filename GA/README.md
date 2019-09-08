@@ -1,6 +1,8 @@
 # Genetic Algorithm 
 we use GA to search for eligible (accuracy < 0.6) packages.
 
+## install
+geatpy
 ## process
 
 ![process](https://github.com/llmhyy/tls_attack/blob/master/GA/img/process_GA.png)
