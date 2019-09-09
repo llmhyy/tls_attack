@@ -133,9 +133,9 @@ Use  'longest common sequence'  to calculate the similarity of two package.
 in GA_traffic.py, try other types of recombination, like 'reclin','recsbx';  
 and can adjust the probability of mutation and recombination. 
 ```
-self.recFunc = 'xovdp'  # 两点交叉
-self.pc = 0.7 # 重组概率
-self.pm = 0.7 # 整条染色体的变异概率
+self.recFunc = 'xovdp'  # Two points crossing
+self.pc = 0.7 # the probability of recombination
+self.pm = 0.7 # the probability of mutation for the whole chromosome
 ```
 
 
