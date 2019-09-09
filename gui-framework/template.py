@@ -14,36 +14,46 @@ import time
 import fnmatch
 import traceback
 import subprocess
-from functools import partial
-
 import numpy as np
+from ruamel.yaml import YAML
+from functools import partial
 from PyQt5 import QtCore, QtWidgets, QtGui
-from keras.models import load_model
 from matplotlib.backends.backend_qt5agg import (FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
 from matplotlib.figure import Figure
-from ruamel.yaml import YAML
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppress Tensorflow debugging information for INFO level
 import tensorflow as tf
-from keras.backend.tensorflow_backend import set_session
-tf_config = tf.ConfigProto()
-tf_config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
-tf_config.log_device_placement = True  # to log device placement (on which device the operation ran)
-# (nothing gets printed in Jupyter, only if you run it standalone)
-sess = tf.Session(config=tf_config)
-set_session(sess)  # set this TensorFlow session as the default session for Keras
+from tensorflow.keras.models import load_model
+from tensorflow.keras.backend import set_session
+
+import config
 
 sys.path.append(os.path.join('..','rnn-model'))
-import utils_datagen as utilsDatagen
 import utils_metric as utilsMetric
+import utils_datagen as utilsDatagen
 sys.path.append(os.path.join('..','feature-extraction'))
 import utils as utilsFeatureExtract
 
-import config
+#####################################################
+# PRE-CONFIGURATION
+#####################################################
+
+# Setting of CPU/GPU configuration for TF
+tf_config = tf.ConfigProto()
+tf_config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
+tf_config.log_device_placement = False # to log device placement (on which device the operation ran)
+                                        # (nothing gets printed in Jupyter, only if you run it standalone)
+sess = tf.Session(config=tf_config)
+set_session(sess)  # set this TensorFlow session as the default session for Keras
 
 # Initialize a yaml object for reading and writing yaml files
 yaml = YAML(typ='rt') # Round trip loading and dumping
 yaml.preserve_quotes = True
 yaml.indent(mapping=4, sequence=4)
+
+#####################################################
+# WIDGET CLASSES AND FUNCTIONS
+#####################################################
 
 # BASE WIDGET FOR PLOTTING MATPLOTLIB GRAPHS
 class PlotWidget(QtWidgets.QWidget):
@@ -569,10 +579,16 @@ class Ui_MainWindow(object):
                 fail_count = 0
                 for i in range(pointer, len(sorted_zipped_name_acc)):
                     name,acc = sorted_zipped_name_acc[i]
+                    # print(name)
+                    # print(fullpath)
+                    # if i > 10:
+                    #     exit()
+                    #
+                    # PROBLEM: changing the directory of the pcap files causes the search function to fail
+                    # TODO: find a better substring matching function
+                    #
                     if name in fullpath:
                         if self.filter_fn(acc):
-                            # print('THIS IS THE ACC {}'.format(acc))
-                            # pf
                             filename = fullpath.split(os.path.sep)[-1]
                             item = QtWidgets.QListWidgetItem(filename)
                             item.setToolTip(fullpath)
@@ -627,45 +643,30 @@ class Ui_MainWindow(object):
             print('Error: min-max feature file cannot be found in the extracted-features directory of the selected database')
             return
         norm_fn = utilsDatagen.normalize(2, min_max_feature)
+        denorm_fn = utilsDatagen.denormalize(min_max_feature)
         selected_seqlen = len(traffic_features[0])
-        selected_input, selected_target = utilsDatagen.preprocess_data(traffic_features, pad_len=SEQUENCE_LEN, norm_fn=norm_fn)
+        selected_input, selected_true = utilsDatagen.preprocess_data(traffic_features, pad_len=SEQUENCE_LEN, norm_fn=norm_fn)
 
-        # Compute metrics for GUI 
-        self.data = {}
-        selected_predict = self.model.predict_on_batch(selected_input)
-        # Calculate metrics with batchified data
-        selected_acc_padded = utilsMetric.calculate_acc_of_traffic(selected_predict, selected_target)
-        selected_sqerr_padded = utilsMetric.calculate_squared_error_of_traffic(selected_predict, selected_target)
+        # Compute metrics for GUI
+        metrics_labels = ['acc', 'mean_acc', 'squared_error', 'true', 'predict']
+        selected_info = {'seq_len':[selected_seqlen]} # utils_datagen.compute_metrics_for_batch requires the 3rd element of the tuple to be a dict
+                                                    #  and selected_seqlen needs to be bathcify in a list
+        batch_data = selected_input, selected_true, selected_info
+        output = utilsDatagen.compute_metrics_for_batch(self.model, batch_data, metrics_labels, denorm_fn)
 
         # De-batchify the data
-        selected_predict = np.squeeze(selected_predict)
-        selected_target = np.squeeze(selected_target)
+        for metric_label, metric in output.items():
+            output[metric_label] = np.squeeze(metric)
 
-        upper_bound_pktlen = 100
-        selected_acc_padded = np.squeeze(selected_acc_padded)  # De-batchify the data
-        # Mask with true sequence length
-        selected_acc_masked_by_seqlen = np.ma.array(selected_acc_padded)
-        selected_acc_masked_by_seqlen[selected_seqlen:] = np.ma.masked
-        # Mask with packet length smaller than upper bound
-        pktlen_min, pktlen_max = min_max_feature[0][7], min_max_feature[1][7]
-        selected_pktlen = selected_target[:,7]
-        selected_pktlen = utilsDatagen.denormalize(selected_pktlen, pktlen_min, pktlen_max)
-        selected_pktlen_mask = selected_pktlen <= upper_bound_pktlen
-        selected_acc_masked_by_seqlen_and_pktlen = np.ma.array(selected_acc_masked_by_seqlen, copy=True)
-        selected_acc_masked_by_seqlen_and_pktlen.mask = selected_pktlen_mask
-        selected_mean_acc = np.mean(selected_acc_masked_by_seqlen_and_pktlen)
-
-        selected_sqerr_padded = np.squeeze(selected_sqerr_padded)  # De-batchify the data
-        selected_sqerr_masked = np.ma.array(selected_sqerr_padded)
-        selected_sqerr_masked[selected_seqlen:] = np.ma.masked
-
-        self.data['predict'] = selected_predict
-        self.data['true'] = selected_target
-        self.data['acc'] = selected_acc_masked_by_seqlen
-        self.data['mean_acc'] = selected_mean_acc
-        self.data['squared_error'] = selected_sqerr_masked
+        self.data = {}
+        self.data['predict'] = output['predict']
+        self.data['true'] = output['true']
+        self.data['acc'] = output['acc']
+        self.data['mean_acc'] = output['mean_acc']
+        self.data['squared_error'] = output['squared_error']
         self.data['dim_names'] = self.dim_names
-        self.data['pktlen_mask'] = selected_pktlen_mask
+        # Generate the mask from pkt len and squeeze
+        self.data['pktlen_mask'] = np.squeeze(utilsDatagen.generate_mask_from_pkt_len(denorm_fn(selected_true)))
 
         # Load accuracy graph
         self.loadAccuracyGraph(self.data)

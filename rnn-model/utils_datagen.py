@@ -63,7 +63,7 @@ def normalize(option, min_max_feature=None):
         batch_data = np.divide(batch_data, l2_norm, out=np.zeros_like(batch_data), where=l2_norm!=0.0)
         return batch_data
     def min_max_norm(batch_data, min_max_feature):
-        min_feature, max_feature = min_max_feature[0], min_max_feature[1]
+        min_feature, max_feature = min_max_feature
         # Dimension 20~62 of ciphersuite are frequency values and should not be normalized like other features
         min_feature[20:63] = 0
         max_feature[20:63] = 1
@@ -83,11 +83,13 @@ def normalize(option, min_max_feature=None):
             print("Error: min-max range for feature is not provided")
             return
 
-def denormalize(batch_norm_data, min_feature, max_feature):
+def denormalize(min_max_feature):
     # TODO: Denormalize the data based on a user-specified option in future
-    # Expects min_feature and max_feature to be scalar values
-    batch_data = (batch_norm_data * (max_feature - min_feature)) + min_feature
-    return batch_data
+    def min_max_denorm(batch_norm_data):
+        min_feature, max_feature = min_max_feature
+        batch_data = (batch_norm_data * (max_feature - min_feature)) + min_feature
+        return batch_data
+    return min_max_denorm
 
 def get_feature_vector(selected_idx, mmap_data, byte_offset, sequence_len, norm_fn):
     selected_byte_offset = [byte_offset[i] for i in selected_idx]
@@ -149,54 +151,76 @@ class BatchGenerator(Sequence):
     def on_epoch_end(self):
         shuffle(self.selected_idx)
 
-def get_compute_metrics_generator(model, data_generator, metrics):
-    gen = compute_metrics_generator(model, data_generator, metrics)
-    return gen
+PKT_LEN_THRESHOLD = 100 # <<< CHANGE THIS VALUE
+                        # for computation of mean over big packets. If -1, computation over all packets
 
-def compute_metrics_generator(model, data_generator, metrics):
-    for (batch_inputs, batch_true, batch_info) in data_generator:
-        output = {}
-        for metric in metrics:
-            batch_seq_len = batch_info['seq_len']
-            if metric == 'idx':
-                batch_idx = batch_info['batch_idx']
-                output[metric] = batch_idx
+def compute_metrics_for_batch(model, batch_data, metrics, denorm_fn):
+    # Metric supported: 'seq_len', 'idx', 'acc', 'mean_acc'
+    #                   'squared_error', 'mean_squared_error', 'true', 'predict', <an int value for the dim number>
 
-            elif metric == 'seq_len':
-                output[metric] = batch_seq_len
+    batch_inputs, batch_true, batch_info = batch_data
+    output = {}
+    for metric in metrics:
+        batch_seq_len = batch_info['seq_len']
+        if metric == 'idx':
+            batch_idx = batch_info['batch_idx']
+            output[metric] = batch_idx
 
-            else:
-                batch_predict = model.predict_on_batch(batch_inputs)
-                if metric == 'acc' or metric == 'mean_acc':
-                    padded_batch_acc = utilsMetric.calculate_acc_of_traffic(batch_predict, batch_true)
-                    masked_batch_acc = np.ma.array(padded_batch_acc)
-                    # Mask based on true seq len for every row
-                    for i in range(len(batch_seq_len)):
-                        masked_batch_acc[i,batch_seq_len[i]:] = np.ma.masked
-                    if metric == 'acc':
-                        output[metric] = masked_batch_acc
-                    elif metric == 'mean_acc':
+        elif metric == 'seq_len':
+            output[metric] = batch_seq_len
+
+        else:
+            batch_predict = model.predict_on_batch(batch_inputs)
+            if metric == 'acc' or metric == 'mean_acc':
+                padded_batch_acc = utilsMetric.calculate_acc_of_traffic(batch_predict, batch_true)
+                masked_batch_acc = np.ma.array(padded_batch_acc)
+                # Mask based on true seq len for every row
+                for i in range(len(batch_seq_len)):
+                    masked_batch_acc[i, batch_seq_len[i]:] = np.ma.masked
+                if metric == 'acc':
+                    output[metric] = masked_batch_acc
+                elif metric == 'mean_acc':
+                    if PKT_LEN_THRESHOLD > 0 and denorm_fn:
+                        denorm_batch_true = denorm_fn(batch_true)
+                        mask = generate_mask_from_pkt_len(denorm_batch_true)
+                        masked2_batch_acc = np.ma.array(masked_batch_acc)
+                        masked2_batch_acc.mask = mask
+                        batch_mean_acc_over_big_pkts = np.mean(masked2_batch_acc, axis=-1)
+                        output[metric] = batch_mean_acc_over_big_pkts
+                    elif PKT_LEN_THRESHOLD == -1:
                         batch_mean_acc = np.mean(masked_batch_acc, axis=-1)
                         output[metric] = batch_mean_acc
 
-                elif metric == 'squared_error' or metric == 'mean_squared_error':
-                    padded_batch_squared_error = utilsMetric.calculate_squared_error_of_traffic(batch_predict, batch_true)
-                    masked_batch_squared_error = np.ma.array(padded_batch_squared_error)
-                    # Mask based on true seq len for every row
-                    for i in range(len(batch_seq_len)):
-                        masked_batch_squared_error[i,batch_seq_len[i]:,:] = np.ma.masked
-                    if metric == 'squared_error':
-                        output[metric] = masked_batch_squared_error
-                    elif metric == 'mean_squared_error':
-                        batch_mean_squared_error = np.mean(masked_batch_squared_error, axis=1)
-                        output[metric] = batch_mean_squared_error
+            elif metric == 'squared_error' or metric == 'mean_squared_error':
+                padded_batch_squared_error = utilsMetric.calculate_squared_error_of_traffic(batch_predict, batch_true)
+                masked_batch_squared_error = np.ma.array(padded_batch_squared_error)
+                # Mask based on true seq len for every row
+                for i in range(len(batch_seq_len)):
+                    masked_batch_squared_error[i, batch_seq_len[i]:, :] = np.ma.masked
+                if metric == 'squared_error':
+                    output[metric] = masked_batch_squared_error
+                elif metric == 'mean_squared_error':
+                    batch_mean_squared_error = np.mean(masked_batch_squared_error, axis=1)
+                    output[metric] = batch_mean_squared_error
 
-                elif type(metric) == int:  # dim number
-                    output[metric] = (batch_true[:,:,metric:metric+1], batch_predict[:,:,metric:metric+1])
+            elif type(metric) == int:  # dim number
+                output[metric] = (batch_true[:, :, metric:metric + 1], batch_predict[:, :, metric:metric + 1])
 
-                elif metric == 'true_predict':
-                    output[metric] = (batch_true, batch_predict)
+            elif metric == 'true':
+                output[metric] = batch_true
 
+            elif metric == 'predict':
+                output[metric] = batch_predict
+    return output
+
+def generate_mask_from_pkt_len(batch_data):
+    batch_pktlen = batch_data[:, :, 7]
+    mask = batch_pktlen <= PKT_LEN_THRESHOLD
+    return mask
+
+def compute_metrics_generator(model, data_generator, metrics, denorm_fn=None):
+    for batch_data in data_generator:
+        output = compute_metrics_for_batch(model, batch_data, metrics, denorm_fn)
         yield output
 
 # For defining float values between 0 and 1 for argparse

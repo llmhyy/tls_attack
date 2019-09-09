@@ -7,6 +7,7 @@ import argparse
 import numpy as np
 from functools import partial
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppress Tensorflow debugging information for INFO level
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.backend import set_session
@@ -17,13 +18,11 @@ import utils_datagen as utilsDatagen
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model', help='Input directory path of existing model to be used for prediction', required=True)
 parser.add_argument('-r', '--rootdir', help='Input the directory path of the folder containing the feature file and other supporting files', required=True)
-parser.add_argument('-s', '--savedir', help='Input the directory path to save the prediction results', required=True)  # e.g foo/bar/trained-rnn/normal/expt_2019-03-15_21-52-20/predict_results/predict_on_normal/
 parser.add_argument('-q', '--tstep', help='Input the number of time steps used in this model', default=1000, type=int)
+parser.add_argument('-p', '--split', help='Input the split ratio for the validation set as a percentage of the dataset', default=0.05, type=float)
 parser.add_argument('-o', '--mode', help='Input the combination of test for evaluation of the model', default=0, type=int, choices=[0,1,2])
 parser.add_argument('-l', '--lower', help='Input the lower bound for sampling traffic', default=0.0, type=utilsDatagen.restricted_float)
 parser.add_argument('-u', '--upper', help='Input upper bound for sampling traffic', default=1.0, type=utilsDatagen.restricted_float)
-# parser.add_argument('-tl', '--templower', help='Input the lower bound for sampling traffic', default=0.0, type=utilsDatagen.restricted_float)
-# parser.add_argument('-tu', '--tempupper', help='Input upper bound for sampling traffic', default=1.0, type=utilsDatagen.restricted_float)
 parser.add_argument('-g', '--gpu', help='Flag for using GPU in model training', action='store_true')
 args = parser.parse_args()
 
@@ -32,17 +31,15 @@ args = parser.parse_args()
 #####################################################
 
 # Setting of CPU/GPU configuration for TF
-config = tf.ConfigProto()
 if args.gpu:
-    # Use gradient checkpointing to reduce GPU memory
-    import memory_saving_gradients as gc
-    from tensorflow.python.ops import gradients as tf_gradients
-    tf_gradients.gradients = gc.gradients_speed
-
+    config = tf.ConfigProto()
     config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
-    config.log_device_placement = True  # to log device placement (on which device the operation ran)
+    config.log_device_placement = False  # to log device placement (on which device the operation ran)
+                                        # (nothing gets printed in Jupyter, only if you run it standalone)
 else:
-    config.device_count = {'GPU':0}  # Force use of CPU
+    config = tf.ConfigProto(
+        device_count={'GPU': 0}
+    )
 sess = tf.Session(config=config)
 set_session(sess)  # set this TensorFlow session as the default session for Keras
 
@@ -57,7 +54,7 @@ elif args.mode == 2:
     BASIC_TEST_SWITCH = True
     SAMPLE_TRAFFIC_SWITCH = True
 
-# Define filenames from args.rootdir
+# Define filenames based on args.rootdir
 FEATURE_FILENAME = 'features_tls_*.csv'
 FEATUREINFO_FILENAME = 'features_info_*.csv'
 PCAPNAME_FILENAME = 'pcapname_*.csv'
@@ -72,10 +69,15 @@ featureinfo_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, F
 pcapname_dir = os.path.join(args.rootdir, fnmatch.filter(rootdir_filenames, PCAPNAME_FILENAME)[0])
 minmax_dir = os.path.join(args.rootdir, '..', '..', MINMAX_FILENAME)
 
+# Define directory to save files
+dataset_name = os.path.basename(os.path.normpath(args.rootdir))
+model_dirpath = os.path.dirname(os.path.normpath(args.model))
+save_dir = os.path.join(model_dirpath, 'predict_results', 'predict_on_{}'.format(dataset_name))
+
 # Configuration for model evaluation
 BATCH_SIZE = 64
 SEQUENCE_LEN = args.tstep
-SPLIT_RATIO = 0.05
+SPLIT_RATIO = args.split
 SEED = 2019
 
 #####################################################
@@ -99,6 +101,7 @@ except FileNotFoundError:
 train_idx,test_idx = utilsDatagen.split_train_test(dataset_size=len(byte_offset), split_ratio=SPLIT_RATIO, seed=SEED)
 # Initialize the normalization function
 norm_fn = utilsDatagen.normalize(2, min_max_feature)
+denorm_fn = utilsDatagen.denormalize(min_max_feature)
 # Initialize the batch generator
 train_generator = partial(utilsDatagen.BatchGenerator, mmap_data=mmap_data,byte_offset=byte_offset,selected_idx=train_idx,
                                                         batch_size=BATCH_SIZE, sequence_len=SEQUENCE_LEN, norm_fn=norm_fn,
@@ -141,30 +144,12 @@ def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapn
         pcap_filename = [row.strip() for row in f.readlines()]
 
     print('Computing metrics and plotting graph...')
-    idx_for_all_traffic = [batch_metrics['idx'] for batch_metrics in utilsDatagen.get_compute_metrics_generator(model, dataset_generator(), metrics=['idx'])]
+    idx_for_all_traffic = [batch_metrics['idx'] for batch_metrics in utilsDatagen.compute_metrics_generator(model, dataset_generator(), metrics=['idx'])]
     idx_for_all_traffic = np.concatenate(idx_for_all_traffic, axis=0)
-
-    mean_acc_for_all_traffic = [batch_metrics['mean_acc'] for batch_metrics in utilsDatagen.get_compute_metrics_generator(model, dataset_generator(), metrics=['mean_acc'])]
+    mean_acc_for_all_traffic = [batch_metrics['mean_acc'] for batch_metrics in utilsDatagen.compute_metrics_generator(model, dataset_generator(), metrics=['mean_acc'], denorm_fn=denorm_fn)]
     mean_acc_for_all_traffic = np.concatenate(mean_acc_for_all_traffic, axis=0)  # Join up the batches
 
-    selective_mean_acc_for_all_traffic = np.array([])
-    upper_bound_pkt_len = 100
-    pktlen_min, pktlen_max = min_max_feature[0][7], min_max_feature[1][7]
-    met_gen = utilsDatagen.get_compute_metrics_generator(model, dataset_generator(), metrics=['acc', 7])
-    for batch_metrics in met_gen:
-        # Extract and process batch of metrics on the fly to reduce memory allocation
-        # Tried to store all the batches of metrics in a list but encountered memory issues
-        batch_acc = batch_metrics['acc']
-        batch_pktlen = batch_metrics[7][0]
-        batch_pktlen = utilsDatagen.denormalize(batch_pktlen, pktlen_min, pktlen_max)
-        mask = batch_pktlen <= upper_bound_pkt_len
-        masked_batch_acc = np.ma.array(batch_acc)
-        masked_batch_acc.mask = mask
-        batch_selective_mean_acc = np.mean(masked_batch_acc, axis=-1)
-        selective_mean_acc_for_all_traffic = np.hstack([selective_mean_acc_for_all_traffic, batch_selective_mean_acc])
-
     if BASIC_TEST_SWITCH:
-
         # Create a log file for logging in each tests
         logfile = open(os.path.join(save_dir, 'predict_log.txt'),'w')
 
@@ -176,16 +161,10 @@ def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapn
         logfile.write('Overall Mean Accuracy{:60}{:>10.6f}\n'.format(':', overall_mean_acc))
         print('Mean accuracy calculation completed!')
 
-        # Evaluate mean accuracy across selective packet for each traffic
-        selective_overall_mean_acc = np.mean(selective_mean_acc_for_all_traffic)
-        save_dir_for_plot = os.path.join(save_dir, 'acc-traffic(more than {} pktlen)'.format(upper_bound_pkt_len))
-        utilsPlot.plot_distribution(np.array(selective_mean_acc_for_all_traffic), selective_overall_mean_acc, save_dir_for_plot)
-        print('Mean accuracy calculation (selective) completed!')
-
         # Evaluate mean squared error across traffic and packet for each dimension
         sum = None
         count = 0
-        met_gen = utilsDatagen.get_compute_metrics_generator(model, dataset_generator(), metrics=['squared_error'])
+        met_gen = utilsDatagen.compute_metrics_generator(model, dataset_generator(), metrics=['squared_error'])
         for batch_metrics in met_gen:
             # Extract and process batch of metrics on the fly to reduce memory allocation
             # Tried to store all the batches of metrics in a list but encountered memory issues
@@ -206,28 +185,6 @@ def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapn
             logfile.write(line)
         print('Mean squared error calculation completed!')
 
-        # if len(idx_for_all_traffic) > 100: # find outliers only for sufficiently large datasets
-        #     # Get outliers from traffic based on mean acc
-        #     outlier_count = 10
-        #     bottom_idx, top_idx = utilsPredict.find_outlier(outlier_count, mean_acc_for_all_traffic)
-
-        #     ####  TEST 3a ####
-        #     utilsPredict.test_mse_dim_of_outlier(bottom_idx, top_idx, mean_acc_for_all_traffic, mean_squared_error_for_all_traffic, idx_for_all_traffic, pcap_filename, logfile, save_dir)
-
-        #     ####  TEST 3b ####
-        #     outlier_traffic_types = ['bottom10traffic', 'top10traffic']
-        #     outlier_traffic_idx = [bottom_idx, top_idx]
-        #     for i in range(len(outlier_traffic_types)):
-        #         save_traffic_dir = os.path.join(save_dir,  outlier_traffic_types[i])
-        #         if os.path.exists(save_traffic_dir):
-        #             shutil.rmtree(save_traffic_dir)
-        #         os.makedirs(save_traffic_dir)
-        #         sampled_metrics = utilsPredict.get_metrics_from_idx(outlier_traffic_idx[i], mean_acc_for_all_traffic, acc_for_all_traffic,
-        #                                                             squared_error_for_all_traffic, mean_squared_error_for_all_traffic,
-        #                                                             idx_for_all_traffic, pcap_filename,
-        #                                                             mmap_data, byte_offset, SEQUENCE_LEN, norm_fn, model)
-        #         utilsPredict.summary_for_sampled_traffic(sampled_metrics, dim_names, save_traffic_dir)
-
         logfile.close()
 
     # Evaluate performance on sampled traffic found within a lower and upper bound
@@ -236,78 +193,46 @@ def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapn
         if os.path.exists(save_sampled_dir):
             shutil.rmtree(save_sampled_dir)
         os.makedirs(save_sampled_dir)
-        bounded_selective_mean_acc_idx = [(i,mean_acc) for i,mean_acc in enumerate(selective_mean_acc_for_all_traffic) if mean_acc >= args.lower and mean_acc <= args.upper]
-        # bounded_mean_acc_idx = [(i,mean_acc) for i,mean_acc in enumerate(mean_acc_for_all_traffic) if mean_acc >= args.templower and mean_acc <= args.tempupper]
-        # print('###  Outlier Summary with Mean Acc  ###')
-        # print('Total traffic: {}   Outlier traffic: {}   Outlier %: {:.5f}'.format(len(idx_for_all_traffic),
-        #                                                                            len(bounded_mean_acc_idx),
-        #                                                                            len(bounded_mean_acc_idx) / len(idx_for_all_traffic)))
-        print('###  Outlier Summary with Selective Mean Acc')
-        print('Total traffic: {}   Outlier traffic: {}   Outlier %: {:.5f}'.format(len(idx_for_all_traffic),
-                                                                                   len(bounded_selective_mean_acc_idx),
-                                                                                   len(bounded_selective_mean_acc_idx)/len(idx_for_all_traffic)))
 
-        if len(bounded_selective_mean_acc_idx)>0:
-            print("{} traffic found within bound of {}-{}".format(len(bounded_selective_mean_acc_idx), args.lower, args.upper))
+        bounded_mean_acc_idx = [(i,mean_acc) for i,mean_acc in enumerate(mean_acc_for_all_traffic) if mean_acc >= args.lower and mean_acc <= args.upper]
+        print('%%%%%  Outlier Summary with Mean Acc  %%%%%')
+        print('Total traffic: {}   Outlier traffic: {}   Outlier %: {:.5f}'.format(len(idx_for_all_traffic),
+                                                                                   len(bounded_mean_acc_idx),
+                                                                                   len(bounded_mean_acc_idx) / len(idx_for_all_traffic)))
+
+        if len(bounded_mean_acc_idx)>0:
+            print("{} traffic found within bound of {}-{}".format(len(bounded_mean_acc_idx), args.lower, args.upper))
             try:
                 random.seed(2018)
-                sampled_acc_idx = random.sample(bounded_selective_mean_acc_idx, 10)
+                sampled_acc_idx = random.sample(bounded_mean_acc_idx, 10)
             except ValueError:
-                sampled_acc_idx = bounded_selective_mean_acc_idx
+                sampled_acc_idx = bounded_mean_acc_idx
 
             print("Sampling {} traffic".format(len(sampled_acc_idx)))
             sampled_idx,sampled_mean_acc = [list(t) for t in zip(*sampled_acc_idx)]
             # Get the index used in the original mmap object and byte offset
             sampled_idx_mmap = np.array([idx_for_all_traffic[idx] for idx in sampled_idx])
             # Initialize the batch generator with original index
-            sample_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, sampled_idx_mmap, BATCH_SIZE,
+            sample_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, sampled_idx_mmap, len(sampled_acc_idx), #  Generate data in 1 full batch
                                                            SEQUENCE_LEN, norm_fn, return_batch_info=True)
-            metrics_labels = ['acc', 'mean_acc', 'squared_error', 'mean_squared_error', 'true_predict', 'seq_len']
-            metrics_generator_for_sampled = utilsDatagen.compute_metrics_generator(model, sample_generator, metrics=metrics_labels)
-            metrics_for_sampled = [batch_metrics for batch_metrics in metrics_generator_for_sampled]
+            metrics_labels = ['acc', 'mean_acc', 'squared_error', 'mean_squared_error', 'true', 'predict', 'seq_len']
+            sampled_metrics_generator = utilsDatagen.compute_metrics_generator(model, sample_generator, metrics=metrics_labels, denorm_fn=denorm_fn)
+            sampled_metrics = next(sampled_metrics_generator)  # Get 1 batch of metrics from the generator
+            sampled_pcap_filenames = [pcap_filename[idx] for idx in sampled_idx_mmap]
 
-            # General summary of sampled traffic
-            sampled_acc = [batch_metrics['acc'] for batch_metrics in metrics_for_sampled]
-            sampled_acc = np.concatenate(sampled_acc, axis=0)
-            sampled_mean_acc = np.array(sampled_mean_acc)
-            sampled_sqerr = [batch_metrics['squared_error'] for batch_metrics in metrics_for_sampled]
-            sampled_sqerr = np.concatenate(sampled_sqerr, axis=0)
-            sampled_mean_sqerr = [batch_metrics['mean_squared_error'] for batch_metrics in metrics_for_sampled]
-            sampled_mean_sqerr = np.concatenate(sampled_mean_sqerr, axis=0)
-            sampled_true_predict = [batch_metrics['true_predict'] for batch_metrics in metrics_for_sampled]
-            sampled_true, sampled_predict = list(zip(*sampled_true_predict))
-            sampled_true = np.concatenate(sampled_true, axis=0)
-            sampled_predict = np.concatenate(sampled_predict, axis=0)
-            sampled_pcap_filename = [pcap_filename[idx] for idx in sampled_idx_mmap]
-            sampled_seq_len = [batch_metrics['seq_len'] for batch_metrics in metrics_for_sampled]
-            sampled_seq_len = np.concatenate(sampled_seq_len, axis=0)
+            utilsPlot.plot_summary_for_sampled_traffic(sampled_metrics, sampled_pcap_filenames, dim_names,
+                                                       save_sampled_dir, show=False, trough_marker=True)
 
-            for i in range(len(sampled_pcap_filename)):
-                dim_sorted_by_mean_sqerr = sorted(range(len(sampled_mean_sqerr[i])), key=lambda k: sampled_mean_sqerr[i][k])
-                top5dim = dim_sorted_by_mean_sqerr[:5]
-                bottom5dim = dim_sorted_by_mean_sqerr[-5:]
-                utilsPlot.plot_summary_for_sampled_traffic(sampled_pcap_filename[i], sampled_mean_sqerr[i], dim_names,
-                                                           sampled_mean_acc[i], sampled_acc[i],
-                                                           sampled_predict[:, :, top5dim][i, :sampled_seq_len[i]],
-                                                           sampled_true[:, :, top5dim][i, :sampled_seq_len[i]], top5dim,
-                                                           sampled_predict[:, :, bottom5dim][i, :sampled_seq_len[i]],
-                                                           sampled_true[:, :, bottom5dim][i, :sampled_seq_len[i]],
-                                                           bottom5dim,
-                                                           save_sampled_dir, trough_marker=True)
-
-            # Interactive plot for sampled traffic
-            utilsPlot.plot_interactive_summary_for_sampled_traffic(sampled_acc, sampled_mean_acc, sampled_sqerr,
-                                                                   sampled_predict, sampled_true,
-                                                                   sampled_pcap_filename, dim_names,
-                                                                   save_sampled_dir, show=True)
+            utilsPlot.plot_interactive_summary_for_sampled_traffic(sampled_metrics, sampled_pcap_filenames, dim_names,
+                                                                   show=False)
 
         else:
             print("No traffic found within bound of {}-{}".format(args.lower, args.upper))
             print('Total traffic: {}'.format(len(idx_for_all_traffic)))
 
-    # Record the prediction accuracy into file
+    # Record the prediction accuracy into file for use in gui tool
     RESULTS_FILENAME = 'results.csv'
-    zipped = zip(idx_for_all_traffic, selective_mean_acc_for_all_traffic)
+    zipped = zip(idx_for_all_traffic, mean_acc_for_all_traffic)
     sorted_acc = [x for _, x in sorted(zipped)]
     with open(os.path.join(save_dir, RESULTS_FILENAME), 'w') as f:
         for x in sorted_acc:
@@ -316,7 +241,8 @@ def evaluate_model_on_generator(model, dataset_generator, featureinfo_dir, pcapn
 dataset_name = ['train', 'val']
 dataset_generator = [train_generator, test_generator]
 for i in range(len(dataset_name)):
+    print('\n##################################################')
     print('Evaluating model on {} dataset'.format(dataset_name[i]))
-    evaluate_model_on_generator(model, dataset_generator[i], featureinfo_dir, pcapname_dir, os.path.join(args.savedir, dataset_name[i]))
+    evaluate_model_on_generator(model, dataset_generator[i], featureinfo_dir, pcapname_dir, os.path.join(save_dir, dataset_name[i]))
 
 print('\nModel Evaluation Completed!')

@@ -58,11 +58,30 @@ def plot_mse_for_dim_for_outliers(pcap_filename, mean_acc, mse_dim, typename, sa
         plt.show()
     plt.clf()
 
-def plot_summary_for_sampled_traffic(pcap_filename, mse_dim, dim_name, mean_acc, packetwise_acc, 
-                                predict_for_top5_dim, true_for_top5_dim, top5dim, 
-                                predict_for_bottom5_dim, true_for_bottom5_dim, bottom5dim,
-                                save_dir, show=False, trough_marker=False):
-    
+def plot_summary_for_sampled_traffic(metrics, pcap_filenames, dim_names,
+                                    save_dir, show=False, trough_marker=False):
+    sampled_mean_sqerr = metrics['mean_squared_error']
+    for i in range(len(pcap_filenames)):
+        dim_sorted_by_mean_sqerr = sorted(range(len(sampled_mean_sqerr[i])), key=lambda k: sampled_mean_sqerr[i][k])
+        top5dim = dim_sorted_by_mean_sqerr[:5]
+        bottom5dim = dim_sorted_by_mean_sqerr[-5:]
+        metrics_for_one_traffic = {}
+        for metric_name, metric in metrics.items():
+            metrics_for_one_traffic[metric_name] = metric[i]
+        plot_summary_for_one_sampled_traffic(metrics_for_one_traffic, pcap_filenames[i], dim_names, top5dim, bottom5dim,
+                                            save_dir, show, trough_marker)
+
+def plot_summary_for_one_sampled_traffic(metrics, pcap_filename, dim_names, top5dim, bottom5dim,
+                                    save_dir, show, trough_marker):
+    seq_len = metrics['seq_len']
+    mean_acc = metrics['mean_acc']
+    mse_dim = metrics['mean_squared_error']
+    packetwise_acc = metrics['acc'][~metrics['acc'].mask]  # Remove masked elements in array
+    predict_for_top5_dim = metrics['predict'][:seq_len, top5dim]  # Remove padding using seq len
+    true_for_top5_dim = metrics['true'][:seq_len, top5dim]
+    predict_for_bottom5_dim = metrics['predict'][:seq_len, bottom5dim]
+    true_for_bottom5_dim = metrics['true'][:seq_len, bottom5dim]
+
     fig=plt.gcf()
     fig.set_size_inches(25,18)
     fig.suptitle('Summary Stats for {}\nAcc: {}'.format(pcap_filename, mean_acc))
@@ -70,7 +89,6 @@ def plot_summary_for_sampled_traffic(pcap_filename, mse_dim, dim_name, mean_acc,
     gs = mpl.gridspec.GridSpec(4,5)
     gs.update(hspace=0.3)
 
-    # ax1 = plt.subplot2grid((4,5), (0,0), colspan=5)
     ax1 = plt.subplot(gs[0,:])
     ax1.bar(np.arange(len(mse_dim)), mse_dim)
     ax1.set_xlabel('Feature #')
@@ -80,11 +98,6 @@ def plot_summary_for_sampled_traffic(pcap_filename, mse_dim, dim_name, mean_acc,
     ax2 = plt.subplot(gs[1,:])
     ax2.plot(packetwise_acc)
     if trough_marker:
-        # x_val = list(range(len(packetwise_acc)))
-        # y_val = packetwise_acc - 0.05
-        # text = list(range(1,len(packetwise_acc)+1))
-        # ax2.plot(x_val, packetwise_acc, 'ro-')
-        # ax2.text(x_val, y_val, text, fontsize=8, horizontalalignment='center')
         for i,packet_acc in enumerate(packetwise_acc.tolist()):
             ax2.plot(i, packet_acc, 'ro-')
             ax2.text(i, (packet_acc-0.05), i+1, fontsize=8, horizontalalignment='center')
@@ -98,13 +111,13 @@ def plot_summary_for_sampled_traffic(pcap_filename, mse_dim, dim_name, mean_acc,
         ax_top = plt.subplot(gs[2,i])
         ax_top.plot(predict_for_top5_dim[:,i], label='Predict')
         ax_top.plot(true_for_top5_dim[:,i], label='True')
-        ax_top.set_title('{} (T)'.format(dim_name[top5dim[i]]))
+        ax_top.set_title('{} (T)'.format(dim_names[top5dim[i]]))
 
         # ax_bottom = plt.subplot2grid((4,5), (3,i))
         ax_bottom = plt.subplot(gs[3,i])
         ax_bottom.plot(predict_for_bottom5_dim[:,i], label='Predict')
         ax_bottom.plot(true_for_bottom5_dim[:,i], label='True')
-        ax_bottom.set_title('{} (B)'.format(dim_name[bottom5dim[i]]))
+        ax_bottom.set_title('{} (B)'.format(dim_names[bottom5dim[i]]))
     handles,labels = ax_top.get_legend_handles_labels()
     fig.legend(handles, labels, loc=(0.85,0.05))
     if '/' in pcap_filename:
@@ -116,14 +129,19 @@ def plot_summary_for_sampled_traffic(pcap_filename, mse_dim, dim_name, mean_acc,
         plt.show()
     plt.close()
 
-def plot_interactive_summary_for_sampled_traffic(pktwise_acc, mean_acc, pktwise_sqerr,
-                                                 predict, true,
-                                                 pcap_filenames, dim_names, save_dir, show=False):
+def plot_interactive_summary_for_sampled_traffic(metrics, pcap_filenames, dim_names,
+                                                 show=False):
+    mean_acc = metrics['mean_acc']
+    pktwise_acc = metrics['acc']
+    pktwise_sqerr = metrics['squared_error']
+    predict = metrics['predict']
+    true = metrics['true']
 
     def plot_graph():
         fig.suptitle('{}\nAcc: {}'.format(pcap_filenames[pointer], mean_acc[pointer]))
-        ax[0].plot([i+1 for i in range(len(pktwise_acc[pointer]))], pktwise_acc[pointer])
-        for i, pkt_acc in enumerate(pktwise_acc[pointer]):
+        unpadded_pktwise_acc = pktwise_acc[pointer][~pktwise_acc[pointer].mask]
+        ax[0].plot([i+1 for i in range(unpadded_pktwise_acc.size)], unpadded_pktwise_acc)
+        for i, pkt_acc in enumerate(unpadded_pktwise_acc):
             ax[0].plot(i+1, pkt_acc, 'ro', picker=5)
             ax[0].text(i+1, (pkt_acc-0.05), i+1, fontsize=9, horizontalalignment='center')
         ax[0].set_ylim([0.0,1.0])
@@ -186,7 +204,8 @@ def plot_interactive_summary_for_sampled_traffic(pktwise_acc, mean_acc, pktwise_
     bprev = Button(axprev, 'Previous')
     bprev.on_clicked(prev)
     fig.canvas.mpl_connect('pick_event', on_pick)
-    plt.show()
+    if show:
+        plt.show()
 
 
 #########   Training   ##########
