@@ -128,5 +128,15 @@ Use  'longest common sequence'  to calculate the similarity of two package.
 - **sim:** 
 
   we know element in subsequence is a vector with 109 dimensions, so we calculate the value of  corresponding vectors' cos similarity , sum them and divided by the number.
+  
+## todo:
+in GA_traffic.py, try other types of recombination, like 'reclin','recsbx';  
+and can adjust the probability of mutation and recombination. 
+```
+self.recFunc = 'xovdp'  # 两点交叉
+self.pc = 0.7 # 重组概率
+self.pm = 0.7 # 整条染色体的变异概率
+```
+
 
    
