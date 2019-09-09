@@ -86,7 +86,7 @@ for num in range(packet_num):
 # =============================================================================
     target = K.variable(tf.zeros((1,seq_len,feature_num)))
     loss=keras.losses.mean_squared_error(target,model.output)
-    loss_for_all=tf.reduce_mean(loss, axis=1)  #(,1000)
+    loss_for_all=tf.reduce_mean(loss, axis=1)  
     grad=K.gradients(loss_for_all,model.input)[0]
     fn_grad=K.function([model.input,target],[grad,loss_for_all])
     
