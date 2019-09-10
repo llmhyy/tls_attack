@@ -7,7 +7,7 @@ import argparse
 import numpy as np
 from functools import partial
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppress Tensorflow debugging information for INFO level
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'  # Suppress Tensorflow debugging information for INFO level
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.backend import set_session
@@ -19,6 +19,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model', help='Input directory path of existing model to be used for prediction', required=True)
 parser.add_argument('-r', '--rootdir', help='Input the directory path of the folder containing the feature file and other supporting files', required=True)
 parser.add_argument('-q', '--tstep', help='Input the number of time steps used in this model', default=1000, type=int)
+parser.add_argument('-b', '--bsize', help='Input the batch size used for model prediction', default=64, type=int)
 parser.add_argument('-p', '--split', help='Input the split ratio for the validation set as a percentage of the dataset', default=0.05, type=float)
 parser.add_argument('-o', '--mode', help='Input the combination of test for evaluation of the model', default=0, type=int, choices=[0,1,2])
 parser.add_argument('-l', '--lower', help='Input the lower bound for sampling traffic', default=0.0, type=utilsDatagen.restricted_float)
@@ -36,6 +37,12 @@ if args.gpu:
     config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
     config.log_device_placement = False  # to log device placement (on which device the operation ran)
                                         # (nothing gets printed in Jupyter, only if you run it standalone)
+
+    # Use gradient checkpointing to reduce GPU memory
+    import memory_saving_gradients
+    # monkey patch tf.gradients to point to our custom version, with automatic checkpoint selection
+    tf.__dict__["gradients"] = memory_saving_gradients.gradients_speed
+    # print('checkpointing enabled')
 else:
     config = tf.ConfigProto(
         device_count={'GPU': 0}
@@ -75,7 +82,7 @@ model_dirpath = os.path.dirname(os.path.normpath(args.model))
 save_dir = os.path.join(model_dirpath, 'predict_results', 'predict_on_{}'.format(dataset_name))
 
 # Configuration for model evaluation
-BATCH_SIZE = 64
+BATCH_SIZE = args.bsize
 SEQUENCE_LEN = args.tstep
 SPLIT_RATIO = args.split
 SEED = 2019

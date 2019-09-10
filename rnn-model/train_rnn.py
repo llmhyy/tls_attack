@@ -77,6 +77,7 @@ tracemalloc.start()
 #####################################################
 
 # Load the mmap data and the byte offsets from the feature file
+print('\nLoading features into memory...')
 mmap_data, byte_offset = utilsDatagen.get_mmapdata_and_byteoffset(feature_dir)
 
 # Get min and max for each feature
