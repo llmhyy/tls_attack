@@ -1,5 +1,6 @@
 import os
 import time
+import random
 import pyshark
 import itertools
 from pyshark.packet.layer import JsonLayer
@@ -27,76 +28,80 @@ def searchEnums(rootdir, limit):
     success = 0
     failed = 0
     logging.info("Traversing through directory to find all enums...")
-    for root, dirs, files in os.walk(rootdir):
-        for f in files:
-            if f.endswith(".pcap"):
-                pcapfile_capture = pyshark.FileCapture(os.path.join(root, f))
-                try:
-                    logging.info("Processing {}".format(f))
-                    starttime_traffic = time.time()
-                    found_clienthello = False # Variable for ending the packet loop if ClientHello is found
-                    found_certificate = False # Variable for ending the packet loop if Certificate is found
+    files = os.listdir(rootdir)
+    random.seed(2019)
+    sampled_files = random.sample(files, min(len(files), limit))
+    pkt_limit = 500
 
-                    for packet in pcapfile_capture:
-                        starttime_packet = time.time()
-                        # Compression Methods
-                        traffic_compressionmethods = extractClienthelloCompressionmethod(packet)
-                        compressionmethods.extend(traffic_compressionmethods)
-                        # Supported Groups
-                        traffic_supportedgroups = extractClienthelloSupportedgroup(packet)
-                        supportedgroups.extend(traffic_supportedgroups)
-                        # Clienthello - Signature Hash Algorithm
-                        traffic_sighashalgorithms_client = extractClienthelloSignaturehash(packet)
-                        sighashalgorithms_client.extend(traffic_sighashalgorithms_client)
+    for f in sampled_files:
+        if f.endswith(".pcap"):
 
-                        if traffic_compressionmethods or traffic_sighashalgorithms_client:
-                            found_clienthello = True
+            pcapfile_capture = pyshark.FileCapture(os.path.join(rootdir,f))
+            packets = []
+            try:
+                for i in range(pkt_limit):
+                    packets.append(pcapfile_capture[i])
+            except KeyError:
+                pass
+            pcapfile_capture.close()
 
-                        # Certificate - Signature Hash Algorithm
-                        traffic_sighashalgorithms_cert = extractCertificate(packet)
-                        sighashalgorithms_cert.extend(traffic_sighashalgorithms_cert)
+            try:
+                logging.info("Processing {}".format(f))
+                starttime_traffic = time.time()
+                found_clienthello = False # Variable for ending the packet loop if ClientHello is found
+                found_certificate = False # Variable for ending the packet loop if Certificate is found
 
-                        if traffic_sighashalgorithms_cert:
-                            found_certificate = True
+                for packet in packets:
+                    starttime_packet = time.time()
+                    # Compression Methods
+                    traffic_compressionmethods = extractClienthelloCompressionmethod(packet)
+                    compressionmethods.extend(traffic_compressionmethods)
+                    # Supported Groups
+                    traffic_supportedgroups = extractClienthelloSupportedgroup(packet)
+                    supportedgroups.extend(traffic_supportedgroups)
+                    # Clienthello - Signature Hash Algorithm
+                    traffic_sighashalgorithms_client = extractClienthelloSignaturehash(packet)
+                    sighashalgorithms_client.extend(traffic_sighashalgorithms_client)
 
-                        logging.debug("Time spent on packet: {}s".format(time.time()-starttime_packet))
+                    if traffic_compressionmethods or traffic_sighashalgorithms_client:
+                        found_clienthello = True
 
-                        # Break the loop once both ClientHello and Certificate are found
-                        if found_clienthello and found_certificate:
-                            break
+                    # Certificate - Signature Hash Algorithm
+                    traffic_sighashalgorithms_cert = extractCertificate(packet)
+                    sighashalgorithms_cert.extend(traffic_sighashalgorithms_cert)
 
-                    logging.debug("Time spent on traffic: {}s".format(time.time()-starttime_traffic))
+                    if traffic_sighashalgorithms_cert:
+                        found_certificate = True
 
-                    # If ClientHello cannot be found in the traffic
-                    if not found_clienthello:
-                        logging.warning("No ClientHello found for file {}".format(os.path.join(root,f)))
-                    if not found_certificate:
-                        logging.warning("No Certificate found for file {}".format(os.path.join(root,f)))
+                    logging.debug("Time spent on packet: {}s".format(time.time()-starttime_packet))
 
-                    compressionmethods = list(set(compressionmethods))
-                    supportedgroups = list(set(supportedgroups))
-                    sighashalgorithms_client = list(set(sighashalgorithms_client))
-                    sighashalgorithms_cert = list(set(sighashalgorithms_cert))
-
-                    success += 1
-
-                    if success>=limit:
+                    # Break the loop once both ClientHello and Certificate are found
+                    if found_clienthello and found_certificate:
                         break
 
-                # Skip this pcap file
-                except (KeyError, AttributeError, TypeError):
-                    logging.exception('Known error in file {}. Traffic is skipped'.format(f))
-                    failed+=1
+                logging.debug("Time spent on traffic: {}s".format(time.time()-starttime_traffic))
 
-                except Exception:
-                    logging.exception('Unknown error in file {}. Traffic is skipped')
-                    failed += 1
+                # If ClientHello cannot be found in the traffic
+                if not found_clienthello:
+                    logging.warning("No ClientHello found for file {}".format(os.path.join(rootdir,f)))
+                if not found_certificate:
+                    logging.warning("No Certificate found for file {}".format(os.path.join(rootdir,f)))
 
-                finally:
-                    pcapfile_capture.close()
+                compressionmethods = list(set(compressionmethods))
+                supportedgroups = list(set(supportedgroups))
+                sighashalgorithms_client = list(set(sighashalgorithms_client))
+                sighashalgorithms_cert = list(set(sighashalgorithms_cert))
 
-        if success>=limit:
-            break
+                success += 1
+
+            # Skip this pcap file
+            except (KeyError, AttributeError, TypeError):
+                logging.exception('Known error in file {}. Traffic is skipped'.format(f))
+                failed+=1
+
+            except Exception:
+                logging.exception('Unknown error in file {}. Traffic is skipped')
+                failed += 1
 
     logging.info("Done processing enum")
     print("Processed enums in directory {}: {} success, {} failure".format(rootdir,success, failed))

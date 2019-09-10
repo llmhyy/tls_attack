@@ -82,7 +82,7 @@ else:
     pcapdirs = [os.path.join(args.pcapdir, o) for o in os.listdir(args.pcapdir) if os.path.isdir(os.path.join(args.pcapdir, o))]
     pcapdirs.append(args.pcapdir)
     for dirname in pcapdirs:
-        enums_in_a_file = utils.searchEnums(dirname, limit=5000)
+        enums_in_a_file = utils.searchEnums(dirname, limit=5200)  # 5000 + 200 (in case of failed pcap files)
         for k,v in enums_in_a_file.items():
             if k not in enums:
                 enums[k] = []
