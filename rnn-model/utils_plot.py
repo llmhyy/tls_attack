@@ -13,6 +13,7 @@ from matplotlib.patches import Arrow
 #########   Prediction   ##########
 
 def plot_distribution(final_acc, overall_mean_acc, save_dir, show=False):
+    plt.clf()
     fig = plt.gcf()
     fig.set_size_inches(8,6)
     ax = plt.gca()
@@ -29,6 +30,7 @@ def plot_distribution(final_acc, overall_mean_acc, save_dir, show=False):
     plt.clf()
 
 def plot_mse_for_dim(mse_dim, dim_name, save_dir, show=False):
+    plt.clf()
     fig = plt.gcf()
     fig.set_size_inches(25,18)
     plt.bar(np.arange(len(mse_dim)), mse_dim, tick_label=dim_name)
