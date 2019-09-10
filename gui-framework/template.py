@@ -547,7 +547,7 @@ class Ui_MainWindow(object):
             return
 
         try:
-            results_dir = os.path.join(self.model_dirs, config.results[self.model_name][self.dataset_name][self.split_name])
+            results_dir = os.path.join(self.model_dirs, os.path.dirname(os.path.normpath(config.model[self.model_name])), 'predict_results', 'predict_on_{}'.format(self.dataset_name), self.split_name, 'results.csv')
         except KeyError:
             QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Accuracy results directory for model {} and dataset {} is not listed in the configuration file. Check config.py'.format(self.model_name, self.dataset_name))
             return
@@ -579,15 +579,8 @@ class Ui_MainWindow(object):
                 fail_count = 0
                 for i in range(pointer, len(sorted_zipped_name_acc)):
                     name,acc = sorted_zipped_name_acc[i]
-                    # print(name)
-                    # print(fullpath)
-                    # if i > 10:
-                    #     exit()
-                    #
-                    # PROBLEM: changing the directory of the pcap files causes the search function to fail
-                    # TODO: find a better substring matching function
-                    #
-                    if name in fullpath:
+
+                    if name in fullpath or os.path.basename(name) == os.path.basename(fullpath):
                         if self.filter_fn(acc):
                             filename = fullpath.split(os.path.sep)[-1]
                             item = QtWidgets.QListWidgetItem(filename)
@@ -609,7 +602,7 @@ class Ui_MainWindow(object):
             self.listWidget.itemClicked.connect(self.onClickTraffic)
 
         except FileNotFoundError as e:
-            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', e)
+            QtWidgets.QMessageBox.about(self.centralwidget, 'Error', 'Results.csv cannot be found for {} model predicting on {} dataset'.format(self.model_name, self.dataset_name))
             return
 
     def onClickTraffic(self, item):
