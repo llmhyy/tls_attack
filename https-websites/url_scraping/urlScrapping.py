@@ -6,6 +6,7 @@ import urllib.parse
 import logging
 import requests
 import threading
+import traceback
 import subprocess
 import googlesearch
 from itertools import islice
@@ -268,3 +269,4 @@ class FinderScannerWorker(threading.Thread):
 
             except Exception:
                 print('Fatal error but continuing to next query...')
+                print(traceback.print_exc())
