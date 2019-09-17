@@ -24,6 +24,7 @@ import utils_plot as utilsPlot
 parser = argparse.ArgumentParser()
 parser.add_argument('-e', '--epoch', help='Input epoch for training', default=100, type=int)
 parser.add_argument('-q', '--tstep', help='Input the number of time steps for RNN model training', default=1000, type=int)
+parser.add_argument('-b', '--bsize', help='Input the batch size used for RNN model training', default=64, type=int)
 parser.add_argument('-p', '--split', help='Input the split ratio for the validation set as a percentage of the dataset', default=0.05, type=float)
 parser.add_argument('-r', '--rootdir', help='Input the directory path of the folder containing the feature file and other supporting files', required=True)
 parser.add_argument('-s', '--savedir', help='Input the directory path to save the rnn model and its training results', required=True)  # e.g foo/bar/trained-rnn/normal/
@@ -62,7 +63,7 @@ minmax_dir = os.path.join(args.rootdir, '..', '..', MINMAX_FILENAME)
 
 # Configuration for model training
 DATETIME_NOW = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-BATCH_SIZE = 64
+BATCH_SIZE = args.bsize
 SEQUENCE_LEN = args.tstep
 EPOCH = args.epoch
 SAVE_EVERY_EPOCH = 5
@@ -182,6 +183,7 @@ sample_count = 5
 sample_train_idx = random.sample(train_idx.tolist(), sample_count)
 sample_test_idx = random.sample(test_idx.tolist(), sample_count)
 
+# TODO: Change the name of this function. It is too complex and ambiguous
 def get_and_process_metrics_from_trainhistory_generator(met_gen, sample_idx):
     trf_mean_acc = np.array([])
     trf_median_acc = np.array([])
