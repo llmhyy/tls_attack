@@ -381,9 +381,10 @@ def extractClienthelloCiphersuite(packet):
     feature_len = sum(map(len, [getattr(ciphersuite_parser, component) for component in ciphersuite_parser.components]))
     feature = [0] * feature_len
     try:
-        raw_fields = [field.show for field in packet.ssl.handshake_ciphersuite.all_fields]
-        dec_ciphersuites = [int(field) for field in raw_fields]
-        feature = ciphersuite_parser.getVecAndAggregateAndNormalize(dec_ciphersuites)
+        if int(packet.ssl.handshake_type)==1:
+            raw_fields = [field.show for field in packet.ssl.handshake_ciphersuite.all_fields]
+            dec_ciphersuites = [int(field) for field in raw_fields]
+            feature = ciphersuite_parser.getVecAndAggregateAndNormalize(dec_ciphersuites)
 
     except (AttributeError, ZeroDivisionError):
         pass
@@ -411,8 +412,9 @@ def extractClienthelloCompressionmethodAndEncode(packet, enum):
 def extractClienthelloCompressionmethod(packet):
     feature = []
     try:
-        raw_fields = [field.show for field in packet.ssl.handshake_comp_method.all_fields]
-        feature = [int(field, 16) for field in raw_fields]
+        if int(packet.ssl.handshake_type)==1:
+            raw_fields = [field.show for field in packet.ssl.handshake_comp_method.all_fields]
+            feature = [int(field, 16) for field in raw_fields]
 
     except AttributeError:
         pass
@@ -487,8 +489,9 @@ def extractClienthelloSignaturehashAndEncode(packet, enum):
 def extractClienthelloSignaturehash(packet):
     feature = []
     try:
-        raw_fields = [field.show for field in packet.ssl.handshake_sig_hash_alg.all_fields]
-        feature = [int(field, 16) for field in raw_fields]
+        if int(packet.ssl.handshake_type)==1:
+            raw_fields = [field.show for field in packet.ssl.handshake_sig_hash_alg.all_fields]
+            feature = [int(field, 16) for field in raw_fields]
 
     except AttributeError:
         pass
