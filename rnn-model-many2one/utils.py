@@ -74,7 +74,7 @@ class BatchGenerator(Sequence):
 
         # Aggregate the data
         self.aggregated_idx = []
-        self.label2id = {'normal':0, 'breach':1, 'poodle:':2, 'rc4':3, 'dos':4}  # TODO: should put this in config since will be used in model predicgtion as well
+        self.label2id = {'normal':0, 'breach':1, 'poodle':2, 'rc4':3, 'dos':4}  # TODO: should put this in config since will be used in model predicgtion as well
         self.id2label = {v:k for k,v in self.label2id.items()}
         for label, feature_idx in feature_idxs.items():
             label_id = self.label2id[label]
@@ -87,17 +87,23 @@ class BatchGenerator(Sequence):
 
     def __getitem__(self, idx):
         batch_idx = self.aggregated_idx[idx*config.BATCH_SIZE:(idx+1)*config.BATCH_SIZE]
-        batch_data, batch_targets = [],[]
+        batch_data, batch_labels = [],[]
         for label_id, i in batch_idx:
             label = self.id2label[label_id]
             mmap,byteoffset = self.feature_mmap_byteoffsets[label]
             start,end = byteoffset[i]
             dataline = mmap[start:end+1].decode('ascii').strip().rstrip(',')
             batch_data.append(json.loads('['+dataline+']'))
-            batch_targets.append(label_id)
+            batch_labels.append(label_id)
 
-        # Preprocessing step: pad and normalize
-        batch_data = pad_sequences(batch_data, maxlen=config.SEQUENCE_LEN,dtype='float32',padding='post',truncating='post',value=0.0)
-        batch_input = self.norm_fn(batch_data)
+        # Zero-padding and normalize
+        batch_input = pad_sequences(batch_data, maxlen=config.SEQUENCE_LEN,dtype='float32',padding='post',truncating='post',value=0.0)
+        batch_input = self.norm_fn(batch_input)
+
+        # One-hot encoding
+        num_dim = len(self.label2id)
+        batch_labels = np.array(batch_labels)
+        batch_targets = np.zeros((batch_labels.size, num_dim))
+        batch_targets[np.arange(batch_labels.size),batch_labels] = 1
 
         return batch_input, batch_targets
