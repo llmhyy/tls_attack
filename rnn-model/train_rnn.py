@@ -11,12 +11,10 @@ import matplotlib.pyplot as plt
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppress Tensorflow debugging information for INFO level
 import tensorflow as tf
-from tensorflow.keras.layers import Activation
-from tensorflow.keras.layers import LSTM, CuDNNLSTM
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.models import load_model
-from tensorflow.keras.models import clone_model
+from tensorflow.keras.layers import Activation, LSTM, CuDNNLSTM, Input
+from tensorflow.keras.models import Sequential, Model, load_model, clone_model
 from tensorflow.keras.backend import set_session
+
 
 import utils_datagen as utilsDatagen
 import utils_plot as utilsPlot
@@ -29,6 +27,7 @@ parser.add_argument('-p', '--split', help='Input the split ratio for the validat
 parser.add_argument('-r', '--rootdir', help='Input the directory path of the folder containing the feature file and other supporting files', required=True)
 parser.add_argument('-s', '--savedir', help='Input the directory path to save the rnn model and its training results', required=True)  # e.g foo/bar/trained-rnn/normal/
 parser.add_argument('-m', '--model', help='Input directory for existing model to be trained')
+parser.add_argument('-t', '--modeltype', help='Input the model to be used for training', default=0, type=int, choices=[0,1])
 parser.add_argument('-o', '--show', help='Flag for displaying plots', action='store_true', default=False)
 parser.add_argument('-g', '--gpu', help='Flag for using GPU in model training', action='store_true')
 args = parser.parse_args()
@@ -110,18 +109,33 @@ test_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, test_idx, B
 # MODEL TRAINING
 #####################################################
 
+# TODO: 2-part loss function for positive and negative training
+def dual_mse_loss_fn(y_true, y_pred, y_label):
+    pass
+
 # Build RNN model or load existing RNN model
 if args.model:
     model = load_model(args.model)
 else:
-    model = Sequential()
-    if args.gpu:
-        model.add(CuDNNLSTM(INPUT_DIM, input_shape=(SEQUENCE_LEN, INPUT_DIM), return_sequences=True))
-    else:
-        model.add(LSTM(INPUT_DIM, input_shape=(SEQUENCE_LEN, INPUT_DIM), return_sequences=True))
-    model.add(Activation('relu'))
-    model.compile(loss='mean_squared_error',
-                    optimizer='rmsprop')
+    if args.modeltype == 0:
+        model = Sequential()
+        if args.gpu:
+            model.add(CuDNNLSTM(INPUT_DIM, input_shape=(SEQUENCE_LEN, INPUT_DIM), return_sequences=True))
+        else:
+            model.add(LSTM(INPUT_DIM, input_shape=(SEQUENCE_LEN, INPUT_DIM), return_sequences=True))
+        model.add(Activation('relu'))
+        model.compile(loss='mean_squared_error',
+                        optimizer='rmsprop')
+
+    elif args.modeltype == 1:
+        x = Input(shape=(SEQUENCE_LEN, INPUT_DIM))
+        y_true = Input(shape=(SEQUENCE_LEN, INPUT_DIM))
+        y_label = Input(shape=(5,)) # TODO: Use a constant first. Change this later
+        y_pred = CuDNNLSTM(INPUT_DIM, (SEQUENCE_LEN, INPUT_DIM), return_sequences=True)(x)
+        model = Model(inputs=[x, y_true, y_label], outputs=y_pred)
+        model.add_loss(dual_mse_loss_fn(y_true, y_pred, y_label))
+        model.compile(loss=None, optimizer='rmsprop')
+
 model.summary()
 
 class TrainHistory(tf.keras.callbacks.Callback):
