@@ -68,9 +68,10 @@ def normalize(option, min_max_feature=None):
             return
 
 class BatchGenerator(Sequence):
-    def __init__(self, feature_mmap_byteoffsets, feature_idxs, norm_fn):
+    def __init__(self, feature_mmap_byteoffsets, feature_idxs, norm_fn, return_batch_info=False):
         self.feature_mmap_byteoffsets = feature_mmap_byteoffsets
         self.norm_fn = norm_fn
+        self.return_batch_info = return_batch_info
 
         # Aggregate the data
         self.aggregated_idx = []
@@ -106,4 +107,12 @@ class BatchGenerator(Sequence):
         batch_targets = np.zeros((batch_labels.size, num_dim))
         batch_targets[np.arange(batch_labels.size),batch_labels] = 1
 
-        return batch_input, batch_targets
+        if not self.return_batch_info:
+            return (batch_input, batch_targets)
+
+        # Extract secondary info about batch
+        batch_info = {}
+        batch_seq_len = [len(data) for data in batch_data]
+        batch_info['seq_len'] = np.array(batch_seq_len)
+
+        return (batch_input, batch_targets,batch_info)

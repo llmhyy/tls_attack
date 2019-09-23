@@ -116,14 +116,6 @@ norm_fn = utils.normalize(2, min_max_feature)
 train_generator = utils.BatchGenerator(feature_mmap_byteoffsets, feature_train_idxs, norm_fn)
 test_generator = utils.BatchGenerator(feature_mmap_byteoffsets, feature_test_idxs, norm_fn)
 
-# for input, targets in train_generator:
-#     print(input)
-#     print(input.shape)
-#     print(targets)
-#     print(targets.shape)
-#     break
-# exit()
-
 #####################################################
 # MODEL TRAINING
 #####################################################
@@ -197,7 +189,7 @@ with open(os.path.join(save_dir, 'train_log.txt'),'w') as logfile:
     for i, (loss, val_loss) in enumerate(zip(history.history['loss'], history.history['val_loss'])):
         logfile.write('Epoch  #{}\tTrain Loss: {:.6f}\tVal Loss: {:.6f}\n'.format(i+1, loss, val_loss))
     logfile.write("\n#####  TRAIN/VAL ACCURACY  #####\n")
-    for i, (train_mean, test_mean) in enumerate(zip(history.history['accuracy'], history.history['val_accuracy'])):
+    for i, (train_mean, test_mean) in enumerate(zip(history.history['acc'], history.history['val_acc'])):
         logfile.write('Epoch  #{}\tTrain Mean Accuracy: {:.6f}\tVal Mean Accuracy: {:.6f}\n'.format(i+1, train_mean, test_mean))
 
 # Save the model
