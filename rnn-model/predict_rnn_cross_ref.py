@@ -93,8 +93,8 @@ with open(config_cross_ref.minmax_dir) as f:
     min_max_feature = (np.array(min_max_feature_list[0]),np.array(min_max_feature_list[1]))
 
 # Initialize the normalization function
-norm_fn = utilsDatagen.normalize(2, min_max_feature)
-denorm_fn = utilsDatagen.denormalize(min_max_feature)
+norm_fn = utilsDatagen.normalize(3)
+denorm_fn = utilsDatagen.denormalize(3)
 
 # Initialize data generator for prediction
 data_generators = {}

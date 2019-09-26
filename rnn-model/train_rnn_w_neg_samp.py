@@ -136,7 +136,7 @@ for label, mmap_byteoffset in feature_mmap_byteoffsets.items():
     feature_test_idxs[label] = feature_test_idx
 
 # Initialize the normalization function
-norm_fn = utilsDatagen.normalize(2, min_max_feature)
+norm_fn = utilsDatagen.normalize(3)
 
 # Initialize the train and test generators for model training
 train_generator = utilsDatagen.SpecialBatchGenerator(feature_mmap_byteoffsets, feature_train_idxs, norm_fn,label2id[POS_LABEL])

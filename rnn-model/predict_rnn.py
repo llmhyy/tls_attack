@@ -107,8 +107,8 @@ except FileNotFoundError:
 # Split the dataset into train and test and return train/test indexes to the byte offset
 train_idx,test_idx = utilsDatagen.split_train_test(dataset_size=len(byte_offset), split_ratio=SPLIT_RATIO, seed=SEED)
 # Initialize the normalization function
-norm_fn = utilsDatagen.normalize(2, min_max_feature)
-denorm_fn = utilsDatagen.denormalize(min_max_feature)
+norm_fn = utilsDatagen.normalize(3)
+denorm_fn = utilsDatagen.denormalize(3)
 # Initialize the batch generator
 train_generator = partial(utilsDatagen.BatchGenerator, mmap_data=mmap_data,byte_offset=byte_offset,selected_idx=train_idx,
                                                         batch_size=BATCH_SIZE, sequence_len=SEQUENCE_LEN, norm_fn=norm_fn,
