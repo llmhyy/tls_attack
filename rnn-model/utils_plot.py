@@ -273,22 +273,23 @@ def plot_prediction_on_pktlen(predict_train, true_train, predict_test, true_test
 
     def replot():
         predict_plot,true_plot = None, None
-        for i in range(num_sample):
+        for i in range(len(predict_train[0])):
             ax[0, i].clear()
-            ax[1, i].clear()
             ax[0, i].set_ylim([0, 1])
-            ax[1, i].set_ylim([0, 1])
             predict_plot = ax[0, i].plot(predict_train[0][i, :, 0])
             true_plot = ax[0, i].plot(true_train[i, :, 0], alpha=0.5)
             ax[0, i].set_title('Train Sample #{}'.format(i))
+        for i in range(len(predict_test[0])):
+            ax[1, i].clear()
+            ax[1, i].set_ylim([0, 1])
             ax[1, i].plot(predict_test[0][i, :, 0])
             ax[1, i].plot(true_test[i, :, 0], alpha=0.5)
             ax[1, i].set_title('Test Sample #{}'.format(i))
         return predict_plot, true_plot
 
-    assert len(predict_train[0]) == len(predict_test[0])
-    num_sample = len(predict_train[0])
-    fig, ax = plt.subplots(nrows=2, ncols=num_sample)
+    # assert len(predict_train[0]) == len(predict_test[0])  # Assertion will fail if the number i
+    # num_sample = len(predict_train[0])
+    fig, ax = plt.subplots(nrows=2, ncols=max(len(predict_train[0]), len(predict_test[0])))
     plt.subplots_adjust(left=0.15, bottom=0.25, wspace=0.4, hspace=0.4)
     fig.set_size_inches(10, 8)
     predict_plot, true_plot = replot()

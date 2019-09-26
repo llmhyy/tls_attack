@@ -62,11 +62,12 @@ def split_train_test(dataset_size, split_ratio, seed):
         train_idx = train_idx[:-1]
     return train_idx, test_idx
 
-def normalize(option, min_max_feature=None):
+def normalize(option):
     def l2_norm(batch_data):
         l2_norm = np.linalg.norm(batch_data, axis=2, keepdims=True)
         batch_data = np.divide(batch_data, l2_norm, out=np.zeros_like(batch_data), where=l2_norm!=0.0)
         return batch_data
+
     def min_max_norm(batch_data, min_max_feature):
         min_feature, max_feature = min_max_feature
         # Dimension 20~62 of ciphersuite are frequency values and should not be normalized like other features
@@ -79,22 +80,39 @@ def normalize(option, min_max_feature=None):
         batch_data[batch_data>1] = 1  # if > max, set to 1
         assert (batch_data <= 1).all() and (batch_data >= 0).all()
         return batch_data
+
+    def reciprocal_norm(batch_data):
+        batch_data[batch_data < 0] = 0  # Set -ve values to 0 because -ve values are mapped weirdly for this func
+        batch_data = batch_data/(1+batch_data)
+        return batch_data
+
     if option == 1:
         return l2_norm
     elif option == 2:
-        if min_max_feature is not None:
-            return partial(min_max_norm, min_max_feature=min_max_feature)
-        else:
-            print("Error: min-max range for feature is not provided")
-            return
+        return min_max_norm
+    elif option == 3:
+        return reciprocal_norm
+    else:
+        print('Error: Option is not valid')
+        return
 
-def denormalize(min_max_feature):
-    # TODO: Denormalize the data based on a user-specified option in future
-    def min_max_denorm(batch_norm_data):
+def denormalize(option):
+    def min_max_denorm(batch_norm_data, min_max_feature):
         min_feature, max_feature = min_max_feature
         batch_data = (batch_norm_data * (max_feature - min_feature)) + min_feature
         return batch_data
-    return min_max_denorm
+
+    def reciprocal_denorm(batch_norm_data):
+        batch_data = batch_norm_data/(1-batch_norm_data)
+        return batch_data
+
+    if option == 2:
+        return min_max_denorm
+    elif option == 3:
+        return reciprocal_denorm
+    else:
+        print('Error: Option is not valid')
+        return
 
 def get_feature_vector(selected_idx, mmap_data, byte_offset, sequence_len, norm_fn):
     selected_byte_offset = [byte_offset[i] for i in selected_idx]

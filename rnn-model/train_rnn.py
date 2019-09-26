@@ -100,7 +100,7 @@ sample_traffic = json.loads('['+mmap_data[byte_offset[0][0]:byte_offset[0][1]+1]
 INPUT_DIM = len(sample_traffic[0])
 
 # Initialize the normalization function
-norm_fn = utilsDatagen.normalize(2, min_max_feature)
+norm_fn = utilsDatagen.normalize(3)
 
 # Initialize the train and test generators for model training
 train_generator = utilsDatagen.BatchGenerator(mmap_data, byte_offset, train_idx, BATCH_SIZE, SEQUENCE_LEN, norm_fn)
@@ -180,8 +180,10 @@ pkt_len_true_test = None
 
 # Sampling traffic for model prediction on packet length on epochs
 sample_count = 5
-sample_train_idx = random.sample(train_idx.tolist(), sample_count)
-sample_test_idx = random.sample(test_idx.tolist(), sample_count)
+train_idx_list = train_idx.tolist()
+test_idx_list = test_idx.tolist()
+sample_train_idx = random.sample(train_idx.tolist(), min(len(train_idx_list),sample_count))
+sample_test_idx = random.sample(test_idx.tolist(), min(len(test_idx_list), sample_count))
 
 # TODO: Change the name of this function. It is too complex and ambiguous
 def get_and_process_metrics_from_trainhistory_generator(met_gen, sample_idx):
