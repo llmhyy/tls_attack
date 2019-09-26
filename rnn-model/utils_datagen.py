@@ -13,7 +13,7 @@ import utils_metric as utilsMetric
 import os
 import sys
 sys.path.append(os.path.join('..', 'rnn-model-many2one'))
-import utils as utilsMany2one
+import utils_many2one as utilsMany2one
 
 def find_lines(data):
     for i, char in enumerate(data):
@@ -122,8 +122,9 @@ def preprocess_data(batch_data, pad_len, norm_fn):
 
 # TODO: Combine rnn-model and rnn-model-many2one module since they share alot of functions
 class SpecialBatchGenerator(utilsMany2one.BatchGenerator):
-    def __init__(self, feature_mmap_byteoffsets, feature_idxs, norm_fn):
+    def __init__(self, feature_mmap_byteoffsets, feature_idxs, norm_fn, pos_label):
         super().__init__(feature_mmap_byteoffsets, feature_idxs, norm_fn, return_batch_info=False)
+        self.pos_label = pos_label
 
     def __len__(self):
         return super().__len__()
@@ -132,12 +133,17 @@ class SpecialBatchGenerator(utilsMany2one.BatchGenerator):
         batch_data, batch_labels = super().__getitem__(idx)
 
         # Process batch inputs to generate batch targets
-        packet_zero = np.zeros(batch_data.shape[0], 1, batch_data.shape[2])
+        packet_zero = np.zeros((batch_data.shape[0], 1, batch_data.shape[2]))
         batch_data = np.concatenate((packet_zero, batch_data), axis=1)
         batch_inputs = batch_data[:,:-1,:]
         batch_targets = batch_data[:,1:,:]
 
-        return (batch_inputs, batch_targets, batch_labels)
+        # Transform 5-vector batch label into a boolean and append to batch_targets
+        packet_labelid = np.zeros((batch_targets.shape[0], 1, batch_targets.shape[2]))
+        packet_labelid[batch_labels[:,self.pos_label]==1,:,:] = 1
+        batch_targets = np.concatenate((packet_labelid, batch_targets), axis=1)
+
+        return (batch_inputs, batch_targets)
 
 class BatchGenerator(Sequence):
     def __init__(self, mmap_data, byte_offset, selected_idx, batch_size, sequence_len, norm_fn, return_batch_info=False):
