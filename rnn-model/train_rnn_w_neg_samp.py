@@ -77,7 +77,7 @@ except IndexError as e:
 
 # Take ref from any of the feature_filepaths to get the minmax and dim filepath
 a_dataset_filepath = os.path.dirname(feature_filepaths[list(feature_filepaths.keys())[0]])
-minmax_filepath = os.path.join(os.path.join(a_dataset_filepath, '..', '..'), 'features_minmax_ref_deprecated.csv')  # TODO: CHANGE THIS
+minmax_filepath = os.path.join(os.path.join(a_dataset_filepath, '..', '..'), 'features_minmax_ref.csv')  # TODO: CHANGE THIS
 if not os.path.exists(minmax_filepath):
     print('ERROR: Min-max feature file is missing in root directory of feature extraction module')
     exit()
@@ -151,51 +151,6 @@ pos_test_idx = feature_test_idxs[POS_LABEL]
 # MODEL TRAINING
 #####################################################
 
-# def dual_mse_loss_fn(y_true, y_pred, is_pos):
-#     print(y_pred.dtype) # float32
-#     print(y_true.dtype) # float32
-#     print(is_pos.dtype) # float32
-#     if not tf.is_tensor(y_pred):
-#         y_pred = K.constant(y_pred)
-#     y_true = K.cast(y_true, y_pred.dtype)
-#     print('WALALALALAALALALALALA',type(is_pos))
-#     print(tf.is_tensor(is_pos))
-#     if tf.is_tensor(is_pos):  # Assume this is a numpy array of positive labels
-#         mask = tf.equal(is_pos, 0)
-#         indexs = tf.where(mask)
-#         is_pos = tf.scatter_update(is_pos, indexs, tf.constant(-1))
-#
-#         is_pos = K.cast(is_pos, y_pred.dtype)
-#         is_pos = K.repeat_elements(K.expand_dims(is_pos, axis=-1), K.shape(y_pred)[-1], axis=-1)  # Expand to same shape as y_pred
-#         dual_mse_loss = K.mean(K.square(y_pred - y_true), axis=-1)* is_pos  # Apply indicator function
-#         clipped_dual_mse_loss = K.clip(dual_mse_loss, min_value=-0.01)  # Clip the loss for neg sample due to lack of upperbound
-#         print('LOSS HERE', clipped_dual_mse_loss)
-#         return clipped_dual_mse_loss
-#     else:
-#         return K.mean(K.square(y_pred - y_true), axis=-1)
-
-# def dual_mse_loss_fn2(y_true, y_pred):
-#     print('y_true', y_true)
-#     print('y_pred', y_pred)
-#
-#     y_true_sliced = y_true[:,1:,:]
-#     print('y_true_sliced', y_true_sliced)
-#     label = y_true[:,0,0]
-#     print('label',label)
-#     # y_true_sliced = K.print_tensor(y_true_sliced, message='y_true_sliced')
-#     # y_pred = K.print_tensor(y_pred, message='y_pred')
-#     mask = K.variable(K.ones_like(label))
-#     print('mask',mask)
-#     comparison = K.equal(label, tf.constant(0.0))
-#     print('comparison', comparison)
-#     mask = mask.assign(tf.where(comparison, tf.negative(tf.ones_like(mask)), mask))
-#     print('new_mask', mask)
-#     dual_mse_loss = K.mean(K.square(y_pred - y_true_sliced), axis=-1)*mask
-#     print('dual_mse_loss', dual_mse_loss)
-#     clipped_dual_mse_loss = K.clip(dual_mse_loss, min_value=-0.01, max_value=1000) # Max value is an arbitrary large value
-#     print('clipped_dual_mse_loss', clipped_dual_mse_loss)
-#     return clipped_dual_mse_loss
-
 def dual_mse_loss_fn(y_true, y_pred):
     y_true_sliced = y_true[:,1:,:]
     label = y_true[:, 0, 0]
@@ -205,8 +160,8 @@ def dual_mse_loss_fn(y_true, y_pred):
     dual_mse_loss = K.mean(K.square(y_pred - y_true_sliced), axis=-1) * mask
     dual_mse_loss = K.print_tensor(dual_mse_loss, message='dual_mse_loss')
     clipped_dual_mse_loss = K.clip(dual_mse_loss, min_value=-0.01, max_value=1000)  # Max value is an arbitrary large value
-    clipped_dual_mse_loss = K.print_tensor(clipped_dual_mse_loss, message='clipped_dual_mse_loss')
-    return dual_mse_loss
+    # clipped_dual_mse_loss = K.print_tensor(clipped_dual_mse_loss, message='clipped_dual_mse_loss')
+    return clipped_dual_mse_loss
 
 # Build RNN model or load existing RNN model
 if args.model:

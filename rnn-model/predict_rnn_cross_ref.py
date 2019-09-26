@@ -3,7 +3,7 @@ import json
 import fnmatch
 import argparse
 import numpy as np
-import config_cross_ref1 as config_cross_ref
+import config_cross_ref2 as config_cross_ref
 import utils_datagen as utilsDatagen
 
 # Fking hack to use the BatchGenerator from rnn-model-many2one
