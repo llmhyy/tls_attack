@@ -1,0 +1,260 @@
+///////////////////////////////////////////////////////////////////////////////
+training set is data1 and others for testing
+start test breach
+4000/4000 Finished
+Probability of being judged as breach: 0.52375
+Probability of being judged as normal: 0.4005
+Probability of being judged as poodle: 0.00175
+Probability of being judged as dos: 0.0
+Probability of being judged as rc4: 0.0735
+Probability of being not able to be judged: 0.0005
+correct rate: 0.52375
+total correct rate: 0.10475
+start test normal
+4000/4000 Finished
+Probability of being judged as breach: 0.01625
+Probability of being judged as normal: 0.9035
+Probability of being judged as poodle: 0.003
+Probability of being judged as dos: 0.00025
+Probability of being judged as rc4: 0.076
+Probability of being not able to be judged: 0.001
+correct rate: 0.9035
+total correct rate: 0.28545
+start test poodle
+4000/4000 Finished
+Probability of being judged as breach: 0.0
+Probability of being judged as normal: 0.0005
+Probability of being judged as poodle: 0.98525
+Probability of being judged as dos: 0.0
+Probability of being judged as rc4: 0.005
+Probability of being not able to be judged: 0.00925
+correct rate: 0.98525
+total correct rate: 0.4825
+start test dos
+4000/4000 Finished
+Probability of being judged as breach: 0.0
+Probability of being judged as normal: 0.0065
+Probability of being judged as poodle: 0.0
+Probability of being judged as dos: 0.9805
+Probability of being judged as rc4: 0.00225
+Probability of being not able to be judged: 0.01075
+correct rate: 0.9805
+total correct rate: 0.6786
+start test rc4
+4000/4000 Finished
+Probability of being judged as breach: 0.026
+Probability of being judged as normal: 0.24875
+Probability of being judged as poodle: 0.03175
+Probability of being judged as dos: 0.0
+Probability of being judged as rc4: 0.686
+Probability of being not able to be judged: 0.0075
+correct rate: 0.686
+total correct rate: 0.8158
+///////////////////////////////////////////////////////////////////////////////
+training set is data2 and others for testing
+start test breach
+4000/4000 Finished
+Probability of being judged as breach: 0.5575
+Probability of being judged as normal: 0.36775
+Probability of being judged as poodle: 0.004
+Probability of being judged as dos: 0.0
+Probability of being judged as rc4: 0.069
+Probability of being not able to be judged: 0.00175
+correct rate: 0.5575
+total correct rate: 0.1115
+start test normal
+4000/4000 Finished
+Probability of being judged as breach: 0.0155
+Probability of being judged as normal: 0.89925
+Probability of being judged as poodle: 0.00225
+Probability of being judged as dos: 0.00125
+Probability of being judged as rc4: 0.08075
+Probability of being not able to be judged: 0.001
+correct rate: 0.89925
+total correct rate: 0.29135
+start test poodle
+4000/4000 Finished
+Probability of being judged as breach: 0.0
+Probability of being judged as normal: 0.0005
+Probability of being judged as poodle: 0.9715
+Probability of being judged as dos: 0.0
+Probability of being judged as rc4: 0.0055
+Probability of being not able to be judged: 0.0225
+correct rate: 0.9715
+total correct rate: 0.48565
+start test dos
+4000/4000 Finished
+Probability of being judged as breach: 0.0
+Probability of being judged as normal: 0.0085
+Probability of being judged as poodle: 0.0
+Probability of being judged as dos: 0.99025
+Probability of being judged as rc4: 0.0
+Probability of being not able to be judged: 0.00125
+correct rate: 0.99025
+total correct rate: 0.6837
+start test rc4
+4000/4000 Finished
+Probability of being judged as breach: 0.0195
+Probability of being judged as normal: 0.232
+Probability of being judged as poodle: 0.02825
+Probability of being judged as dos: 0.0015
+Probability of being judged as rc4: 0.705
+Probability of being not able to be judged: 0.01375
+correct rate: 0.705
+total correct rate: 0.8247
+///////////////////////////////////////////////////////////////////////////////
+training set is data3 and others for testing
+start test breach
+4000/4000 Finished
+Probability of being judged as breach: 0.52125
+Probability of being judged as normal: 0.3875
+Probability of being judged as poodle: 0.00175
+Probability of being judged as dos: 0.0
+Probability of being judged as rc4: 0.0875
+Probability of being not able to be judged: 0.002
+correct rate: 0.52125
+total correct rate: 0.10425
+start test normal
+4000/4000 Finished
+Probability of being judged as breach: 0.0185
+Probability of being judged as normal: 0.88875
+Probability of being judged as poodle: 0.0025
+Probability of being judged as dos: 0.00025
+Probability of being judged as rc4: 0.089
+Probability of being not able to be judged: 0.001
+correct rate: 0.88875
+total correct rate: 0.282
+start test poodle
+4000/4000 Finished
+Probability of being judged as breach: 0.0
+Probability of being judged as normal: 0.00175
+Probability of being judged as poodle: 0.984
+Probability of being judged as dos: 0.0
+Probability of being judged as rc4: 0.002
+Probability of being not able to be judged: 0.01225
+correct rate: 0.984
+total correct rate: 0.4788
+start test dos
+4000/4000 Finished
+Probability of being judged as breach: 0.0
+Probability of being judged as normal: 0.01
+Probability of being judged as poodle: 0.0
+Probability of being judged as dos: 0.98575
+Probability of being judged as rc4: 0.001
+Probability of being not able to be judged: 0.00325
+correct rate: 0.98575
+total correct rate: 0.67595
+start test rc4
+4000/4000 Finished
+Probability of being judged as breach: 0.019
+Probability of being judged as normal: 0.245
+Probability of being judged as poodle: 0.00125
+Probability of being judged as dos: 0.0
+Probability of being judged as rc4: 0.71775
+Probability of being not able to be judged: 0.017
+correct rate: 0.71775
+total correct rate: 0.8195
+///////////////////////////////////////////////////////////////////////////////
+training set is data4 and others for testing
+start test breach
+4000/4000 Finished
+Probability of being judged as breach: 0.53325
+Probability of being judged as normal: 0.387
+Probability of being judged as poodle: 0.00275
+Probability of being judged as dos: 0.0
+Probability of being judged as rc4: 0.07375
+Probability of being not able to be judged: 0.00325
+correct rate: 0.53325
+total correct rate: 0.10665
+start test normal
+4000/4000 Finished
+Probability of being judged as breach: 0.01575
+Probability of being judged as normal: 0.895
+Probability of being judged as poodle: 0.003
+Probability of being judged as dos: 0.0
+Probability of being judged as rc4: 0.08475
+Probability of being not able to be judged: 0.0015
+correct rate: 0.895
+total correct rate: 0.28565
+start test poodle
+4000/4000 Finished
+Probability of being judged as breach: 0.0
+Probability of being judged as normal: 0.0005
+Probability of being judged as poodle: 0.98875
+Probability of being judged as dos: 0.0
+Probability of being judged as rc4: 0.001
+Probability of being not able to be judged: 0.00975
+correct rate: 0.98875
+total correct rate: 0.4834
+start test dos
+4000/4000 Finished
+Probability of being judged as breach: 0.0
+Probability of being judged as normal: 0.0
+Probability of being judged as poodle: 0.0
+Probability of being judged as dos: 0.99675
+Probability of being judged as rc4: 0.00125
+Probability of being not able to be judged: 0.002
+correct rate: 0.99675
+total correct rate: 0.68275
+start test rc4
+4000/4000 Finished
+Probability of being judged as breach: 0.02275
+Probability of being judged as normal: 0.2285
+Probability of being judged as poodle: 0.022
+Probability of being judged as dos: 0.0
+Probability of being judged as rc4: 0.699
+Probability of being not able to be judged: 0.02775
+correct rate: 0.699
+total correct rate: 0.82255
+///////////////////////////////////////////////////////////////////////////////
+training set is data5 and others for testing
+start test breach
+4000/4000 Finished
+Probability of being judged as breach: 0.485
+Probability of being judged as normal: 0.43125
+Probability of being judged as poodle: 0.00075
+Probability of being judged as dos: 0.0
+Probability of being judged as rc4: 0.08
+Probability of being not able to be judged: 0.003
+correct rate: 0.485
+total correct rate: 0.097
+start test normal
+4000/4000 Finished
+Probability of being judged as breach: 0.01175
+Probability of being judged as normal: 0.90975
+Probability of being judged as poodle: 0.001
+Probability of being judged as dos: 0.0005
+Probability of being judged as rc4: 0.075
+Probability of being not able to be judged: 0.002
+correct rate: 0.90975
+total correct rate: 0.27895
+start test poodle
+4000/4000 Finished
+Probability of being judged as breach: 0.00025
+Probability of being judged as normal: 0.00225
+Probability of being judged as poodle: 0.958
+Probability of being judged as dos: 0.0
+Probability of being judged as rc4: 0.0065
+Probability of being not able to be judged: 0.033
+correct rate: 0.958
+total correct rate: 0.47055
+start test dos
+4000/4000 Finished
+Probability of being judged as breach: 0.0
+Probability of being judged as normal: 0.00725
+Probability of being judged as poodle: 0.0
+Probability of being judged as dos: 0.98575
+Probability of being judged as rc4: 0.0015
+Probability of being not able to be judged: 0.0055
+correct rate: 0.98575
+total correct rate: 0.6677
+start test rc4
+4000/4000 Finished
+Probability of being judged as breach: 0.0225
+Probability of being judged as normal: 0.25525
+Probability of being judged as poodle: 0.003
+Probability of being judged as dos: 0.0
+Probability of being judged as rc4: 0.6975
+Probability of being not able to be judged: 0.02175
+correct rate: 0.6975
+total correct rate: 0.8072
