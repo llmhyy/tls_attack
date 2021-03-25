@@ -36,7 +36,7 @@ PyQt5-sip==4.19.18
 pyshark==0.4.2.9
 pytest==5.0.1
 python-dateutil==2.8.0
-PyYAML==5.1.1
+PyYAML==5.4
 Random-Word==1.0.4
 requests==2.22.0
 ruamel.yaml==0.15.89
