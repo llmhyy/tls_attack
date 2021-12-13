@@ -18,7 +18,7 @@ ipaddress==1.0.22
 Keras-Applications==1.0.8
 Keras-Preprocessing==1.1.0
 kiwisolver==1.1.0
-lxml==4.4.1
+lxml==4.6.5
 Markdown==3.1.1
 matplotlib==3.1.0
 more-itertools==7.2.0
